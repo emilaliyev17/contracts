@@ -84,45 +84,55 @@
             <tbody>
                 {% for contract in contracts %}
                 <tr>
-                    <td>{{ contract.id }}</td>
-                    <td>
+                    <td style="padding: 12px;">{{ contract.id }}</td>
+                    <td style="padding: 12px;">
                         <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
                             {{ contract.contract_name|truncatechars:40 }}
                         </a>
                     </td>
-                    <td>{{ contract.contract_number|truncatechars:20 }}</td>
-                    <td>{{ contract.client_name|truncatechars:25 }}</td>
-                    <td>
+                    <td style="padding: 12px;">{{ contract.contract_number|truncatechars:20 }}</td>
+                    <td style="padding: 12px;">{{ contract.client_name|truncatechars:25 }}</td>
+                    <td style="padding: 12px;">
                         {% if contract.total_value %}
                             ${{ contract.total_value|floatformat:2 }} {{ contract.currency }}
                         {% else %}
                             <span class="text-muted">N/A</span>
                         {% endif %}
                     </td>
-                    <td>
-                        <span class="status-badge status-{{ contract.status }}">
-                            {% if contract.status == 'needs_clarification' %}
-                                Needs Clarification
-                            {% else %}
+                    <td style="padding: 12px;">
+                        {% if contract.status == 'processing' %}
+                            <span class="badge badge-warning">
                                 {{ contract.status|title }}
-                            {% endif %}
-                        </span>
+                            </span>
+                        {% elif contract.status == 'needs_clarification' %}
+                            <span class="badge badge-info">
+                                Needs Clarification
+                            </span>
+                        {% elif contract.status == 'completed' %}
+                            <span class="badge badge-success">
+                                {{ contract.status|title }}
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-{{ contract.status }}">
+                                {{ contract.status|title }}
+                            </span>
+                        {% endif %}
                     </td>
-                    <td>
+                    <td style="padding: 12px;">
                         {% if contract.start_date %}
                             {{ contract.start_date|date:"M d, Y" }}
                         {% else %}
                             <span class="text-muted">N/A</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="padding: 12px;">
                         {% if contract.end_date %}
                             {{ contract.end_date|date:"M d, Y" }}
                         {% else %}
                             <span class="text-muted">Ongoing</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td style="padding: 12px;">
                         <form method="post" action="{% url 'core:delete_contract' contract.id %}" 
                               style="display:inline;" 
                               onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
@@ -203,6 +213,34 @@
     background-color: #e7f3ff;
     color: #0066cc;
     font-weight: 600;
+}
+
+/* Bootstrap Badge Classes */
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.badge-warning {
+    color: #212529;
+    background-color: #ffc107;
+}
+
+.badge-info {
+    color: #fff;
+    background-color: #17a2b8;
+}
+
+.badge-success {
+    color: #fff;
+    background-color: #28a745;
 }
 
 .delete-btn {
