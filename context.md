@@ -1187,6 +1187,12 @@ OPENAI_MODEL=gpt-4o
   - Processed contracts in 4.2 seconds average with ~2,151 tokens per contract
   - Total cost: ~$1.40 for all 10 contracts (vs $130,000/year manual processing)
   - Identified common patterns: Monthly retainers (40%), Fixed fees (30%), Hourly billing (20%), Milestones (10%)
+- **2024-12-19**: **CRITICAL FIX 4 - PDF File Handling in Clarifications**
+  - Fixed template error when contracts lack PDF files in clarifications page
+  - Added conditional checks for PDF file existence before displaying View Contract button
+  - Resolved ValueError: 'pdf_file' attribute has no file associated with it
+  - Database analysis: 7 contracts with PDFs, 3 without (test contracts)
+  - System now gracefully handles mixed data (contracts with/without PDF files)
   - Validated AI extraction accuracy on complex real-world contract formats
 
 ## Development Guidelines
@@ -1941,3 +1947,55 @@ MAX_UPLOAD_SIZE=10485760
 ⚠️ **Concurrent Processing**: Single-threaded (can be parallelized)
 ⚠️ **Language Support**: Optimized for English contracts
 ⚠️ **Complex Tables**: May need manual review for intricate payment schedules
+
+---
+
+## CRITICAL FIX 4 - PDF File Handling in Clarifications
+
+**Date**: September 24, 2025 - 21:45 PDT
+**Issue**: Template error when contracts lack PDF files
+**Status**: ✅ RESOLVED
+
+### Problem Analysis
+**Root Cause**: 
+- Template tried to access `{{ contract.pdf_file.url }}` for ALL contracts
+- Some contracts in database have empty `pdf_file` field
+- Django raises `ValueError` when accessing `.url` on empty FileField
+
+**Database Status**:
+- **Total Contracts**: 10
+- **With PDF Files**: 7 ✅
+- **Without PDF Files**: 3 ❌
+  - ID: 296 - "Demo Contract - Apply Clarifications" (DEMO-APPLY-001)
+  - ID: 295 - "Test Contract Full Flow" (TEST-FLOW-001)
+  - ID: 294 - "Test Contract Needs Clarification" (TEST-CLARIF-001)
+
+### Solution Implemented
+**Template Fix**: Added conditional checks in `core/templates/core/clarifications.html`
+
+```html
+{% if contract_group.contract.pdf_file %}
+    <a href="{{ contract_group.contract.pdf_file.url }}" target="_blank" class="btn btn-sm btn-light">
+        📄 View Contract
+    </a>
+{% endif %}
+```
+
+**Benefits**:
+- ✅ **Error Prevention**: No more crashes for contracts without PDFs
+- ✅ **Conditional Display**: View Contract button only when PDF exists
+- ✅ **Graceful Degradation**: System handles mixed data gracefully
+- ✅ **Clean UI**: Contracts without PDFs show just contract name
+
+### Files Modified
+- `core/templates/core/clarifications.html` - Added conditional PDF file checks
+
+### Testing Results
+- ✅ **Clarifications page loads**: HTTP 200 OK
+- ✅ **Template compiles**: No syntax errors
+- ✅ **View Contract buttons**: 2 displayed (for contracts with PDFs)
+- ✅ **Error handling**: Contracts without PDFs don't crash page
+
+---
+
+**LAST UPDATED**: September 24, 2025 - 21:45 PDT

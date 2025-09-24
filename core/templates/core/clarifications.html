@@ -32,7 +32,13 @@
             {% for contract_group in contracts_ready_to_apply %}
                 <div class="contract-section ready-to-apply">
                     <div class="contract-header success-header">
-                        <h3>📄 {{ contract_group.contract.contract_name }}</h3>
+                        <h3>📄 {{ contract_group.contract.contract_name }}
+                            {% if contract_group.contract.pdf_file %}
+                                <a href="{{ contract_group.contract.pdf_file.url }}" target="_blank" class="btn btn-sm btn-light" style="float: right; margin-left: 10px;">
+                                    📄 View Contract
+                                </a>
+                            {% endif %}
+                        </h3>
                         <small class="text-white">Contract #{{ contract_group.contract.contract_number }}</small>
                     </div>
                     
@@ -76,7 +82,13 @@
                 <div class="contract-section">
                     <div class="contract-header">
                         <div>
-                            <h3>📄 {{ contract_group.contract.contract_name }}</h3>
+                            <h3>📄 {{ contract_group.contract.contract_name }}
+                                {% if contract_group.contract.pdf_file %}
+                                    <a href="{{ contract_group.contract.pdf_file.url }}" target="_blank" class="btn btn-sm btn-light" style="float: right; margin-left: 10px;">
+                                        📄 View Contract
+                                    </a>
+                                {% endif %}
+                            </h3>
                             <small class="text-muted">Contract #{{ contract_group.contract.contract_number }}</small>
                         </div>
                         <div class="progress-indicator">
