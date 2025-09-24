@@ -1,0 +1,338 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Contracts - Contract Analyzer{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📋 Contract List</h2>
+    
+    <!-- Export Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>📊 Export Contracts to Excel</h4>
+            <p>Export all contracts to Excel format for FP&A reporting.</p>
+            <div class="export-actions">
+                <a href="{% url 'core:export_excel' %}" class="btn btn-success export-btn">
+                    📈 Export All Contracts
+                </a>
+                <button class="btn btn-secondary" id="filter-export-btn">
+                    🔍 Filter Export
+                </button>
+            </div>
+            
+            <!-- Export Filters (hidden by default) -->
+            <div id="export-filters" class="export-filters" style="display: none;">
+                <h5>Filter Export Options:</h5>
+                <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="date_from">From Date:</label>
+                            <input type="date" id="date_from" name="date_from">
+                        </div>
+                        <div class="filter-group">
+                            <label for="date_to">To Date:</label>
+                            <input type="date" id="date_to" name="date_to">
+                        </div>
+                        <div class="filter-group">
+                            <label for="status">Status:</label>
+                            <select id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="uploaded">Uploaded</option>
+                                <option value="processing">Processing</option>
+                                <option value="completed">Completed</option>
+                                <option value="error">Error</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="btn btn-success">Export Filtered Results</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-filter-btn">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    {% if contracts %}
+        <div class="contract-stats">
+            <span class="stat-item">Total Contracts: {{ contracts.count }}</span>
+        </div>
+        
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Contract Name</th>
+                    <th>Contract Number</th>
+                    <th>Client</th>
+                    <th>Total Value</th>
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contract in contracts %}
+                <tr>
+                    <td>{{ contract.id }}</td>
+                    <td>
+                        <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
+                            {{ contract.contract_name|truncatechars:40 }}
+                        </a>
+                    </td>
+                    <td>{{ contract.contract_number|truncatechars:20 }}</td>
+                    <td>{{ contract.client_name|truncatechars:25 }}</td>
+                    <td>
+                        {% if contract.total_value %}
+                            ${{ contract.total_value|floatformat:2 }} {{ contract.currency }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ contract.status }}">
+                            {% if contract.status == 'needs_clarification' %}
+                                Needs Clarification
+                            {% else %}
+                                {{ contract.status|title }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if contract.start_date %}
+                            {{ contract.start_date|date:"M d, Y" }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if contract.end_date %}
+                            {{ contract.end_date|date:"M d, Y" }}
+                        {% else %}
+                            <span class="text-muted">Ongoing</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'core:delete_contract' contract.id %}" 
+                              style="display:inline;" 
+                              onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm delete-btn" 
+                                    title="Delete contract {{ contract.contract_name }}">
+                                🗑️ Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📄</div>
+            <h3>No Contracts Found</h3>
+            <p>There are no contracts in the system yet.</p>
+            <a href="{% url 'core:home' %}" class="btn btn-primary">Upload Your First Contract</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.contract-stats {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+}
+
+.stat-item {
+    font-weight: 500;
+    color: #495057;
+}
+
+.contract-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.contract-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-processing {
+    background-color: #fff3cd;
+    color: #664d03;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.status-uploaded {
+    background-color: #d1ecf1;
+    color: #055160;
+}
+
+.status-needs_clarification {
+    background-color: #e7f3ff;
+    color: #0066cc;
+    font-weight: 600;
+}
+
+.delete-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    transform: translateY(-1px);
+    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.alert {
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Export Section Styles */
+.export-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.export-btn {
+    font-size: 1.1rem;
+    padding: 0.75rem 1.5rem;
+}
+
+.export-filters {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+</style>
+
+<script>
+function confirmDelete(contractName, contractId) {
+    const message = `Are you sure you want to delete this contract?\n\n` +
+                   `Contract: "${contractName}"\n` +
+                   `ID: ${contractId}\n\n` +
+                   `⚠️ WARNING: This action cannot be undone!\n` +
+                   `This will permanently delete all contract data and payment milestones.`;
+    
+    return confirm(message);
+}
+
+// Export filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const filterExportBtn = document.getElementById('filter-export-btn');
+    const exportFilters = document.getElementById('export-filters');
+    const cancelFilterBtn = document.getElementById('cancel-filter-btn');
+
+    if (filterExportBtn) {
+        filterExportBtn.addEventListener('click', function() {
+            exportFilters.style.display = exportFilters.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+
+    if (cancelFilterBtn) {
+        cancelFilterBtn.addEventListener('click', function() {
+            exportFilters.style.display = 'none';
+        });
+    }
+
+    // Set default date range (last 30 days)
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    
+    if (dateFromInput && dateToInput) {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        dateFromInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+        dateToInput.value = today.toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

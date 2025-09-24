@@ -1,0 +1,289 @@
+Found 64 PDF files to process
+
+============================================================
+PROCESSING CONTRACTS
+============================================================
+
+[1/64] Processing: SIGNED -  Conduit Compliance Operations Support.pdf
+  ✅ Success - Confidence: 90.0% (0.76s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[2/64] Processing: SIGNED - 6Lock MULTIYEAR AML IA 2025.pdf
+  ✅ Success - Confidence: 88.0% (0.54s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[3/64] Processing: SIGNED - 6lock ACH Audit.pdf
+  ✅ Success - Confidence: 88.0% (0.44s)
+
+[4/64] Processing: SIGNED - ANT AUS AML Program Review.pdf
+  ✅ Success - Confidence: 94.0% (0.59s)
+
+[5/64] Processing: SIGNED - ANT INTERNATIONAL AML Program Review.pdf
+  ✅ Success - Confidence: 94.0% (0.55s)
+
+[6/64] Processing: SIGNED - APM Help Compliance Build Out.pdf
+  ✅ Success - Confidence: 90.0% (0.66s)
+    ⚠️  Failed to create milestone 4: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[7/64] Processing: SIGNED - Anrok BSA_AML IA.pdf
+  ✅ Success - Confidence: 88.0% (0.74s)
+
+[8/64] Processing: SIGNED - Athena Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 92.0% (0.50s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[9/64] Processing: SIGNED - Blockchain TM-2025.pdf
+  ✅ Success - Confidence: 90.0% (0.35s)
+
+[10/64] Processing: SIGNED - Booking.com BHFS MPP Onboarding Operations Support.pdf
+  ✅ Success - Confidence: 94.0% (1.58s)
+
+[11/64] Processing: SIGNED - ByteDance MSA_CT20250.pdf
+  ❌ Failed: Contract processing failed for SIGNED - ByteDance MSA_CT20250.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (147, Signed   Bytedance Msa Ct20250, TEST-20250924-181519-1356, contracts/SIGNED_-_ByteDance_MSA_CT20250_wNVaE2u.pdf, 2025-09-24 18:15:19.911444+00, 2025-09-24 18:15:19.91145+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - ByteDance MSA_CT20250.pd...).
+ (0.06s)
+
+[12/64] Processing: SIGNED - ByteDance Sanctions Model Validation.pdf
+  ❌ Failed: Contract processing failed for SIGNED - ByteDance Sanctions Model Validation.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (148, Signed   Bytedance Sanctions Model Validation, TEST-20250924-181519-4533, contracts/SIGNED_-_ByteDance_Sanctions_Model_Validation_FRAOEgh...., 2025-09-24 18:15:19.961913+00, 2025-09-24 18:15:19.961918+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - ByteDance Sanctions Mode...).
+ (0.05s)
+
+[13/64] Processing: SIGNED - Chime BSA AML Independent Review.pdf
+  ✅ Success - Confidence: 94.0% (0.88s)
+
+[14/64] Processing: SIGNED - Circle DFS 504 Readiness Review.pdf
+  ✅ Success - Confidence: 90.0% (0.51s)
+
+[15/64] Processing: SIGNED - Clara BSA AML Independent Assessment 2025.pdf
+  ✅ Success - Confidence: 88.0% (0.69s)
+
+[16/64] Processing: SIGNED - Clara Compliance Buildout 2025 Extension.pdf
+  ✅ Success - Confidence: 80.0% (0.16s)
+
+[17/64] Processing: SIGNED - Clara LMS.pdf
+  ✅ Success - Confidence: 92.0% (0.49s)
+
+[18/64] Processing: SIGNED - Coinbase - Ops Support Jun2025.pdf
+  ✅ Success - Confidence: 94.0% (0.40s)
+
+[19/64] Processing: SIGNED - Coinbase Apr 2024 Ops Support.pdf
+  ✅ Success - Confidence: 94.0% (0.24s)
+
+[20/64] Processing: SIGNED - Coinbase Ops Support 2025.pdf
+  ✅ Success - Confidence: 94.0% (0.31s)
+
+[21/64] Processing: SIGNED - Coinbase Ops Support Jul2025.pdf
+  ✅ Success - Confidence: 94.0% (0.27s)
+
+[22/64] Processing: SIGNED - Coinbase Ops Support Ph2.pdf
+  ✅ Success - Confidence: 94.0% (0.27s)
+
+[23/64] Processing: SIGNED - Conduit Addendum Staff Aug.pdf
+  ✅ Success - Confidence: 74.0% (0.13s)
+
+[24/64] Processing: SIGNED - Conduit Compliance Program Remediation & Enhancement.pdf
+  ✅ Success - Confidence: 88.0% (0.64s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[25/64] Processing: SIGNED - Conduit Compliance Program Review.pdf
+  ✅ Success - Confidence: 90.0% (0.59s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[26/64] Processing: SIGNED - Conduit Hawk and Scorechain Tuning.pdf
+  ✅ Success - Confidence: 90.0% (0.69s)
+
+[27/64] Processing: SIGNED - Corpay CDD and AML Remediation Support.pdf
+  ✅ Success - Confidence: 88.0% (0.32s)
+
+[28/64] Processing: SIGNED - Corpay EDD Staff Aug.pdf
+  ✅ Success - Confidence: 94.0% (0.69s)
+
+[29/64] Processing: SIGNED - Corpay Screening Tuning and DQ.pdf
+  ✅ Success - Confidence: 88.0% (0.55s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[30/64] Processing: SIGNED - Cumberland DRW Ops Support.pdf
+  ✅ Success - Confidence: 90.0% (0.36s)
+
+[31/64] Processing: SIGNED - DRW Staff Aug.pdf
+  ✅ Success - Confidence: 90.0% (0.33s)
+
+[32/64] Processing: SIGNED - Deel AML TM Sardine Implementation Support Ph1.pdf
+  ✅ Success - Confidence: 88.0% (0.66s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 4: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[33/64] Processing: SIGNED - Dots LMS Training Licenses [06.23.2025].pdf
+  ✅ Success - Confidence: 92.0% (0.43s)
+
+[34/64] Processing: SIGNED - Equitrack Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 92.0% (0.44s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[35/64] Processing: SIGNED - FFB Hawk Implementation.pdf
+  ✅ Success - Confidence: 92.0% (1.36s)
+
+[36/64] Processing: SIGNED - Flyra Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 90.0% (0.77s)
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[37/64] Processing: SIGNED - Gemini Sanctions Model Validation.pdf
+  ✅ Success - Confidence: 92.0% (0.85s)
+
+[38/64] Processing: SIGNED - Hamilton Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 90.0% (0.58s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[39/64] Processing: SIGNED - HomeTrust Bank - AML Operational Support.pdf
+  ✅ Success - Confidence: 90.0% (0.80s)
+
+[40/64] Processing: SIGNED - House Of Doge Retainer Agreement.pdf
+  ❌ Failed: Contract processing failed for SIGNED - House Of Doge Retainer Agreement.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (176, Signed   House Of Doge Retainer Agreement, TEST-20250924-181534-0407, contracts/SIGNED_-_House_Of_Doge_Retainer_Agreement_IKBs85y.pdf, 2025-09-24 18:15:34.482254+00, 2025-09-24 18:15:34.482261+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - House Of Doge Retainer A...).
+ (0.12s)
+
+[41/64] Processing: SIGNED - Kraken FIU Review Change Order.pdf
+  ❌ Failed: Contract processing failed for SIGNED - Kraken FIU Review Change Order.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (177, Signed   Kraken Fiu Review Change Order, TEST-20250924-181534-3293, contracts/SIGNED_-_Kraken_FIU_Review_Change_Order_LVHhjrp.pdf, 2025-09-24 18:15:34.594229+00, 2025-09-24 18:15:34.594234+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - Kraken FIU Review Change...).
+ (0.11s)
+
+[42/64] Processing: SIGNED - Lithic Fraud Audit Multi Year.pdf
+  ✅ Success - Confidence: 88.0% (0.31s)
+
+[43/64] Processing: SIGNED - Mercury KYC EDD PM Support.pdf
+  ✅ Success - Confidence: 90.0% (0.36s)
+
+[44/64] Processing: SIGNED - Meta 2025.pdf
+  ✅ Success - Confidence: 94.0% (0.70s)
+
+[45/64] Processing: SIGNED - Modern Foundry Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 94.0% (0.63s)
+
+[46/64] Processing: SIGNED - Motive Compliance Program Buildout.pdf
+  ✅ Success - Confidence: 92.0% (0.49s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 4: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 5: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 6: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 7: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 8: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 9: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 10: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 11: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 12: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[47/64] Processing: SIGNED - MtFuji Risk Management Process.pdf
+  ✅ Success - Confidence: 86.0% (0.43s)
+
+[48/64] Processing: SIGNED - Paxos AML Operational Support 2025 - Extension.pdf
+  ✅ Success - Confidence: 90.0% (0.43s)
+
+[49/64] Processing: SIGNED - Paxos AML Ops Support 2025.pdf
+  ✅ Success - Confidence: 92.0% (0.60s)
+
+[50/64] Processing: SIGNED - Paxos DFS Project_Plan_Support.pdf
+  ✅ Success - Confidence: 90.0% (0.61s)
+
+[51/64] Processing: SIGNED - Paxos FC Risk Assessment.pdf
+  ✅ Success - Confidence: 90.0% (0.43s)
+
+[52/64] Processing: SIGNED - Paxos Model Gov Staff Augmentation 2025.pdf
+  ✅ Success - Confidence: 96.0% (0.82s)
+
+[53/64] Processing: SIGNED - Paxos Outsourced Operational Support 2025 05_22.pdf
+  ✅ Success - Confidence: 92.0% (0.39s)
+
+[54/64] Processing: SIGNED - Qbit BSA AML Independent Assessment.pdf
+  ✅ Success - Confidence: 88.0% (0.80s)
+
+[55/64] Processing: SIGNED - Ramp Compliance Support.pdf
+  ✅ Success - Confidence: 88.0% (0.32s)
+
+[56/64] Processing: SIGNED - Ramp Ops Support Apr 2025.pdf
+  ✅ Success - Confidence: 92.0% (0.44s)
+
+[57/64] Processing: SIGNED - Ripple Bridger Implementation Support 2025.pdf
+  ✅ Success - Confidence: 82.0% (0.26s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 3: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 4: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 5: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[58/64] Processing: SIGNED - Ripple Persona Testing.pdf
+  ✅ Success - Confidence: 78.0% (0.14s)
+    ⚠️  Failed to create milestone 1: '>' not supported between instances of 'datetime.date' and 'NoneType'
+    ⚠️  Failed to create milestone 2: '>' not supported between instances of 'datetime.date' and 'NoneType'
+
+[59/64] Processing: SIGNED - Ripple Project Highrise.pdf
+  ✅ Success - Confidence: 92.0% (0.62s)
+
+[60/64] Processing: SIGNED - Ripple WC Tuning and CMS.pdf
+  ✅ Success - Confidence: 88.0% (0.30s)
+
+[61/64] Processing: SIGNED - Salsa Compliance Support 2025.pdf
+  ✅ Success - Confidence: 90.0% (0.61s)
+
+[62/64] Processing: SIGNED - Zeal Ongoing Compliance Support.pdf
+  ✅ Success - Confidence: 92.0% (0.51s)
+
+[63/64] Processing: SIGNED - eBAY Final CO 2024.pdf
+  ✅ Success - Confidence: 94.0% (0.46s)
+
+[64/64] Processing: SIGNED- Madu BSA_AML_Independent_Audit.pdf
+  ✅ Success - Confidence: 86.0% (0.65s)
+
+============================================================
+BATCH PROCESSING SUMMARY
+============================================================
+📊 Overall Statistics:
+  Total files: 64
+  Processed: 64
+  Success rate: 93.8%
+  Average confidence: 90.1%
+  Average processing time: 0.51s
+  Total processing time: 32.73s
+
+🎯 Confidence Distribution:
+  High confidence (≥85%): 56 contracts
+  Medium confidence (60-84%): 4 contracts
+  Low confidence (<60%): 0 contracts
+  AI assistance needed (<85%): 4 contracts
+
+🤖 Contracts Needing AI Assistance:
+  • SIGNED - Conduit Addendum Staff Aug.pdf: 74.0%
+  • SIGNED - Ripple Persona Testing.pdf: 78.0%
+  • SIGNED - Clara Compliance Buildout 2025 Extension.pdf: 80.0%
+  • SIGNED - Ripple Bridger Implementation Support 2025.pdf: 82.0%
+
+❌ Failed Contracts:
+  • SIGNED - ByteDance MSA_CT20250.pdf: Contract processing failed for SIGNED - ByteDance MSA_CT20250.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (147, Signed   Bytedance Msa Ct20250, TEST-20250924-181519-1356, contracts/SIGNED_-_ByteDance_MSA_CT20250_wNVaE2u.pdf, 2025-09-24 18:15:19.911444+00, 2025-09-24 18:15:19.91145+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - ByteDance MSA_CT20250.pd...).
+  • SIGNED - ByteDance Sanctions Model Validation.pdf: Contract processing failed for SIGNED - ByteDance Sanctions Model Validation.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (148, Signed   Bytedance Sanctions Model Validation, TEST-20250924-181519-4533, contracts/SIGNED_-_ByteDance_Sanctions_Model_Validation_FRAOEgh...., 2025-09-24 18:15:19.961913+00, 2025-09-24 18:15:19.961918+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - ByteDance Sanctions Mode...).
+  • SIGNED - House Of Doge Retainer Agreement.pdf: Contract processing failed for SIGNED - House Of Doge Retainer Agreement.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (176, Signed   House Of Doge Retainer Agreement, TEST-20250924-181534-0407, contracts/SIGNED_-_House_Of_Doge_Retainer_Agreement_IKBs85y.pdf, 2025-09-24 18:15:34.482254+00, 2025-09-24 18:15:34.482261+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - House Of Doge Retainer A...).
+  • SIGNED - Kraken FIU Review Change Order.pdf: Contract processing failed for SIGNED - Kraken FIU Review Change Order.pdf: Failed to create contract: null value in column "total_value" of relation "core_contract" violates not-null constraint
+DETAIL:  Failing row contains (177, Signed   Kraken Fiu Review Change Order, TEST-20250924-181534-3293, contracts/SIGNED_-_Kraken_FIU_Review_Change_Order_LVHhjrp.pdf, 2025-09-24 18:15:34.594229+00, 2025-09-24 18:15:34.594234+00, processing, null, USD, 2025-09-24, 2026-09-24, Extracted Client Name, , automated, null, {"patterns": {}, "file_name": "SIGNED - Kraken FIU Review Change...).
+
+💡 Recommendations:
+  • 4 contracts need manual review or AI assistance
+  • 4 contracts need format investigation
+
+✅ Batch processing completed!

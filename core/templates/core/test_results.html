@@ -1,0 +1,431 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Batch Test Results - Contract Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Batch Test Results</h1>
+    <p>Analysis of contract extraction performance from /2025 folder</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error">
+    <h3>❌ Error Loading Results</h3>
+    <p>{{ error }}</p>
+</div>
+{% else %}
+
+<!-- Summary Statistics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_contracts }}</div>
+        <div class="stat-label">Total Contracts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ success_rate|floatformat:1 }}%</div>
+        <div class="stat-label">Success Rate</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ avg_confidence|floatformat:1 }}%</div>
+        <div class="stat-label">Avg Confidence</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ ai_assistance_needed }}</div>
+        <div class="stat-label">Need AI Assistance</div>
+    </div>
+</div>
+
+<!-- Confidence Distribution -->
+<div class="card">
+    <h2>Confidence Distribution</h2>
+    <div class="confidence-bars">
+        <div class="confidence-bar">
+            <div class="confidence-label">High (≥85%)</div>
+            <div class="confidence-bar-bg">
+                <div class="confidence-bar-fill high" style="width: {{ high_confidence|div:total_contracts|mul:100|floatformat:1 }}%"></div>
+            </div>
+            <div class="confidence-count">{{ high_confidence }}</div>
+        </div>
+        <div class="confidence-bar">
+            <div class="confidence-label">Medium (60-84%)</div>
+            <div class="confidence-bar-bg">
+                <div class="confidence-bar-fill medium" style="width: {{ medium_confidence|div:total_contracts|mul:100|floatformat:1 }}%"></div>
+            </div>
+            <div class="confidence-count">{{ medium_confidence }}</div>
+        </div>
+        <div class="confidence-bar">
+            <div class="confidence-label">Low (<60%)</div>
+            <div class="confidence-bar-bg">
+                <div class="confidence-bar-fill low" style="width: {{ low_confidence|div:total_contracts|mul:100|floatformat:1 }}%"></div>
+            </div>
+            <div class="confidence-count">{{ low_confidence }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Contracts Needing Manual Review -->
+{% if manual_review_contracts %}
+<div class="card">
+    <h2>Contracts Needing AI Assistance (<85% confidence)</h2>
+    <div class="table-responsive">
+        <table class="contracts-table">
+            <thead>
+                <tr>
+                    <th>Contract Name</th>
+                    <th>Client</th>
+                    <th>Confidence</th>
+                    <th>Extraction Method</th>
+                    <th>Upload Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contract in manual_review_contracts %}
+                <tr>
+                    <td>{{ contract.contract_name }}</td>
+                    <td>{{ contract.client_name }}</td>
+                    <td>
+                        <span class="confidence-badge 
+                            {% if contract.confidence_score >= 85 %}high
+                            {% elif contract.confidence_score >= 60 %}medium
+                            {% else %}low{% endif %}">
+                            {{ contract.confidence_score|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td>{{ contract.extraction_method|title }}</td>
+                    <td>{{ contract.upload_date|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'core:contract_detail' contract.id %}" class="btn btn-sm btn-primary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Processing Activity -->
+{% if recent_contracts %}
+<div class="card">
+    <h2>Recent Processing Activity</h2>
+    <div class="table-responsive">
+        <table class="contracts-table">
+            <thead>
+                <tr>
+                    <th>Contract Name</th>
+                    <th>Client</th>
+                    <th>Confidence</th>
+                    <th>Milestones</th>
+                    <th>Upload Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contract in recent_contracts %}
+                <tr>
+                    <td>{{ contract.contract_name }}</td>
+                    <td>{{ contract.client_name }}</td>
+                    <td>
+                        <span class="confidence-badge 
+                            {% if contract.confidence_score >= 85 %}high
+                            {% elif contract.confidence_score >= 60 %}medium
+                            {% else %}low{% endif %}">
+                            {{ contract.confidence_score|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td>{{ contract.payment_milestones.count }}</td>
+                    <td>{{ contract.upload_date|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'core:contract_detail' contract.id %}" class="btn btn-sm btn-primary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Error Patterns Analysis -->
+{% if error_patterns %}
+<div class="card">
+    <h2>Common Extraction Issues</h2>
+    <div class="error-patterns">
+        {% for pattern, count in error_patterns.items %}
+        <div class="error-pattern">
+            <div class="error-count">{{ count }}</div>
+            <div class="error-description">{{ pattern }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recommendations -->
+<div class="card">
+    <h2>Recommendations</h2>
+    <div class="recommendations">
+        {% if avg_confidence < 80 %}
+        <div class="recommendation warning">
+            <strong>⚠️ Low Average Confidence:</strong> Consider implementing AI-assisted extraction for better accuracy.
+        </div>
+        {% endif %}
+        
+        {% if ai_assistance_needed > 0 %}
+        <div class="recommendation info">
+            <strong>🤖 AI Assistance Needed:</strong> {{ ai_assistance_needed }} contracts need manual review or AI assistance.
+        </div>
+        {% endif %}
+        
+        {% if success_rate < 90 %}
+        <div class="recommendation warning">
+            <strong>📄 PDF Quality:</strong> Improve PDF format standardization and quality.
+        </div>
+        {% endif %}
+        
+        {% if total_contracts == 0 %}
+        <div class="recommendation info">
+            <strong>📂 No Contracts Found:</strong> Run batch processing on /2025 folder to see results here.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endif %}
+
+<style>
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.confidence-bars {
+    margin-top: 1rem;
+}
+
+.confidence-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.confidence-label {
+    min-width: 120px;
+    font-weight: 500;
+}
+
+.confidence-bar-bg {
+    flex: 1;
+    height: 20px;
+    background-color: #ecf0f1;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.confidence-bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-bar-fill.high {
+    background-color: #27ae60;
+}
+
+.confidence-bar-fill.medium {
+    background-color: #f39c12;
+}
+
+.confidence-bar-fill.low {
+    background-color: #e74c3c;
+}
+
+.confidence-count {
+    min-width: 40px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.contracts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.contracts-table th,
+.contracts-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.contracts-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.confidence-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.confidence-badge.high {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.confidence-badge.medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.confidence-badge.low {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.error-patterns {
+    margin-top: 1rem;
+}
+
+.error-pattern {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    gap: 1rem;
+}
+
+.error-count {
+    background-color: #e74c3c;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+}
+
+.error-description {
+    flex: 1;
+    color: #2c3e50;
+}
+
+.recommendations {
+    margin-top: 1rem;
+}
+
+.recommendation {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.recommendation.warning {
+    background-color: #fff3cd;
+    border-left-color: #f39c12;
+    color: #856404;
+}
+
+.recommendation.info {
+    background-color: #d1ecf1;
+    border-left-color: #3498db;
+    color: #0c5460;
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+}
+</style>
+{% endblock %}

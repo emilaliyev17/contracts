@@ -1,0 +1,19 @@
+from django.urls import path
+from . import views
+
+app_name = 'core'
+
+urlpatterns = [
+    path('', views.home, name='home'),
+    path('contracts/', views.contract_list, name='contract_list'),
+    path('contracts/<int:contract_id>/', views.contract_detail, name='contract_detail'),
+    path('contract/<int:contract_id>/delete/', views.delete_contract, name='delete_contract'),
+    path('upload/', views.upload_contract, name='upload_contract'),
+    path('upload/status/<int:contract_id>/', views.upload_status, name='upload_status'),
+    path('test-results/', views.test_results, name='test_results'),
+    path('export-excel/', views.export_excel, name='export_excel'),
+    path('check-contracts/', views.check_contracts, name='check_contracts'),
+    path('clarifications/', views.clarifications_list, name='clarifications'),
+    path('clarifications/<int:clarification_id>/answer/', views.answer_clarification, name='answer_clarification'),
+    path('contracts/<int:contract_id>/apply-clarifications/', views.apply_contract_clarifications, name='apply_clarifications'),
+]

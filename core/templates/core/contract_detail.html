@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ contract.contract_name }} - Contract Analyzer{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ contract.contract_name }}</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div>
+            <h3>Contract Details</h3>
+            <table class="table">
+                <tr>
+                    <td><strong>Contract Number:</strong></td>
+                    <td>{{ contract.contract_number }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Client:</strong></td>
+                    <td>{{ contract.client_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Value:</strong></td>
+                    <td>{{ contract.total_value }} {{ contract.currency }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td><span class="status {{ contract.status }}">{{ contract.get_status_display }}</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Start Date:</strong></td>
+                    <td>{{ contract.start_date }}</td>
+                </tr>
+                <tr>
+                    <td><strong>End Date:</strong></td>
+                    <td>{{ contract.end_date }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Duration:</strong></td>
+                    <td>{{ contract.duration_days }} days</td>
+                </tr>
+                <tr>
+                    <td><strong>Upload Date:</strong></td>
+                    <td>{{ contract.upload_date }}</td>
+                </tr>
+            </table>
+            
+            {% if contract.notes %}
+            <h4>Notes</h4>
+            <p>{{ contract.notes }}</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            {% if payment_terms %}
+            <h3>Payment Terms</h3>
+            <table class="table">
+                <tr>
+                    <td><strong>Payment Method:</strong></td>
+                    <td>{{ payment_terms.get_payment_method_display }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Payment Frequency:</strong></td>
+                    <td>{{ payment_terms.get_payment_frequency_display }}</td>
+                </tr>
+                {% if payment_terms.late_fee_percentage %}
+                <tr>
+                    <td><strong>Late Fee:</strong></td>
+                    <td>{{ payment_terms.late_fee_percentage }}%</td>
+                </tr>
+                {% endif %}
+                {% if payment_terms.grace_period_days %}
+                <tr>
+                    <td><strong>Grace Period:</strong></td>
+                    <td>{{ payment_terms.grace_period_days }} days</td>
+                </tr>
+                {% endif %}
+                {% if payment_terms.early_payment_discount %}
+                <tr>
+                    <td><strong>Early Payment Discount:</strong></td>
+                    <td>{{ payment_terms.early_payment_discount }}%</td>
+                </tr>
+                {% endif %}
+            </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if payment_milestones %}
+<div class="card">
+    <h3>Payment Milestones</h3>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Milestone Name</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Percentage</th>
+                <th>Status</th>
+                <th>Payment Reference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for milestone in payment_milestones %}
+            <tr>
+                <td>
+                    <strong>{{ milestone.milestone_name }}</strong>
+                    {% if milestone.milestone_description %}
+                    <br><small>{{ milestone.milestone_description }}</small>
+                    {% endif %}
+                </td>
+                <td>{{ milestone.due_date }}</td>
+                <td>{{ milestone.amount }} {{ contract.currency }}</td>
+                <td>
+                    {% if milestone.percentage %}
+                        {{ milestone.percentage }}%
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td><span class="status {{ milestone.status }}">{{ milestone.get_status_display }}</span></td>
+                <td>{{ milestone.payment_reference|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No payment milestones found for this contract.</p>
+{% endif %}
+</div>
+{% endblock %}

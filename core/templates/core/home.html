@@ -1,0 +1,460 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Home - Contract Analyzer{% endblock %}
+
+{% block content %}
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_contracts }}</div>
+        <div class="stat-label">Total Contracts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ active_contracts }}</div>
+        <div class="stat-label">Active Contracts</div>
+    </div>
+</div>
+
+
+<!-- File Upload Section -->
+<div class="card">
+    <h2>Upload Contract PDF</h2>
+    <p>Upload a PDF contract to automatically extract payment information and milestones.</p>
+    
+    <div class="upload-container">
+        <form id="contract-upload-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📄</div>
+                <p class="upload-text">Drag and drop your PDF contract here</p>
+                <p class="upload-subtext">or click to browse files</p>
+                <input type="file" id="pdf-file-input" name="pdf_file" accept=".pdf" style="display: none;">
+            </div>
+            <div class="upload-info">
+                <p><strong>Supported formats:</strong> PDF only</p>
+                <p><strong>Maximum size:</strong> 10MB</p>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div id="upload-progress" class="upload-progress" style="display: none;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p id="progress-text">Processing contract...</p>
+    </div>
+    
+    <!-- Results Display -->
+    <div id="upload-results" class="upload-results" style="display: none;">
+        <div class="result-header">
+            <h3 id="result-title">Processing Complete</h3>
+        </div>
+        <div class="result-details">
+            <div class="result-item">
+                <strong>Confidence Score:</strong> <span id="confidence-score" class="confidence-badge"></span>
+            </div>
+            <div class="result-item">
+                <strong>Payment Milestones:</strong> <span id="milestones-count"></span>
+            </div>
+            <div class="result-item">
+                <strong>Extraction Method:</strong> <span id="extraction-method"></span>
+            </div>
+        </div>
+        <div id="warnings" class="warnings" style="display: none;">
+            <h4>⚠️ Warnings:</h4>
+            <ul id="warnings-list"></ul>
+        </div>
+        <div class="result-actions">
+            <a id="view-contract-btn" href="#" class="btn btn-primary">View Contract</a>
+            <button id="upload-another-btn" class="btn btn-secondary">Upload Another</button>
+        </div>
+    </div>
+    
+    <!-- Error Display -->
+    <div id="upload-error" class="upload-error" style="display: none;">
+        <div class="error-header">
+            <h3>❌ Upload Failed</h3>
+        </div>
+        <p id="error-message"></p>
+        <button id="retry-upload-btn" class="btn btn-secondary">Try Again</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Welcome to Contract Payment Analyzer</h2>
+    <p>This system helps you extract and manage payment information from PDF contracts for FP&A reporting and invoice generation.</p>
+    
+    <h3>Features:</h3>
+    <ul>
+        <li>Upload PDF contracts for analysis</li>
+        <li>Extract payment milestones and terms</li>
+        <li>Track payment status and due dates</li>
+        <li>Generate reports for financial planning</li>
+    </ul>
+    
+    <h3>Getting Started:</h3>
+    <ol>
+        <li>Upload a PDF contract using the form above</li>
+        <li>View your contracts in the <a href="{% url 'core:contract_list' %}">Contracts</a> section</li>
+        <li>Monitor payment milestones and status</li>
+        <li>Use the <a href="/admin/">Admin Panel</a> for advanced management</li>
+    </ol>
+</div>
+
+<style>
+.upload-container {
+    margin: 2rem 0;
+}
+
+.upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #2c3e50;
+    background-color: #f0f0f0;
+}
+
+.upload-area.dragover {
+    border-color: #2c3e50;
+    background-color: #e8f4f8;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.upload-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+    color: #7f8c8d;
+    margin-bottom: 0;
+}
+
+.upload-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.upload-progress {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #28a745;
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.upload-results {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+}
+
+.upload-error {
+    margin-top: 2rem;
+    padding: 2rem;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+}
+
+.result-header h3 {
+    color: #155724;
+    margin-bottom: 1rem;
+}
+
+.error-header h3 {
+    color: #721c24;
+    margin-bottom: 1rem;
+}
+
+.result-details {
+    margin-bottom: 1.5rem;
+}
+
+.result-item {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confidence-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.confidence-badge.high {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.confidence-badge.medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.confidence-badge.low {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.warnings {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+}
+
+.warnings h4 {
+    color: #856404;
+    margin-bottom: 0.5rem;
+}
+
+.warnings ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.result-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('pdf-file-input');
+    const uploadForm = document.getElementById('contract-upload-form');
+    const progressDiv = document.getElementById('upload-progress');
+    const resultsDiv = document.getElementById('upload-results');
+    const errorDiv = document.getElementById('upload-error');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileUpload();
+        }
+    });
+
+    // Click to browse
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files.length > 0) {
+            handleFileUpload();
+        }
+    });
+
+    function handleFileUpload() {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            showError('Please select a PDF file.');
+            return;
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showError('File size must be less than 10MB.');
+            return;
+        }
+
+        uploadFile(file);
+    }
+
+    function uploadFile(file) {
+        // Hide previous results/errors
+        resultsDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        
+        // Show progress
+        progressDiv.style.display = 'block';
+        progressFill.style.width = '0%';
+        progressText.textContent = 'Uploading file...';
+
+        const formData = new FormData();
+        formData.append('pdf_file', file);
+
+        fetch('/upload/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Processing complete!';
+            
+            setTimeout(() => {
+                progressDiv.style.display = 'none';
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    showError(data.error || 'Upload failed');
+                }
+            }, 1000);
+        })
+        .catch(error => {
+            progressDiv.style.display = 'none';
+            showError('Upload failed: ' + error.message);
+        });
+    }
+
+    function showResults(data) {
+        resultsDiv.style.display = 'block';
+        
+        // Update result details
+        document.getElementById('confidence-score').textContent = data.confidence_score.toFixed(1) + '%';
+        document.getElementById('confidence-score').className = 'confidence-badge ' + getConfidenceClass(data.confidence_score);
+        document.getElementById('milestones-count').textContent = data.payment_milestones_created;
+        document.getElementById('extraction-method').textContent = data.extraction_method;
+        
+        // Show warnings if any
+        const warningsDiv = document.getElementById('warnings');
+        const warningsList = document.getElementById('warnings-list');
+        if (data.warnings && data.warnings.length > 0) {
+            warningsDiv.style.display = 'block';
+            warningsList.innerHTML = '';
+            data.warnings.forEach(warning => {
+                const li = document.createElement('li');
+                li.textContent = warning;
+                warningsList.appendChild(li);
+            });
+        } else {
+            warningsDiv.style.display = 'none';
+        }
+        
+        // Set up buttons
+        document.getElementById('view-contract-btn').href = '/contracts/' + data.contract_id + '/';
+        document.getElementById('upload-another-btn').onclick = resetForm;
+    }
+
+    function showError(message) {
+        errorDiv.style.display = 'block';
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('retry-upload-btn').onclick = resetForm;
+    }
+
+    function getConfidenceClass(score) {
+        if (score >= 85) return 'high';
+        if (score >= 60) return 'medium';
+        return 'low';
+    }
+
+    function resetForm() {
+        fileInput.value = '';
+        progressDiv.style.display = 'none';
+        resultsDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        uploadArea.classList.remove('dragover');
+    }
+
+});
+</script>
+{% endblock %}
