@@ -3,6 +3,8 @@
 {% block title %}Contracts - Contract Analyzer{% endblock %}
 
 {% block content %}
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <div class="contracts-page container-fluid px-4">
 <style>
 /* Override base template container to use full width */
@@ -10,6 +12,80 @@
     max-width: none !important;
     margin: 2rem 0 !important;
     padding: 0 !important;
+}
+
+/* Compact Metric Cards Styling */
+.metric-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    height: 85px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.metric-card.warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.metric-card.info {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+}
+
+.metric-card.success {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    line-height: 1;
+    color: #212529;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-context {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Action Buttons Styling */
+.btn-link {
+    border: none;
+    text-decoration: none;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.btn-link:hover {
+    text-decoration: none;
+}
+
+.btn-link:focus {
+    box-shadow: none;
 }
 </style>
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
@@ -19,22 +95,35 @@
         </div>
     </div>
 
-    <div class="summary-stack card shadow-sm border-0 mb-4">
-        <div class="summary-item">
-            <span class="summary-label">Total Contracts</span>
-            <span class="summary-value">{{ summary.total_contracts }}</span>
+    <!-- Compact Metric Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="metric-card" style="height: 85px;">
+                <div class="metric-label">Total Contracts</div>
+                <div class="metric-value">{{ summary.total_contracts }}</div>
+                <div class="metric-context">Active in portfolio</div>
+            </div>
         </div>
-        <div class="summary-item">
-            <span class="summary-label">Needs Clarification</span>
-            <span class="summary-value text-warning">{{ summary.needs_clarification }}</span>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="metric-card warning" style="height: 85px;">
+                <div class="metric-label">Needs Clarification</div>
+                <div class="metric-value">{{ summary.needs_clarification }}</div>
+                <div class="metric-context">Pending review</div>
+            </div>
         </div>
-        <div class="summary-item">
-            <span class="summary-label">Total Contract Value</span>
-            <span class="summary-value">${{ summary.total_value|floatformat:2 }}</span>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="metric-card info" style="height: 85px;">
+                <div class="metric-label">Total Contract Value</div>
+                <div class="metric-value">${{ summary.total_value|floatformat:0 }}</div>
+                <div class="metric-context">Combined value</div>
+            </div>
         </div>
-        <div class="summary-item">
-            <span class="summary-label">Completed This Month</span>
-            <span class="summary-value text-success">{{ summary.completed_this_month }}</span>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="metric-card success" style="height: 85px;">
+                <div class="metric-label">Completed This Month</div>
+                <div class="metric-value">{{ summary.completed_this_month }}</div>
+                <div class="metric-context">Successfully processed</div>
+            </div>
         </div>
     </div>
 
@@ -193,17 +282,19 @@
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <span class="visually-hidden">Open actions</span>
-                                        <span aria-hidden="true" class="kebab">&#8942;</span>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-end">
-                                        <form method="post" action="{% url 'core:delete_contract' contract.id %}" onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
-                                            {% csrf_token %}
-                                            <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                        </form>
-                                    </div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'core:contract_detail' contract.id %}" class="btn btn-link btn-sm text-primary px-2">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </a>
+                                    <span class="text-muted mx-1">|</span>
+                                    <form method="post" action="{% url 'core:delete_contract' contract.id %}" 
+                                          onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});" 
+                                          style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-link btn-sm text-danger px-2">
+                                            <i class="bi bi-trash me-1"></i>Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
