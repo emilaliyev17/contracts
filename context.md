@@ -6056,4 +6056,70 @@ for contract in empty_names:
 
 ---
 
-**LAST UPDATED**: December 19, 2024 - 18:15 PST (Professional home template replacement and Django integration)
+## Navigation UX Improvements - Redundant Link Removal
+
+### Navigation Cleanup
+**Date**: December 19, 2024  
+**Action**: Removed redundant Home links from secondary page navigations to improve user experience
+
+#### Problem Identified
+- **Redundant Navigation**: Home links appeared on both contract_list.html and forecast.html pages
+- **UX Confusion**: Users had multiple paths to reach the same upload functionality
+- **Navigation Bloat**: Unnecessary links cluttered the navigation interface
+
+#### Solution Implemented
+**Files Modified**:
+1. `core/templates/core/contract_list.html` (line 33)
+2. `core/templates/core/forecast.html` (line 17)
+
+**Changes Made**:
+- **Removed**: `<a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors">Home</a>`
+- **Preserved**: All other navigation links and functionality
+- **Maintained**: Upload Contract button on contract_list.html for access to upload functionality
+
+#### Navigation Structure After Cleanup
+
+**Contract List Page Navigation**:
+- Contracts (current page - active state)
+- Forecast (hover state)
+- Admin (hover state)
+- Upload Contract (button-style link to home/upload page)
+
+**Forecast Page Navigation**:
+- Contracts (hover state)
+- Forecast (current page - active state)
+- Admin (hover state)
+
+#### User Experience Benefits
+- **Cleaner Interface**: Reduced navigation clutter and visual noise
+- **Logical Flow**: Users access upload functionality through Contracts → Upload Contract button
+- **Consistent Navigation**: Streamlined navigation across all pages
+- **No Functionality Lost**: All original functionality preserved through alternative paths
+
+#### Technical Implementation
+- **Minimal Changes**: Only removed specific redundant links
+- **Preserved Styling**: All remaining links maintain original CSS classes
+- **Maintained Structure**: HTML structure and responsive design unchanged
+- **No Breaking Changes**: All URL patterns and routing remain functional
+
+#### Design Principles Applied
+- **Progressive Disclosure**: Show only relevant navigation options
+- **Information Architecture**: Logical grouping of related functions
+- **User Mental Model**: Align navigation with user expectations
+- **Consistency**: Uniform navigation patterns across pages
+
+### Business Impact
+- **Improved Usability**: Cleaner navigation reduces cognitive load
+- **Better User Flow**: More intuitive path to upload functionality
+- **Professional Appearance**: Streamlined interface enhances credibility
+- **Reduced Confusion**: Fewer navigation options prevent user hesitation
+
+### Technical Benefits
+- **Maintainability**: Fewer navigation elements to manage
+- **Performance**: Slightly reduced DOM complexity
+- **Accessibility**: Cleaner navigation improves screen reader experience
+- **Consistency**: Standardized navigation patterns across templates
+
+---
+
+**LAST UPDATED**: December 19, 2024 - 19:30 PST (Navigation UX improvements and redundant link removal)
