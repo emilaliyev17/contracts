@@ -186,6 +186,25 @@
         </div>
         {% endfor %}
     </div>
+    {% if answered_count > 0 and contract.status == 'needs_clarification' %}
+    <div class="card-footer bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ answered_count }} clarification{{ answered_count|pluralize }} answered</strong>
+                {% if unanswered_count > 0 %}
+                <span class="text-muted ms-2">({{ unanswered_count }} still pending)</span>
+                {% endif %}
+            </div>
+            <form method="post" action="{% url 'core:apply_contract_clarifications' contract.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i>
+                    Apply {{ answered_count }} Answered Clarification{{ answered_count|pluralize }}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

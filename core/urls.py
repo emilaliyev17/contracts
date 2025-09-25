@@ -14,7 +14,6 @@ urlpatterns = [
     path('test-results/', views.test_results, name='test_results'),
     path('export-excel/', views.export_excel, name='export_excel'),
     path('check-contracts/', views.check_contracts, name='check_contracts'),
-    path('clarifications/', views.clarifications_list, name='clarifications'),
     path('clarifications/<int:clarification_id>/answer/', views.answer_clarification, name='answer_clarification'),
-    path('contracts/<int:contract_id>/apply-clarifications/', views.apply_contract_clarifications, name='apply_clarifications'),
+    path('contracts/<int:contract_id>/apply-clarifications/', views.apply_contract_clarifications, name='apply_contract_clarifications'),
 ]

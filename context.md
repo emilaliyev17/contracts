@@ -3519,4 +3519,221 @@ return redirect('core:contract_detail', contract_id=clarification.contract.id)
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 22:30 PDT (Back button navigation & clarification flow fixes)
+## Removed Standalone Clarifications Page
+
+**Date**: September 25, 2025 - 22:45 PDT
+**Change**: Removed old clarifications page in favor of integrated contract detail view
+**Status**: ✅ COMPLETED
+
+### Rationale
+With clarifications now fully integrated into the contract detail page, the standalone clarifications page became redundant. Removing it simplifies the codebase and improves user workflow by keeping all contract-related actions in one place.
+
+### Components Removed
+
+#### Navigation
+**File**: `core/templates/core/contract_list.html` (line 35)
+- Removed "Clarifications" link from main navigation header
+
+#### URL Patterns
+**File**: `core/urls.py` 
+- Removed: `path('clarifications/', views.clarifications_list, name='clarifications')`
+- Removed: `path('contracts/<int:contract_id>/apply-clarifications/', views.apply_contract_clarifications, name='apply_clarifications')`
+- **Kept**: `path('clarifications/<int:clarification_id>/answer/', views.answer_clarification, name='answer_clarification')` - Still used by contract detail forms
+
+#### View Functions
+**File**: `core/views.py`
+- Removed: `clarifications_list` function (lines 407-449) - Listed all pending clarifications
+- Removed: `apply_contract_clarifications` function (lines 517-562) - Manual apply functionality
+- **Kept**: `answer_clarification` function - Still needed for form submissions from contract detail page
+
+#### Template
+- **Deleted**: `core/templates/core/clarifications.html` - Entire standalone clarifications page
+
+### Preserved Functionality
+All clarification features remain available through the contract detail page:
+- ✅ View pending clarifications
+- ✅ Answer clarification questions
+- ✅ See answered clarifications
+- ✅ Auto-apply when all questions answered
+- ✅ Visual status indicators (pending/answered)
+- ✅ Context snippets and page references
+
+### Workflow Improvements
+#### Before:
+1. Navigate to Clarifications page
+2. Find contract with pending questions
+3. Answer questions
+4. Navigate to contract detail to verify
+
+#### After:
+1. Open contract detail page
+2. See and answer all clarifications in one place
+3. Immediately see results applied to contract
+
+### Benefits
+1. **Simplified Navigation**: One less page to maintain and navigate
+2. **Better Context**: Clarifications shown alongside contract data
+3. **Cleaner Codebase**: ~150 lines of code removed
+4. **Improved UX**: All contract actions in one location
+5. **Reduced Complexity**: No separate state management for clarifications page
+
+### Technical Notes
+- The `answer_clarification` endpoint remains functional for form submissions
+- Auto-apply logic in `answer_clarification` still triggers when all questions are answered
+- Contract status updates from 'needs_clarification' to 'completed' automatically
+- All existing clarification data and relationships preserved in database
+
+### Files Modified
+- `core/templates/core/contract_list.html` - Removed navigation link
+- `core/urls.py` - Removed 2 URL patterns
+- `core/views.py` - Removed 2 view functions (~95 lines)
+- **Deleted**: `core/templates/core/clarifications.html`
+
+---
+
+## Apply Answered Clarifications Button
+
+**Date**: September 25, 2025 - 23:00 PDT  
+**Feature**: Manual control for applying answered clarifications
+**Status**: ✅ IMPLEMENTED
+
+### Overview
+Added an "Apply Answered Clarifications" button to the contract detail page, giving users manual control over when to apply clarification answers to contracts. This allows incremental updates without waiting for all questions to be answered.
+
+### Implementation Details
+
+#### Enhanced Contract Detail View
+**File**: `core/views.py` (lines 94-121)
+- Added answered and unanswered clarification counts
+- Pass counts to template for display and conditional logic
+
+```python
+# Count answered clarifications for the Apply button
+answered_count = clarifications.filter(answered=True).count()
+unanswered_count = clarifications.filter(answered=False).count()
+
+context = {
+    'contract': contract,
+    'clarifications': clarifications,
+    'answered_count': answered_count,
+    'unanswered_count': unanswered_count,
+    # ... other context
+}
+```
+
+#### Apply Button UI
+**File**: `core/templates/core/contract_detail.html` (lines 189-207)
+- Added card footer with Apply button
+- Conditional display based on answered clarifications and contract status
+- Shows count of answered and pending clarifications
+
+```html
+{% if answered_count > 0 and contract.status == 'needs_clarification' %}
+<div class="card-footer bg-light">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ answered_count }} clarification{{ answered_count|pluralize }} answered</strong>
+            {% if unanswered_count > 0 %}
+            <span class="text-muted ms-2">({{ unanswered_count }} still pending)</span>
+            {% endif %}
+        </div>
+        <form method="post" action="{% url 'core:apply_contract_clarifications' contract.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i>
+                Apply {{ answered_count }} Answered Clarification{{ answered_count|pluralize }}
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+```
+
+#### Restored Apply Function
+**File**: `core/views.py` (lines 478-528)
+- Restored `apply_contract_clarifications` view with improvements
+- Supports partial application (some questions still pending)
+- Redirects to contract detail page instead of clarifications list
+
+```python
+@require_http_methods(["POST"])
+def apply_contract_clarifications(request, contract_id):
+    """Manually apply all answered clarifications to a contract."""
+    contract = get_object_or_404(Contract, id=contract_id)
+    answered_clarifs = contract.clarifications.filter(answered=True)
+    unanswered = contract.clarifications.filter(answered=False).count()
+    
+    # Apply clarifications
+    updates_made = contract.apply_clarifications()
+    
+    # Update status only if ALL clarifications are answered
+    if unanswered == 0 and contract.status == 'needs_clarification':
+        contract.status = 'completed'
+        contract.save()
+    
+    # Stay on contract detail page
+    return redirect('core:contract_detail', contract_id=contract.id)
+```
+
+#### URL Configuration
+**File**: `core/urls.py` (line 18)
+- Restored apply clarifications URL pattern
+- Maps to `/contracts/<id>/apply-clarifications/`
+
+### Key Features
+
+#### Button Visibility Logic
+- **Shows when**: 
+  - At least one clarification is answered
+  - Contract status is 'needs_clarification'
+- **Hides when**:
+  - No answered clarifications exist
+  - Contract is already completed
+
+#### Application Behavior
+1. **Partial Application**: Apply answered clarifications even with pending questions
+2. **Smart Status Update**: Only marks 'completed' when ALL clarifications answered
+3. **Clear Feedback**: Messages show what was updated and what's pending
+4. **Seamless Navigation**: Stays on contract detail page after applying
+
+### User Workflow
+
+#### Incremental Clarification Process
+1. **View Contract**: Open contract detail with pending clarifications
+2. **Answer Questions**: Answer clarifications at your own pace
+3. **Apply Incrementally**: Click Apply button to update contract with answered values
+4. **Continue Answering**: Keep working on remaining questions if any
+5. **Auto-Complete**: Status changes to 'completed' when all are done
+
+### Benefits
+- **Manual Control**: Users decide when to apply clarifications
+- **Incremental Progress**: Don't need to wait for all answers
+- **Visual Feedback**: See exact counts of answered vs pending
+- **Flexible Workflow**: Supports both partial and complete flows
+- **Improved Efficiency**: Apply what's ready without delays
+
+### Technical Improvements
+- **Query Optimization**: Efficient counting of clarification states
+- **Error Handling**: Graceful handling of edge cases
+- **Message Clarity**: Informative success and warning messages
+- **Code Reusability**: Leverages existing `apply_clarifications()` method
+
+### Files Modified
+- `core/views.py` - Enhanced contract_detail, restored apply_contract_clarifications
+- `core/templates/core/contract_detail.html` - Added Apply button with counts
+- `core/urls.py` - Restored apply clarifications URL pattern
+
+### Testing Validation
+- ✅ Button displays conditionally based on clarification state
+- ✅ Partial application works with pending questions
+- ✅ Status updates correctly when all answered
+- ✅ Redirect stays on contract detail page
+- ✅ Messages provide clear feedback
+- ✅ Django server runs without errors
+
+### Summary
+This enhancement provides users with granular control over the clarification application process. Instead of an all-or-nothing approach, users can now apply answered clarifications incrementally, improving workflow flexibility and reducing delays in contract processing.
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 23:00 PDT (Added Apply Answered Clarifications button)

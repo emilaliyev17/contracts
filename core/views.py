@@ -97,6 +97,10 @@ def contract_detail(request, contract_id):
     payment_milestones = contract.payment_milestones.all().order_by('due_date')
     clarifications = contract.clarifications.all().order_by('-created_at')  # ADD THIS
     
+    # Count answered clarifications for the Apply button
+    answered_count = clarifications.filter(answered=True).count()
+    unanswered_count = clarifications.filter(answered=False).count()
+    
     # Get and validate the 'next' parameter
     next_url = request.GET.get('next', '')
     if next_url:
@@ -110,6 +114,8 @@ def contract_detail(request, contract_id):
         'payment_milestones': payment_milestones,
         'payment_terms': getattr(contract, 'payment_terms', None),
         'clarifications': clarifications,  # ADD THIS
+        'answered_count': answered_count,
+        'unanswered_count': unanswered_count,
         'back_url': next_url,
     }
     return render(request, 'core/contract_detail.html', context)
@@ -404,51 +410,6 @@ def delete_contract(request, contract_id):
         return redirect('core:contract_list')
 
 
-def clarifications_list(request):
-    """List all clarification questions (pending and ready to apply)."""
-    # Get all clarifications with related contract info
-    all_clarifications = ContractClarification.objects.select_related('contract').order_by('-created_at')
-    
-    # Separate into pending and answered groups
-    contracts_with_pending = {}
-    contracts_ready_to_apply = {}
-    
-    # Get all contracts with clarifications
-    contracts_with_clarifs = set(all_clarifications.values_list('contract_id', flat=True))
-    
-    for contract_id in contracts_with_clarifs:
-        contract_clarifs = all_clarifications.filter(contract_id=contract_id)
-        contract = contract_clarifs.first().contract
-        
-        pending_clarifs = contract_clarifs.filter(answered=False)
-        answered_clarifs = contract_clarifs.filter(answered=True)
-        
-        if pending_clarifs.exists():
-            # Contract has pending clarifications
-            contracts_with_pending[contract_id] = {
-                'contract': contract,
-                'clarifications': list(pending_clarifs),
-                'answered_count': answered_clarifs.count(),
-                'total_count': contract_clarifs.count()
-            }
-        elif answered_clarifs.exists() and contract.status == 'needs_clarification':
-            # All clarifications answered but not yet applied
-            contracts_ready_to_apply[contract_id] = {
-                'contract': contract,
-                'clarifications': list(answered_clarifs),
-                'can_apply': True
-            }
-    
-    context = {
-        'contracts_with_pending': contracts_with_pending.values(),
-        'contracts_ready_to_apply': contracts_ready_to_apply.values(),
-        'total_pending': ContractClarification.objects.filter(answered=False).count(),
-        'total_ready': len(contracts_ready_to_apply)
-    }
-    
-    return render(request, 'core/clarifications.html', context)
-
-
 @require_http_methods(["POST"])
 def answer_clarification(request, clarification_id):
     """Save user's answer to a clarification question."""
@@ -520,23 +481,27 @@ def apply_contract_clarifications(request, contract_id):
     try:
         contract = get_object_or_404(Contract, id=contract_id)
         
-        # Check if all clarifications are answered
+        # Check if there are any answered clarifications to apply
+        answered_clarifs = contract.clarifications.filter(answered=True)
         unanswered = contract.clarifications.filter(answered=False).count()
         
-        if unanswered > 0:
+        if not answered_clarifs.exists():
             messages.warning(
                 request,
-                f'Cannot apply clarifications. {unanswered} question(s) still need answers.'
+                'No answered clarifications to apply.'
             )
-            return redirect('core:clarifications')
+            return redirect('core:contract_detail', contract_id=contract.id)
         
         # Apply clarifications
         updates_made = contract.apply_clarifications()
         
-        # Update status if needed
-        if contract.status == 'needs_clarification':
+        # Update status if all clarifications are answered
+        if unanswered == 0 and contract.status == 'needs_clarification':
             contract.status = 'completed'
             contract.save()
+            status_message = " Contract status updated to completed."
+        else:
+            status_message = f" {unanswered} clarification(s) still pending."
         
         if updates_made:
             updates_summary = ', '.join(updates_made[:5])  # Show first 5 updates
@@ -545,12 +510,12 @@ def apply_contract_clarifications(request, contract_id):
             
             messages.success(
                 request,
-                f'✅ Successfully applied clarifications to "{contract.contract_name}": {updates_summary}'
+                f'✅ Successfully applied clarifications: {updates_summary}.{status_message}'
             )
         else:
             messages.info(
                 request,
-                f'No updates needed for contract "{contract.contract_name}".'
+                f'No updates were made to the contract.{status_message}'
             )
         
         logger.info(f"Manually applied clarifications for contract {contract_id}")
@@ -559,4 +524,7 @@ def apply_contract_clarifications(request, contract_id):
         logger.error(f"Error applying clarifications for contract {contract_id}: {str(e)}")
         messages.error(request, f'Failed to apply clarifications: {str(e)}')
     
-    return redirect('core:clarifications')
+    # Stay on the contract detail page after applying
+    return redirect('core:contract_detail', contract_id=contract.id)
+
+
