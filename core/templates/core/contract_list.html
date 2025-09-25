@@ -3,39 +3,65 @@
 {% block title %}Contracts - Contract Analyzer{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>📋 Contract List</h2>
-    
-    <!-- Export Section -->
-    <div class="card mb-4">
+<div class="contracts-page">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="h4 mb-1">Contract Portfolio</h2>
+            <p class="text-muted mb-0">Monitor contract processing progress and clarify outstanding items.</p>
+        </div>
+    </div>
+
+    <div class="summary-stack card shadow-sm border-0 mb-4">
+        <div class="summary-item">
+            <span class="summary-label">Total Contracts</span>
+            <span class="summary-value">{{ summary.total_contracts }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Needs Clarification</span>
+            <span class="summary-value text-warning">{{ summary.needs_clarification }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Contract Value</span>
+            <span class="summary-value">${{ summary.total_value|floatformat:2 }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Completed This Month</span>
+            <span class="summary-value text-success">{{ summary.completed_this_month }}</span>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4 w-100">
         <div class="card-body">
-            <h4>📊 Export Contracts to Excel</h4>
-            <p>Export all contracts to Excel format for FP&A reporting.</p>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <h4 class="h6 mb-1">Export Contracts to Excel</h4>
+                    <p class="text-muted mb-0">Download the latest contract portfolio for FP&A reporting.</p>
+                </div>
+            </div>
             <div class="export-actions">
                 <a href="{% url 'core:export_excel' %}" class="btn btn-success export-btn">
-                    📈 Export All Contracts
+                    Export All Contracts
                 </a>
-                <button class="btn btn-secondary" id="filter-export-btn">
-                    🔍 Filter Export
+                <button class="btn btn-outline-secondary" id="filter-export-btn">
+                    Filter Export
                 </button>
             </div>
-            
-            <!-- Export Filters (hidden by default) -->
+
             <div id="export-filters" class="export-filters" style="display: none;">
-                <h5>Filter Export Options:</h5>
+                <h5 class="h6 mb-3">Filter Export Options</h5>
                 <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
                     <div class="filter-row">
                         <div class="filter-group">
-                            <label for="date_from">From Date:</label>
-                            <input type="date" id="date_from" name="date_from">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" id="date_from" name="date_from" class="form-control">
                         </div>
                         <div class="filter-group">
-                            <label for="date_to">To Date:</label>
-                            <input type="date" id="date_to" name="date_to">
+                            <label for="date_to" class="form-label">To Date</label>
+                            <input type="date" id="date_to" name="date_to" class="form-control">
                         </div>
                         <div class="filter-group">
-                            <label for="status">Status:</label>
-                            <select id="status" name="status">
+                            <label for="status" class="form-label">Status</label>
+                            <select id="status" name="status" class="form-select">
                                 <option value="">All Statuses</option>
                                 <option value="uploaded">Uploaded</option>
                                 <option value="processing">Processing</option>
@@ -46,13 +72,13 @@
                     </div>
                     <div class="filter-actions">
                         <button type="submit" class="btn btn-success">Export Filtered Results</button>
-                        <button type="button" class="btn btn-secondary" id="cancel-filter-btn">Cancel</button>
+                        <button type="button" class="btn btn-outline-secondary" id="cancel-filter-btn">Cancel</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -61,113 +87,246 @@
             </div>
         {% endfor %}
     {% endif %}
-    
-    {% if contracts %}
-        <div class="contract-stats">
-            <span class="stat-item">Total Contracts: {{ contracts.count }}</span>
+
+    <div class="card shadow-sm border-0 p-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <ul class="nav nav-pills contract-filters">
+            <li class="nav-item"><a class="nav-link {% if active_filter == 'all' %}active{% endif %}" href="{% url 'core:contract_list' %}">All</a></li>
+            <li class="nav-item"><a class="nav-link {% if active_filter == 'needs_review' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=needs_review">Needs Review</a></li>
+            <li class="nav-item"><a class="nav-link {% if active_filter == 'completed' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=completed">Completed</a></li>
+            <li class="nav-item"><a class="nav-link {% if active_filter == 'processing' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=processing">Processing</a></li>
+        </ul>
+            <span class="text-muted small">Showing {{ contracts|length }} of {{ summary.total_contracts }} contracts</span>
         </div>
-        
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Contract Name</th>
-                    <th>Contract Number</th>
-                    <th>Client</th>
-                    <th>Total Value</th>
-                    <th>Status</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for contract in contracts %}
-                <tr>
-                    <td style="padding: 12px;">{{ contract.id }}</td>
-                    <td style="padding: 12px;">
-                        <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
-                            {{ contract.contract_name|truncatechars:40 }}
-                        </a>
-                    </td>
-                    <td style="padding: 12px;">{{ contract.contract_number|truncatechars:20 }}</td>
-                    <td style="padding: 12px;">{{ contract.client_name|truncatechars:25 }}</td>
-                    <td style="padding: 12px;">
-                        {% if contract.total_value %}
-                            ${{ contract.total_value|floatformat:2 }} {{ contract.currency }}
-                        {% else %}
-                            <span class="text-muted">N/A</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 12px;">
-                        {% if contract.status == 'processing' %}
-                            <span class="badge badge-warning">
-                                {{ contract.status|title }}
-                            </span>
-                        {% elif contract.status == 'needs_clarification' %}
-                            <span class="badge badge-info">
-                                Needs Clarification
-                            </span>
-                        {% elif contract.status == 'completed' %}
-                            <span class="badge badge-success">
-                                {{ contract.status|title }}
-                            </span>
-                        {% else %}
-                            <span class="status-badge status-{{ contract.status }}">
-                                {{ contract.status|title }}
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 12px;">
-                        {% if contract.start_date %}
-                            {{ contract.start_date|date:"M d, Y" }}
-                        {% else %}
-                            <span class="text-muted">N/A</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 12px;">
-                        {% if contract.end_date %}
-                            {{ contract.end_date|date:"M d, Y" }}
-                        {% else %}
-                            <span class="text-muted">Ongoing</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: 12px;">
-                        <form method="post" action="{% url 'core:delete_contract' contract.id %}" 
-                              style="display:inline;" 
-                              onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm delete-btn" 
-                                    title="Delete contract {{ contract.contract_name }}">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    </div>
+
+    {% if contracts %}
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table contract-table mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Contract Name</th>
+                            <th scope="col">Contract Number</th>
+                            <th scope="col">Client</th>
+                            <th scope="col">Total Value</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Start Date</th>
+                            <th scope="col">End Date</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr>
+                            <td>{{ contract.id }}</td>
+                            <td>
+                                <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
+                                    {{ contract.contract_name|truncatechars:40 }}
+                                </a>
+                            </td>
+                            <td>{{ contract.contract_number|truncatechars:20 }}</td>
+                            <td>{{ contract.client_name|truncatechars:25 }}</td>
+                            <td>
+                                {% if contract.total_value %}
+                                    ${{ contract.total_value|floatformat:2 }} {{ contract.currency }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.status == 'needs_clarification' %}
+                                    <span class="status-chip text-warning">
+                                        <span class="status-dot bg-warning"></span>
+                                        <span class="ms-2">Needs Clarification</span>
+                                    </span>
+                                {% elif contract.status == 'completed' %}
+                                    <span class="status-chip text-success">
+                                        <span class="status-icon status-icon-check" aria-hidden="true">
+                                            <svg viewBox="0 0 16 16" focusable="false"><path d="M6.558 11.442a.75.75 0 0 1-1.061 0L3.22 9.165a.75.75 0 0 1 1.06-1.06L6 9.826l5.72-5.72a.75.75 0 0 1 1.06 1.06z" fill="currentColor"/></svg>
+                                        </span>
+                                        <span class="ms-2">Completed</span>
+                                    </span>
+                                {% elif contract.status == 'processing' %}
+                                    <span class="status-chip text-primary">
+                                        <span class="status-dot bg-primary"></span>
+                                        <span class="ms-2">Processing</span>
+                                    </span>
+                                {% elif contract.status == 'uploaded' %}
+                                    <span class="status-chip text-secondary">
+                                        <span class="status-dot bg-secondary"></span>
+                                        <span class="ms-2">Uploaded</span>
+                                    </span>
+                                {% elif contract.status == 'error' %}
+                                    <span class="status-chip text-danger">
+                                        <span class="status-dot bg-danger"></span>
+                                        <span class="ms-2">Error</span>
+                                    </span>
+                                {% else %}
+                                    <span class="status-chip text-muted">
+                                        <span class="status-dot status-dot-neutral"></span>
+                                        <span class="ms-2">{{ contract.status|title }}</span>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.start_date %}
+                                    {{ contract.start_date|date:"M d, Y" }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.end_date %}
+                                    {{ contract.end_date|date:"M d, Y" }}
+                                {% else %}
+                                    <span class="text-muted">Ongoing</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Open actions</span>
+                                        <span aria-hidden="true" class="kebab">&#8942;</span>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-end">
+                                        <form method="post" action="{% url 'core:delete_contract' contract.id %}" onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-icon">📄</div>
-            <h3>No Contracts Found</h3>
-            <p>There are no contracts in the system yet.</p>
-            <a href="{% url 'core:home' %}" class="btn btn-primary">Upload Your First Contract</a>
+        <div class="card shadow-sm border-0 empty-state">
+            <div class="card-body text-center py-5">
+                {% if summary.total_contracts %}
+                    <h3 class="h5 mb-2">No contracts match this filter</h3>
+                    <p class="text-muted mb-4">Try selecting a different tab or clear the current filter to view more contracts.</p>
+                    <a href="{% url 'core:contract_list' %}" class="btn btn-outline-primary btn-sm">Clear Filter</a>
+                {% else %}
+                    <h3 class="h5 mb-2">No Contracts Found</h3>
+                    <p class="text-muted mb-4">Upload a contract to start tracking agreements in this workspace.</p>
+                    <a href="{% url 'core:home' %}" class="btn btn-primary">Upload Your First Contract</a>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 </div>
 
 <style>
-.contract-stats {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: #f8f9fa;
-    border-radius: 0.375rem;
+.contracts-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.stat-item {
+
+.summary-stack {
+    width: 100%;
+    border-radius: 0.9rem;
+    overflow: hidden;
+    padding: 0;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1.5rem;
+    border-bottom: 1px solid #edf0f6;
+    transition: background-color 0.18s ease;
+}
+
+.summary-item:hover {
+    background-color: #f7f9fe;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.export-btn {
+    padding: 0.6rem 1.5rem;
+}
+
+.export-filters {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-group {
+    flex: 1 1 220px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.nav.contract-filters {
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding: 0;
+    background: transparent;
+    list-style: none;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.contract-filters .nav-link {
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    color: #6c757d;
     font-weight: 500;
-    color: #495057;
+}
+
+.contract-filters .nav-link.active {
+    background-color: #0d6efd;
+    color: #fff;
+    box-shadow: 0 0.25rem 0.75rem rgba(13, 110, 253, 0.15);
+}
+
+.contract-filters .nav-link:not(.active):hover {
+    background-color: rgba(13, 110, 253, 0.08);
+    color: #0d6efd;
 }
 
 .contract-link {
@@ -181,153 +340,111 @@
     text-decoration: underline;
 }
 
-.status-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
+.contract-table {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.contract-table thead th {
     font-size: 0.75rem;
-    font-weight: 500;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    background-color: #f5f7fb;
+    border: 0;
+    border-bottom: 1px solid #e3e7ef;
+    padding: 0.75rem 1rem;
 }
 
-.status-completed {
-    background-color: #d1e7dd;
-    color: #0f5132;
+.contract-table tbody td {
+    padding: 1rem;
+    border-top: 0;
+    border-bottom: 1px solid #eef1f6;
+    vertical-align: middle;
+    color: #343a40;
+    font-size: 0.95rem;
 }
 
-.status-processing {
-    background-color: #fff3cd;
-    color: #664d03;
+.contract-table tbody tr:last-child td {
+    border-bottom: 0;
 }
 
-.status-failed {
-    background-color: #f8d7da;
-    color: #842029;
+.contract-table tbody tr:hover {
+    background-color: #f8f9fc;
 }
 
-.status-uploaded {
-    background-color: #d1ecf1;
-    color: #055160;
-}
-
-.status-needs_clarification {
-    background-color: #e7f3ff;
-    color: #0066cc;
+.status-chip {
+    display: inline-flex;
+    align-items: center;
     font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
 }
 
-/* Bootstrap Badge Classes */
-.badge {
+.status-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
     display: inline-block;
-    padding: 0.25em 0.4em;
-    font-size: 75%;
-    font-weight: 700;
+}
+
+.status-dot-neutral {
+    background-color: #ced4da;
+}
+
+.status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.status-icon svg {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.dropdown .kebab {
+    font-size: 1.25rem;
     line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.25rem;
-}
-
-.badge-warning {
-    color: #212529;
-    background-color: #ffc107;
-}
-
-.badge-info {
-    color: #fff;
-    background-color: #17a2b8;
-}
-
-.badge-success {
-    color: #fff;
-    background-color: #28a745;
-}
-
-.delete-btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    transition: all 0.2s ease;
-}
-
-.delete-btn:hover {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    transform: translateY(-1px);
-    box-shadow: 0 0.125rem 0.25rem rgba(220, 53, 69, 0.3);
 }
 
 .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
+    border-radius: 0.9rem;
 }
 
-.empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+.empty-state .card-body {
+    max-width: 420px;
+    margin: 0 auto;
 }
 
-.alert {
-    border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-}
+@media (max-width: 576px) {
+    .summary-card .card-body {
+        padding: 1.25rem;
+    }
 
-.text-muted {
-    color: #6c757d !important;
-}
+    .contract-table thead {
+        display: none;
+    }
 
-/* Export Section Styles */
-.export-actions {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
+    .contract-table tbody td {
+        display: block;
+        padding: 0.75rem 0.5rem;
+        border-bottom: none;
+    }
 
-.export-btn {
-    font-size: 1.1rem;
-    padding: 0.75rem 1.5rem;
-}
+    .contract-table tbody tr {
+        border-bottom: 1px solid #eef1f6;
+        padding: 0.5rem 0;
+    }
 
-.export-filters {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-}
-
-.filter-row {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.filter-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.filter-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #495057;
-}
-
-.filter-group input,
-.filter-group select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-.filter-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
+    .contract-table tbody td:last-child {
+        padding-bottom: 1rem;
+    }
 }
 </style>
 
@@ -336,7 +453,7 @@ function confirmDelete(contractName, contractId) {
     const message = `Are you sure you want to delete this contract?\n\n` +
                    `Contract: "${contractName}"\n` +
                    `ID: ${contractId}\n\n` +
-                   `⚠️ WARNING: This action cannot be undone!\n` +
+                   `WARNING: This action cannot be undone.\n` +
                    `This will permanently delete all contract data and payment milestones.`;
     
     return confirm(message);

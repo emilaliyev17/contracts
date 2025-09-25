@@ -18,6 +18,8 @@ from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarificat
 from .services.contract_processor import ContractProcessor, ContractProcessingError
 from .services.excel_exporter import ExcelExporter
 from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +35,58 @@ def home(request):
     return render(request, 'core/home.html', context)
 
 
+def _get_contract_summary():
+    """Aggregate contract summary metrics for dashboards and APIs."""
+    contracts_queryset = Contract.objects.all()
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+
+    return {
+        'total_contracts': contracts_queryset.count(),
+        'needs_clarification': contracts_queryset.filter(status='needs_clarification').count(),
+        'total_value': contracts_queryset.aggregate(total=Sum('total_value'))['total'] or 0,
+        'completed_this_month': contracts_queryset.filter(
+            status='completed',
+            last_modified__date__gte=month_start,
+            last_modified__date__lte=today
+        ).count(),
+    }
+
+
 def contract_list(request):
     """List all contracts."""
-    contracts = Contract.objects.all()
+    contracts_queryset = Contract.objects.all()
+
+    status_filter = request.GET.get('status', 'all')
+    status_map = {
+        'needs_review': 'needs_clarification',
+        'completed': 'completed',
+        'processing': 'processing',
+    }
+
+    if status_filter in status_map:
+        contracts = contracts_queryset.filter(status=status_map[status_filter])
+    else:
+        contracts = contracts_queryset
+        status_filter = 'all'
+
+    summary = _get_contract_summary()
+
     context = {
         'contracts': contracts,
+        'summary': summary,
+        'active_filter': status_filter,
     }
     return render(request, 'core/contract_list.html', context)
+
+
+def contract_metrics(request):
+    """Return contract summary metrics as JSON."""
+    summary = _get_contract_summary()
+    response = summary.copy()
+    total_value = response.get('total_value') or 0
+    response['total_value'] = float(total_value)
+    return JsonResponse(response)
 
 
 def contract_detail(request, contract_id):

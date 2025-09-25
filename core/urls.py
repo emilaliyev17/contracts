@@ -5,6 +5,7 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('api/metrics/', views.contract_metrics, name='contract_metrics'),
     path('contracts/', views.contract_list, name='contract_list'),
     path('contracts/<int:contract_id>/', views.contract_detail, name='contract_detail'),
     path('contract/<int:contract_id>/delete/', views.delete_contract, name='delete_contract'),
