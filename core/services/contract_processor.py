@@ -477,7 +477,7 @@ class ContractProcessor:
                 
                 # Generate unique contract number if not provided
                 if not contract_data.get('contract_number'):
-                    contract_data['contract_number'] = f"TEST-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{hash(pdf_file.name) % 10000:04d}"
+                    contract_data['contract_number'] = f"X-{datetime.now().strftime('%m%d')}-{hash(pdf_file.name) % 100000:05d}"
                 
                 # Convert Decimal objects to float for JSON serialization
                 serializable_extraction = self._make_serializable(extraction_result)
@@ -607,7 +607,7 @@ class ContractProcessor:
         from datetime import datetime
         
         # Generate unique contract number
-        contract_number = f"TEMP-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{hash(pdf_file.name) % 10000:04d}"
+        contract_number = f"T-{datetime.now().strftime('%m%d')}-{hash(pdf_file.name) % 100000:05d}"
         
         contract = Contract.objects.create(
             contract_name=f"Processing: {pdf_file.name}",

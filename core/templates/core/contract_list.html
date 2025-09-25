@@ -29,11 +29,14 @@
       <!-- Main Navigation -->
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-4xl font-bold">Contract Portfolio</h1>
-        <nav class="flex space-x-6">
+        <nav class="flex flex-wrap gap-4">
           <a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors">Home</a>
           <a href="{% url 'core:contract_list' %}" class="text-white font-medium">Contracts</a>
           <a href="{% url 'core:forecast' %}" class="text-white/80 hover:text-white transition-colors">Forecast</a>
           <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
+          <a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors px-4 py-2 bg-white/10 rounded-md hover:bg-white/20">
+            Upload Contract
+          </a>
         </nav>
       </div>
       
@@ -171,61 +174,44 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>
-    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
-        <div>
-            <h2 class="h4 mb-1">Contract Portfolio</h2>
-            <p class="text-muted mb-0">Monitor contract processing progress and clarify outstanding items.</p>
-        </div>
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-white rounded shadow-sm">
+        <span class="text-muted">Export Contracts to Excel:</span>
+        <a href="{% url 'core:export_excel' %}" class="btn btn-success btn-sm">
+            Export All Contracts
+        </a>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="filter-export-btn">
+            Filter Export
+        </button>
     </div>
 
-
-    <div class="card shadow-sm border-0 mb-4 w-100">
-        <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                <div>
-                    <h4 class="h6 mb-1">Export Contracts to Excel</h4>
-                    <p class="text-muted mb-0">Download the latest contract portfolio for FP&A reporting.</p>
+    <div id="export-filters" class="export-filters" style="display: none;">
+        <h5 class="h6 mb-3">Filter Export Options</h5>
+        <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" id="date_from" name="date_from" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" id="date_to" name="date_to" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="uploaded">Uploaded</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                        <option value="error">Error</option>
+                    </select>
                 </div>
             </div>
-            <div class="export-actions">
-                <a href="{% url 'core:export_excel' %}" class="btn btn-success export-btn">
-                    Export All Contracts
-                </a>
-                <button class="btn btn-outline-secondary" id="filter-export-btn">
-                    Filter Export
-                </button>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-success">Export Filtered Results</button>
+                <button type="button" class="btn btn-outline-secondary" id="cancel-filter-btn">Cancel</button>
             </div>
-
-            <div id="export-filters" class="export-filters" style="display: none;">
-                <h5 class="h6 mb-3">Filter Export Options</h5>
-                <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label for="date_from" class="form-label">From Date</label>
-                            <input type="date" id="date_from" name="date_from" class="form-control">
-                        </div>
-                        <div class="filter-group">
-                            <label for="date_to" class="form-label">To Date</label>
-                            <input type="date" id="date_to" name="date_to" class="form-control">
-                        </div>
-                        <div class="filter-group">
-                            <label for="status" class="form-label">Status</label>
-                            <select id="status" name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                <option value="uploaded">Uploaded</option>
-                                <option value="processing">Processing</option>
-                                <option value="completed">Completed</option>
-                                <option value="error">Error</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="filter-actions">
-                        <button type="submit" class="btn btn-success">Export Filtered Results</button>
-                        <button type="button" class="btn btn-outline-secondary" id="cancel-filter-btn">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        </form>
     </div>
 
     {% if messages %}

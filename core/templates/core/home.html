@@ -3,6 +3,21 @@
 {% block title %}Home - Contract Analyzer{% endblock %}
 
 {% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Upload Contract</h1>
+        <p class="text-gray-600">Upload a PDF contract to automatically extract payment information</p>
+    </div>
+    <nav class="flex gap-3">
+        <a href="{% url 'core:home' %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">
+            Home
+        </a>
+        <a href="{% url 'core:contract_list' %}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+            Contracts
+        </a>
+    </nav>
+</div>
+
 <div class="stats">
     <div class="stat-card">
         <div class="stat-number">{{ total_contracts }}</div>
