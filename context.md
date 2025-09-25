@@ -3244,4 +3244,120 @@ ${{ summary.total_value|floatformat:0|slice:":3"|intcomma }}M
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - Current session (navigation and formatting improvements)
+## AI Clarifications Integration - Contract Detail Page
+
+**Date**: September 25, 2025 - 21:50 PDT
+**Feature**: Direct integration of AI clarifications into contract detail view
+**Status**: ✅ IMPLEMENTED
+
+### Overview
+Integrated AI-generated clarification requests directly into the contract detail page, eliminating the need for users to navigate to a separate clarifications page to view and answer questions about individual contracts.
+
+### Implementation Details
+
+#### Backend Changes
+**File**: `core/views.py` (lines 92-104)
+- Modified `contract_detail` view to fetch related clarifications
+- Added ordering by creation date (most recent first)
+- Included clarifications in template context
+
+```python
+def contract_detail(request, contract_id):
+    contract = get_object_or_404(Contract, id=contract_id)
+    payment_milestones = contract.payment_milestones.all().order_by('due_date')
+    clarifications = contract.clarifications.all().order_by('-created_at')
+    
+    context = {
+        'contract': contract,
+        'payment_milestones': payment_milestones,
+        'payment_terms': getattr(contract, 'payment_terms', None),
+        'clarifications': clarifications,
+    }
+```
+
+#### Template Enhancement
+**File**: `core/templates/core/contract_detail.html` (lines 140-186)
+- Added dedicated clarifications section after Payment Milestones
+- Implemented responsive card-based layout with Bootstrap styling
+- Color-coded visual indicators (yellow for pending, green for answered)
+
+### Key Features
+
+#### Visual Design
+- **Warning Header**: Eye-catching header with exclamation triangle icon
+- **Color Coding**: 
+  - Yellow background for pending clarifications
+  - Green background for answered clarifications
+- **Status Badges**: Clear "Pending" or "Answered" labels
+- **Responsive Layout**: Bootstrap flex layout for optimal display
+
+#### Functionality
+- **Inline Answering**: Direct form submission without page navigation
+- **Context Display**: Shows relevant text snippets and page numbers
+- **Field Names**: Displays in uppercase for consistency
+- **Truncated Context**: Limits context snippets to 200 characters
+
+#### User Experience
+- **Seamless Integration**: Clarifications appear directly on contract details
+- **Quick Actions**: Answer clarifications without leaving the page
+- **Visual Hierarchy**: Clear distinction between different clarification states
+- **Contextual Information**: Helps users understand what AI is asking about
+
+### Template Structure
+```html
+{% if clarifications %}
+<div class="card mt-4">
+    <div class="card-header bg-warning bg-opacity-10">
+        <h3>AI Analysis - Clarifications Needed</h3>
+    </div>
+    <div class="card-body">
+        {% for clarification in clarifications %}
+        <!-- Color-coded cards based on status -->
+        <!-- Field name, AI question, context snippet -->
+        <!-- Inline answer form for pending items -->
+        <!-- Status badges -->
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+```
+
+### Technical Improvements
+- **Query Optimization**: Added `.order_by()` for consistent display order
+- **Template Safety**: Used proven `|upper` filter for field names
+- **Bootstrap Integration**: Leverages existing Bootstrap classes
+- **Form Security**: Includes CSRF token for secure submissions
+
+### Files Modified
+- `core/views.py` - Added clarifications to contract_detail view
+- `core/templates/core/contract_detail.html` - Added clarifications section
+
+### Testing Validation
+- ✅ **Data Loading**: Clarifications properly fetched and displayed
+- ✅ **Visual Rendering**: Color coding and badges work correctly
+- ✅ **Form Submission**: Inline answering functionality operational
+- ✅ **Template Filters**: Fixed filter issue with proven `|upper` solution
+- ✅ **Responsive Design**: Layout adapts to different screen sizes
+
+### Benefits
+1. **Improved Workflow**: Users can review and answer clarifications in context
+2. **Reduced Navigation**: No need to switch between pages
+3. **Better Context**: See clarifications alongside contract details
+4. **Faster Resolution**: Quick inline answers speed up the process
+5. **Visual Clarity**: Color coding makes status immediately apparent
+
+### Preserved Functionality
+- ✅ Separate clarifications page remains intact
+- ✅ Bulk clarification management still available
+- ✅ All existing answer_clarification endpoints functional
+- ✅ No breaking changes to existing features
+
+### Future Considerations
+- Add AJAX submission for seamless updates without page refresh
+- Implement real-time notifications for new clarifications
+- Add bulk answer capabilities directly from detail page
+- Consider pagination for contracts with many clarifications
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 21:50 PDT (AI clarifications integration)

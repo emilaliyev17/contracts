@@ -136,4 +136,51 @@
     <p>No payment milestones found for this contract.</p>
 {% endif %}
 </div>
+
+{% if clarifications %}
+<div class="card mt-4">
+    <div class="card-header bg-warning bg-opacity-10">
+        <h3 class="mb-0">
+            <i class="bi bi-exclamation-triangle text-warning"></i>
+            AI Analysis - Clarifications Needed
+        </h3>
+    </div>
+    <div class="card-body">
+        {% for clarification in clarifications %}
+        <div class="mb-3 p-3 border rounded {% if clarification.answered %}bg-success bg-opacity-10{% else %}bg-warning bg-opacity-10{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h5 class="mb-2">{{ clarification.field_name|upper }}</h5>
+                    <p class="mb-2"><strong>AI Question:</strong> {{ clarification.ai_question }}</p>
+                    {% if clarification.context_snippet %}
+                    <p class="text-muted small mb-2">
+                        <strong>Context:</strong> "{{ clarification.context_snippet|truncatechars:200 }}"
+                        {% if clarification.page_number %}(Page {{ clarification.page_number }}){% endif %}
+                    </p>
+                    {% endif %}
+                    {% if clarification.answered %}
+                    <p class="mb-0"><strong>Answer:</strong> {{ clarification.user_answer }}</p>
+                    {% else %}
+                    <form method="post" action="{% url 'core:answer_clarification' clarification.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="answer" class="form-control" placeholder="Enter answer..." required>
+                            <button type="submit" class="btn btn-primary">Submit Answer</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="ms-3">
+                    {% if clarification.answered %}
+                    <span class="badge bg-success">Answered</span>
+                    {% else %}
+                    <span class="badge bg-warning">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

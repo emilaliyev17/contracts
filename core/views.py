@@ -92,12 +92,14 @@ def contract_metrics(request):
 def contract_detail(request, contract_id):
     """Detail view for a specific contract."""
     contract = get_object_or_404(Contract, id=contract_id)
-    payment_milestones = contract.payment_milestones.all()
+    payment_milestones = contract.payment_milestones.all().order_by('due_date')
+    clarifications = contract.clarifications.all().order_by('-created_at')  # ADD THIS
     
     context = {
         'contract': contract,
         'payment_milestones': payment_milestones,
         'payment_terms': getattr(contract, 'payment_terms', None),
+        'clarifications': clarifications,  # ADD THIS
     }
     return render(request, 'core/contract_detail.html', context)
 
