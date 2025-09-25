@@ -191,6 +191,33 @@
             {% endfor %}
         </tbody>
     </table>
+    
+    <div class="mt-3">
+        <button id="add-invoice-btn" class="btn btn-primary">+ Add Invoice</button>
+    </div>
+
+    <div id="new-invoice-form" style="display: none;" class="mt-3 p-3 border rounded">
+        <h5>New Invoice</h5>
+        <div class="row">
+            <div class="col-md-3">
+                <label>Invoice Name</label>
+                <input type="text" id="new-invoice-name" class="form-control" placeholder="Invoice #4">
+            </div>
+            <div class="col-md-3">
+                <label>Due Date</label>
+                <input type="date" id="new-invoice-date" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label>Amount (USD)</label>
+                <input type="number" id="new-invoice-amount" class="form-control" step="0.01">
+            </div>
+            <div class="col-md-3">
+                <label>&nbsp;</label><br>
+                <button id="save-new-invoice" class="btn btn-success">Save</button>
+                <button id="cancel-new-invoice" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 {% else %}
     <p>No payment milestones found for this contract.</p>
 {% endif %}
@@ -404,6 +431,49 @@ document.getElementById('save-type-btn').addEventListener('click', function() {
     .then(data => {
         if(data.success) {
             location.reload();
+        }
+    });
+});
+
+// Add Invoice functionality
+document.getElementById('add-invoice-btn').addEventListener('click', function() {
+    document.getElementById('new-invoice-form').style.display = 'block';
+    this.style.display = 'none';
+});
+
+document.getElementById('cancel-new-invoice').addEventListener('click', function() {
+    document.getElementById('new-invoice-form').style.display = 'none';
+    document.getElementById('add-invoice-btn').style.display = 'block';
+});
+
+document.getElementById('save-new-invoice').addEventListener('click', function() {
+    const name = document.getElementById('new-invoice-name').value;
+    const date = document.getElementById('new-invoice-date').value;
+    const amount = document.getElementById('new-invoice-amount').value;
+    
+    if (!name || !date || !amount) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    fetch("{% url 'core:add_milestone' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            milestone_name: name,
+            due_date: date,
+            amount: amount
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert('Error creating invoice');
         }
     });
 });

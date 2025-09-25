@@ -916,3 +916,19 @@ def update_milestone(request, contract_id):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@require_http_methods(["POST"])
+def add_milestone(request, contract_id):
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    milestone = PaymentMilestone.objects.create(
+        contract=contract,
+        milestone_name=data.get('milestone_name'),
+        due_date=data.get('due_date'),
+        amount=data.get('amount'),
+        status='pending'
+    )
+    
+    return JsonResponse({'success': True, 'id': milestone.id})
