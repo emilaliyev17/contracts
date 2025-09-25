@@ -4,6 +4,19 @@ from django.utils import timezone
 from decimal import Decimal
 
 
+class ContractType(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
 class Contract(models.Model):
     """Model representing a contract document with payment information."""
     
@@ -57,6 +70,14 @@ class Contract(models.Model):
         null=True,
         blank=True,
         help_text="Budget allocated for this PO in USD"
+    )
+    
+    contract_type = models.ForeignKey(
+        'ContractType',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='contracts'
     )
     
     start_date = models.DateField(null=True, blank=True, help_text="Contract start date")

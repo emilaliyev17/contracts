@@ -56,6 +56,23 @@
                     </td>
                 </tr>
                 <tr>
+                    <th>Contract Type:</th>
+                    <td>
+                        <span id="contract-type-display">{{ contract.contract_type.name|default:"Not set" }}</span>
+                        <select id="contract-type-select" class="form-control" style="display: none; width: 200px;">
+                            <option value="">-- Not set --</option>
+                            {% for ctype in contract_types %}
+                            <option value="{{ ctype.id }}" {% if contract.contract_type.id == ctype.id %}selected{% endif %}>
+                                {{ ctype.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button id="edit-type-btn" class="btn btn-sm btn-outline-primary ms-2">Edit</button>
+                        <button id="save-type-btn" class="btn btn-sm btn-success ms-2" style="display: none;">Save</button>
+                        <button id="cancel-type-btn" class="btn btn-sm btn-secondary ms-1" style="display: none;">Cancel</button>
+                    </td>
+                </tr>
+                <tr>
                     <td><strong>Status:</strong></td>
                     <td><span class="status {{ contract.status }}">{{ contract.get_status_display }}</span></td>
                 </tr>
@@ -353,6 +370,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Error updating milestone');
             });
         });
+    });
+});
+</script>
+
+<script>
+document.getElementById('edit-type-btn').addEventListener('click', function() {
+    document.getElementById('contract-type-display').style.display = 'none';
+    document.getElementById('contract-type-select').style.display = 'inline-block';
+    this.style.display = 'none';
+    document.getElementById('save-type-btn').style.display = 'inline-block';
+    document.getElementById('cancel-type-btn').style.display = 'inline-block';
+});
+
+document.getElementById('cancel-type-btn').addEventListener('click', function() {
+    location.reload();
+});
+
+document.getElementById('save-type-btn').addEventListener('click', function() {
+    const contractType = document.getElementById('contract-type-select').value;
+    
+    fetch("{% url 'core:update_contract_type' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            contract_type: contractType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        }
     });
 });
 </script>

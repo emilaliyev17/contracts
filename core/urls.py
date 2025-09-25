@@ -11,6 +11,7 @@ urlpatterns = [
     path('contracts/', views.contract_list, name='contract_list'),
     path('contracts/<int:contract_id>/', views.contract_detail, name='contract_detail'),
     path('contracts/<int:contract_id>/update-po/', views.update_po_info, name='update_po_info'),
+    path('contracts/<int:contract_id>/update-type/', views.update_contract_type, name='update_contract_type'),
     path('contracts/<int:contract_id>/update-milestone/', views.update_milestone, name='update_milestone'),
     path('contract/<int:contract_id>/delete/', views.delete_contract, name='delete_contract'),
     path('upload/', views.upload_contract, name='upload_contract'),

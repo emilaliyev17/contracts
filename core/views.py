@@ -16,7 +16,7 @@ import os
 import tempfile
 from datetime import datetime, date, timedelta
 
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType
 from .services.contract_processor import ContractProcessor, ContractProcessingError
 from .services.excel_exporter import ExcelExporter
 from django.db import models
@@ -117,6 +117,7 @@ def contract_detail(request, contract_id):
         'answered_count': answered_count,
         'unanswered_count': unanswered_count,
         'back_url': next_url,
+        'contract_types': ContractType.objects.filter(is_active=True),
     }
     return render(request, 'core/contract_detail.html', context)
 
@@ -849,6 +850,28 @@ def update_po_info(request, contract_id):
     contract.po_budget = data.get('po_budget') or None
     contract.save()
     
+    return JsonResponse({'success': True})
+
+
+@require_http_methods(["POST"])
+def update_contract_type(request, contract_id):
+    """Update the contract type selection via AJAX."""
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+
+    contract_type_id = data.get('contract_type')
+
+    if contract_type_id:
+        try:
+            contract_type = ContractType.objects.get(id=contract_type_id, is_active=True)
+            contract.contract_type = contract_type
+        except ContractType.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Invalid contract type'}, status=400)
+    else:
+        contract.contract_type = None
+
+    contract.save(update_fields=['contract_type'])
+
     return JsonResponse({'success': True})
 
 

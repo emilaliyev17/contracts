@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType
+
+
+@admin.register(ContractType)
+class ContractTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'description', 'is_active', 'created_at']
+    list_filter = ['is_active']
+    search_fields = ['name']
 
 
 @admin.register(Contract)
@@ -12,6 +19,7 @@ class ContractAdmin(admin.ModelAdmin):
         'currency', 
         'po_number',
         'po_budget',
+        'contract_type',
         'status',
         'extraction_method',
         'confidence_score',
