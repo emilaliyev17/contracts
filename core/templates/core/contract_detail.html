@@ -121,7 +121,7 @@
 
 {% if payment_milestones %}
 <div class="card">
-    <h3>Payment Milestones</h3>
+    <h3>Invoice Milestones</h3>
     
     <table class="table">
         <thead>
@@ -132,28 +132,44 @@
                 <th>Percentage</th>
                 <th>Status</th>
                 <th>Payment Reference</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for milestone in payment_milestones %}
-            <tr>
+            <tr data-milestone-id="{{ milestone.id }}">
                 <td>
-                    <strong>{{ milestone.milestone_name }}</strong>
-                    {% if milestone.milestone_description %}
-                    <br><small>{{ milestone.milestone_description }}</small>
-                    {% endif %}
+                    <span class="milestone-name-display">
+                        <strong>{{ milestone.milestone_name }}</strong>
+                        {% if milestone.milestone_description %}
+                        <br><small>{{ milestone.milestone_description }}</small>
+                        {% endif %}
+                    </span>
+                    <input type="text" class="form-control milestone-name-input" value="{{ milestone.milestone_name }}" style="display: none; width: 150px;">
                 </td>
-                <td>{{ milestone.due_date }}</td>
-                <td>{{ milestone.amount }} {{ contract.currency }}</td>
                 <td>
-                    {% if milestone.percentage %}
-                        {{ milestone.percentage }}%
-                    {% else %}
-                        -
-                    {% endif %}
+                    <span class="milestone-date-display">{{ milestone.due_date|date:"M d, Y" }}</span>
+                    <input type="date" class="form-control milestone-date-input" value="{{ milestone.due_date|date:'Y-m-d' }}" style="display: none;">
                 </td>
-                <td><span class="status {{ milestone.status }}">{{ milestone.get_status_display }}</span></td>
-                <td>{{ milestone.payment_reference|default:"-" }}</td>
+                <td>
+                    <span class="milestone-amount-display">${{ milestone.amount|floatformat:2 }} USD</span>
+                    <input type="number" class="form-control milestone-amount-input" value="{{ milestone.amount }}" step="0.01" style="display: none; width: 150px;">
+                </td>
+                <td>{{ milestone.percentage|default:"-" }}</td>
+                <td>
+                    <span class="badge {% if milestone.status == 'Overdue' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ milestone.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="milestone-reference-display">{{ milestone.payment_reference|default:"-" }}</span>
+                    <input type="text" class="form-control milestone-reference-input" value="{{ milestone.payment_reference|default:'' }}" placeholder="Payment ref" style="display: none; width: 150px;">
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary edit-milestone-btn" data-milestone-id="{{ milestone.id }}">Edit</button>
+                    <button class="btn btn-sm btn-success save-milestone-btn" data-milestone-id="{{ milestone.id }}" style="display: none;">Save</button>
+                    <button class="btn btn-sm btn-secondary cancel-milestone-btn" data-milestone-id="{{ milestone.id }}" style="display: none;">Cancel</button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -264,6 +280,79 @@ document.getElementById('save-po-btn').addEventListener('click', function() {
         if(data.success) {
             location.reload();
         }
+    });
+});
+
+// Milestone editing functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit milestone button handlers
+    document.querySelectorAll('.edit-milestone-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const milestoneId = this.getAttribute('data-milestone-id');
+            const row = document.querySelector(`tr[data-milestone-id="${milestoneId}"]`);
+            
+            // Hide display elements and show input elements
+            row.querySelector('.milestone-name-display').style.display = 'none';
+            row.querySelector('.milestone-name-input').style.display = 'inline-block';
+            row.querySelector('.milestone-date-display').style.display = 'none';
+            row.querySelector('.milestone-date-input').style.display = 'inline-block';
+            row.querySelector('.milestone-amount-display').style.display = 'none';
+            row.querySelector('.milestone-amount-input').style.display = 'inline-block';
+            row.querySelector('.milestone-reference-display').style.display = 'none';
+            row.querySelector('.milestone-reference-input').style.display = 'inline-block';
+            
+            // Show/hide buttons
+            this.style.display = 'none';
+            row.querySelector('.save-milestone-btn').style.display = 'inline-block';
+            row.querySelector('.cancel-milestone-btn').style.display = 'inline-block';
+        });
+    });
+    
+    // Cancel milestone button handlers
+    document.querySelectorAll('.cancel-milestone-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            location.reload();
+        });
+    });
+    
+    // Save milestone button handlers
+    document.querySelectorAll('.save-milestone-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const milestoneId = this.getAttribute('data-milestone-id');
+            const row = document.querySelector(`tr[data-milestone-id="${milestoneId}"]`);
+            
+            const milestoneName = row.querySelector('.milestone-name-input').value;
+            const dueDate = row.querySelector('.milestone-date-input').value;
+            const amount = row.querySelector('.milestone-amount-input').value;
+            const paymentReference = row.querySelector('.milestone-reference-input').value;
+            
+            fetch("{% url 'core:update_milestone' contract.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    milestone_id: milestoneId,
+                    milestone_name: milestoneName,
+                    due_date: dueDate,
+                    amount: amount,
+                    payment_reference: paymentReference
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating milestone: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating milestone');
+            });
+        });
     });
 });
 </script>

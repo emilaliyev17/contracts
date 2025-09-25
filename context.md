@@ -5555,4 +5555,70 @@ function changeMonth(direction) {
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 21:50 PDT (PO fields implementation and inline editing functionality)
+---
+
+## UI ENHANCEMENT 2 - Invoice Milestones Inline Editing
+
+**Date**: September 25, 2025 - 22:15 PDT
+**Issue**: Need to rename Payment Milestones to Invoice Milestones and add inline editing
+**Status**: ✅ RESOLVED
+
+### Changes Made
+
+#### 1. Section Rename
+- **Location**: `core/templates/core/contract_detail.html` line 124
+- **Change**: "Payment Milestones" → "Invoice Milestones"
+- **Purpose**: Better terminology alignment with invoice-based workflow
+
+#### 2. Template Structure Updates
+- **Location**: `core/templates/core/contract_detail.html` lines 137-174
+- **Inline Editing**: Added display spans + hidden input fields for each editable field
+- **Editable Fields**: Milestone Name, Due Date, Amount, Payment Reference
+- **Action Buttons**: Edit, Save, Cancel buttons for each milestone row
+- **Table Header**: Added "Actions" column header
+
+#### 3. JavaScript Functionality
+- **Location**: `core/templates/core/contract_detail.html` lines 286-357
+- **Edit Mode**: Switches display elements to input fields
+- **Cancel Function**: Reloads page to discard changes
+- **Save Function**: AJAX call to update milestone information
+- **Error Handling**: User-friendly error messages for failed updates
+
+#### 4. Backend API Implementation
+- **URL Pattern**: `contracts/<int:contract_id>/update-milestone/`
+- **View Function**: `update_milestone` with POST-only restriction
+- **Data Validation**: Proper date and amount format validation
+- **Error Handling**: Comprehensive error responses with specific messages
+- **Security**: CSRF protection and milestone ownership verification
+
+### Technical Implementation Details
+
+#### Frontend Features
+- **Responsive Design**: Input fields sized appropriately for table layout
+- **User Experience**: Clear visual feedback during edit/save operations
+- **Data Types**: Proper input types (text, date, number) for each field
+- **Validation**: Client-side input validation with step attributes
+
+#### Backend Features
+- **Model Integration**: Direct updates to PaymentMilestone model
+- **Date Handling**: Proper date parsing and conversion
+- **Amount Validation**: Float conversion with error handling
+- **Status Updates**: Automatic overdue status calculation on save
+- **Security**: Milestone ownership verification through contract relationship
+
+### User Experience Improvements
+- **In-Place Editing**: No page navigation required for updates
+- **Visual Feedback**: Clear button states and transitions
+- **Error Messages**: Specific error messages for validation failures
+- **Data Persistence**: Automatic status updates based on due dates
+- **Responsive Layout**: Works on all screen sizes
+
+### Technical Benefits
+- **AJAX Updates**: No full page reloads during save operations
+- **Data Integrity**: Server-side validation and error handling
+- **Performance**: Lightweight client-side code with efficient DOM manipulation
+- **Maintainability**: Clean separation of concerns between frontend and backend
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 22:20 PDT (Invoice Milestones inline editing functionality)

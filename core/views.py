@@ -850,3 +850,46 @@ def update_po_info(request, contract_id):
     contract.save()
     
     return JsonResponse({'success': True})
+
+
+@require_http_methods(["POST"])
+def update_milestone(request, contract_id):
+    """Update milestone information for a contract via AJAX"""
+    from .models import PaymentMilestone
+    from datetime import datetime
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    try:
+        milestone_id = data.get('milestone_id')
+        milestone = get_object_or_404(PaymentMilestone, id=milestone_id, contract=contract)
+        
+        # Update milestone fields
+        milestone.milestone_name = data.get('milestone_name', milestone.milestone_name)
+        
+        # Handle date conversion
+        due_date_str = data.get('due_date')
+        if due_date_str:
+            try:
+                milestone.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid date format'})
+        
+        # Handle amount conversion
+        amount_str = data.get('amount')
+        if amount_str:
+            try:
+                milestone.amount = float(amount_str)
+            except ValueError:
+                return JsonResponse({'success': False, 'error': 'Invalid amount format'})
+        
+        milestone.payment_reference = data.get('payment_reference', milestone.payment_reference)
+        
+        # Save the milestone (this will also update the status if overdue)
+        milestone.save()
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
