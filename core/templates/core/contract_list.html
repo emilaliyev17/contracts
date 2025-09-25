@@ -173,6 +173,34 @@
     background: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* Sticky table headers */
+.contracts-table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix sticky position relative to viewport */
+.contracts-table-wrapper thead th {
+    top: 0px !important;
+}
+
+/* When scrolled past the gradient header */
+@media screen {
+    .contracts-table-wrapper thead th {
+        position: -webkit-sticky;
+        position: sticky;
+    }
+}
+
+/* Ensure proper background on hover */
+.contracts-table-wrapper thead th:hover {
+    background-color: #ffffff;
+}
+
 </style>
     <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-white rounded shadow-sm">
         <span class="text-muted">Export Contracts to Excel:</span>
@@ -253,19 +281,19 @@
         </div>
       </div>
       
-      <div class="overflow-x-auto">
+      <div class="contracts-table-wrapper">
         <table class="w-full">
           <thead>
             <tr class="border-b bg-gray-50/50">
-              <th class="text-left p-4 font-medium text-sm">#</th>
-              <th class="text-left p-4 font-medium text-sm">Contract Name</th>
-              <th class="text-left p-4 font-medium text-sm">Contract Number</th>
-              <th class="text-left p-4 font-medium text-sm">Client</th>
-              <th class="text-right p-4 font-medium text-sm">Total Value</th>
-              <th class="text-left p-4 font-medium text-sm">Status</th>
-              <th class="text-left p-4 font-medium text-sm">Start Date</th>
-              <th class="text-left p-4 font-medium text-sm">End Date</th>
-              <th class="text-center p-4 font-medium text-sm">Actions</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">#</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Contract Name</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Contract Number</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Client</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-right p-4 font-medium text-sm">Total Value</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Status</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Start Date</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">End Date</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-center p-4 font-medium text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -340,9 +368,11 @@
 
 <style>
 .contracts-page {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    display: block;
+}
+
+.contracts-page > * + * {
+    margin-top: 1.5rem;
 }
 
 
