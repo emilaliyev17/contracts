@@ -183,7 +183,10 @@
                             <td class="text-center p-4">
                                 {% for invoice in invoices %}
                                     {% if invoice.date|date:"Y-m" == month|date:"Y-m" %}
-                                        <div class="text-sm font-semibold">${{ invoice.amount|floatformat:0 }}</div>
+                                        <a href="{% url 'core:contract_detail' invoice.contract_id %}?next={{ request.get_full_path|urlencode }}" 
+                                           class="text-sm font-semibold text-black no-underline hover:text-purple-600 transition-colors cursor-pointer">
+                                            ${{ invoice.amount|floatformat:0 }}
+                                        </a>
                                     {% endif %}
                                 {% endfor %}
                             </td>

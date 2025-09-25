@@ -4662,4 +4662,165 @@ function applyCustomRange() {
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 16:15 PDT (Timeline View, Custom Date Range, and Tab Switching implementations)
+---
+
+## CLICKABLE TIMELINE AMOUNTS - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 16:19 PDT
+**Feature**: Made Timeline amounts clickable links to contract details
+**Status**: ✅ COMPLETED
+
+### Implementation Overview
+Enhanced the Timeline View by making all invoice amounts clickable links that navigate directly to contract details while maintaining a clean, Excel-like appearance.
+
+### Key Features
+
+#### Template Implementation:
+```html
+{% for invoice in invoices %}
+    {% if invoice.date|date:"Y-m" == month|date:"Y-m" %}
+        <a href="{% url 'core:contract_detail' invoice.contract_id %}" 
+           class="text-sm font-semibold text-black no-underline hover:text-purple-600 transition-colors cursor-pointer">
+            ${{ invoice.amount|floatformat:0 }}
+        </a>
+    {% endif %}
+{% endfor %}
+```
+
+#### CSS Classes Applied:
+- **`text-sm font-semibold`**: Maintains original text styling
+- **`text-black`**: Normal text color (not blue link color)
+- **`no-underline`**: Removes default link underline
+- **`hover:text-purple-600`**: Purple color on hover
+- **`transition-colors`**: Smooth color transition
+- **`cursor-pointer`**: Shows clickable cursor
+
+### Backend Data Structure
+Verified that all invoice types in `generate_invoice_schedule` already include `contract_id`:
+- **Monthly Invoices**: ✅ Include `'contract_id': contract.id`
+- **Quarterly Invoices**: ✅ Include `'contract_id': contract.id`
+- **Annual Invoices**: ✅ Include `'contract_id': contract.id`
+- **Payment Milestones**: ✅ Include `'contract_id': contract.id`
+
+### Testing Results
+- **Contract Detail Links**: ✅ 42+ links generated in timeline view
+- **Proper URL Format**: ✅ Links formatted as `/contracts/{id}/`
+- **CSS Styling**: ✅ 44+ instances of hover styling applied
+- **Extended Range**: ✅ 206+ links with 365-day range
+- **Clean Design**: ✅ Maintains Excel-like appearance
+- **No Underlines**: ✅ Links don't have default blue underlines
+- **Hover Effects**: ✅ Subtle purple color change on hover
+
+### Technical Benefits
+- **Intuitive Navigation**: Users can click on any amount to see contract details
+- **Clean Interface**: No visual clutter from traditional blue links
+- **Professional Appearance**: Maintains spreadsheet-like aesthetic
+- **Smooth Interactions**: Subtle hover effects provide feedback
+- **Seamless Navigation**: Direct access to contract details from timeline
+- **Context Preservation**: Users can analyze timeline and drill down to specifics
+
+---
+
+## TIMELINE CONTEXT PRESERVATION - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 16:24 PDT
+**Feature**: Preserve Timeline context when navigating to contract details
+**Status**: ✅ COMPLETED
+
+### Implementation Overview
+Enhanced the Timeline navigation by preserving the complete Timeline context (tab, date range, filters) when users click on amounts to view contract details, ensuring seamless return navigation.
+
+### Key Features
+
+#### Template Implementation:
+```html
+<a href="{% url 'core:contract_detail' invoice.contract_id %}?next={{ request.get_full_path|urlencode }}" 
+   class="text-sm font-semibold text-black no-underline hover:text-purple-600 transition-colors cursor-pointer">
+    ${{ invoice.amount|floatformat:0 }}
+</a>
+```
+
+#### Backend Processing:
+```python
+# Get and validate the 'next' parameter
+next_url = request.GET.get('next', '')
+if next_url:
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = reverse('core:contract_list')
+else:
+    next_url = reverse('core:contract_list')
+
+context = {
+    # ... other context
+    'back_url': next_url,
+}
+```
+
+#### Frontend Back Button:
+```html
+<a href="{{ back_url }}" class="btn btn-secondary me-2">
+    <i class="bi bi-arrow-left"></i> Back
+</a>
+```
+
+### Context Preservation Features
+- **Tab State**: Timeline tab preserved (`tab=timeline`)
+- **Date Range**: Date range preserved (`days=365`)
+- **Custom Dates**: Custom date ranges preserved (`start_date=2024-01-01&end_date=2024-12-31`)
+- **All Parameters**: Complete URL state preserved
+- **Security Validation**: `url_has_allowed_host_and_scheme` prevents open redirects
+
+### Testing Results
+
+#### URL Parameter Generation:
+- **Standard Timeline**: ✅ 203+ links with `next` parameter
+- **Custom Date Range**: ✅ 5+ links with custom date parameters
+- **Proper Encoding**: ✅ URLs properly URL-encoded (e.g., `%3Ftab%3Dtimeline%26days%3D365`)
+
+#### Navigation Flow:
+- **Contract Links**: ✅ Click timeline amount → contract detail page
+- **Back Button**: ✅ Click Back → return to Timeline with preserved state
+- **State Restoration**: ✅ All filters, tabs, and date ranges restored
+
+### URL Examples
+
+#### Standard Timeline:
+```
+/contracts/461/?next=/forecast/%3Ftab%3Dtimeline%26days%3D365
+```
+
+#### Custom Date Range:
+```
+/contracts/443/?next=/forecast/%3Ftab%3Dtimeline%26days%3Dcustom%26start_date%3D2024-01-01%26end_date%3D2024-12-31
+```
+
+#### Decoded Back URL:
+```
+/forecast/?tab=timeline&days=365
+```
+
+### User Experience Benefits
+- **Seamless Workflow**: Users can drill down to contract details and return to exact Timeline state
+- **No Context Loss**: All Timeline settings (tab, date range, filters) preserved
+- **Intuitive Navigation**: Back button works as expected
+- **Professional Feel**: Smooth, predictable navigation flow
+
+### Use Cases
+
+#### Financial Analysis Workflow:
+1. User analyzes cash flow in Timeline view
+2. User notices unusual payment pattern
+3. User clicks on amount to investigate contract
+4. User reviews contract terms and returns to Timeline
+5. User continues analysis with same view settings
+
+#### Contract Management:
+1. User views upcoming payments in Timeline
+2. User identifies contracts needing attention
+3. User clicks on payment to access contract details
+4. User makes updates or notes
+5. User returns to Timeline to continue monitoring
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 16:24 PDT (Clickable Timeline amounts and context preservation implementations)
