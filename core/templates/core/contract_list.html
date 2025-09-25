@@ -15,60 +15,43 @@
 }
 
 /* Compact Metric Cards Styling */
-.metric-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid #dee2e6;
+.container-fluid .metric-card {
+    background: #f8f9fa !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    border: 1px solid #dee2e6 !important;
     transition: all 0.2s ease;
     cursor: pointer;
-    height: 85px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 }
-
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.container-fluid .metric-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
-
-.metric-card.warning {
-    background: #fff3cd;
-    border-color: #ffc107;
+.container-fluid .metric-card.warning {
+    background: #fff3cd !important;
+    border-color: #ffc107 !important;
 }
-
-.metric-card.info {
-    background: #d1ecf1;
-    border-color: #17a2b8;
+.container-fluid .metric-card.info {
+    background: #d1ecf1 !important;
+    border-color: #17a2b8 !important;
 }
-
-.metric-card.success {
-    background: #d4edda;
-    border-color: #28a745;
+.container-fluid .metric-card.success {
+    background: #d4edda !important;
+    border-color: #28a745 !important;
 }
-
-.metric-label {
-    font-size: 0.75rem;
+.container-fluid .metric-label {
+    font-size: 0.7rem;
     color: #6c757d;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
     margin-bottom: 0.25rem;
 }
-
-.metric-value {
-    font-size: 1.75rem;
+.container-fluid .metric-value {
+    font-size: 1.25rem;
     font-weight: bold;
     line-height: 1;
-    color: #212529;
-    margin-bottom: 0.25rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
-
-.metric-context {
-    font-size: 0.85rem;
+.container-fluid .metric-context {
+    font-size: 0.75rem;
     color: #6c757d;
 }
 
@@ -97,29 +80,37 @@
 
     <!-- Compact Metric Cards -->
     <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-2">
-            <div class="metric-card" style="height: 85px;">
+        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="metric-card" style="height: 95px;">
                 <div class="metric-label">Total Contracts</div>
                 <div class="metric-value">{{ summary.total_contracts }}</div>
                 <div class="metric-context">Active in portfolio</div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
-            <div class="metric-card warning" style="height: 85px;">
+        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="metric-card warning" style="height: 95px;">
                 <div class="metric-label">Needs Clarification</div>
                 <div class="metric-value">{{ summary.needs_clarification }}</div>
                 <div class="metric-context">Pending review</div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
-            <div class="metric-card info" style="height: 85px;">
+        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="metric-card info" style="height: 95px;">
                 <div class="metric-label">Total Contract Value</div>
-                <div class="metric-value">${{ summary.total_value|floatformat:0 }}</div>
+                <div class="metric-value">
+                    {% if summary.total_value >= 1000000 %}
+                        ${{ summary.total_value|floatformat:0|slice:":3" }}M
+                    {% elif summary.total_value >= 1000 %}
+                        ${{ summary.total_value|floatformat:0|slice:":3" }}K
+                    {% else %}
+                        ${{ summary.total_value|floatformat:0 }}
+                    {% endif %}
+                </div>
                 <div class="metric-context">Combined value</div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
-            <div class="metric-card success" style="height: 85px;">
+        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="metric-card success" style="height: 95px;">
                 <div class="metric-label">Completed This Month</div>
                 <div class="metric-value">{{ summary.completed_this_month }}</div>
                 <div class="metric-context">Successfully processed</div>
