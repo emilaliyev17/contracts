@@ -194,24 +194,24 @@
                 <table class="table contract-table mb-0">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Contract Name</th>
-                            <th scope="col">Contract Number</th>
-                            <th scope="col">Client</th>
-                            <th scope="col">Total Value</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Start Date</th>
-                            <th scope="col">End Date</th>
-                            <th scope="col" class="text-end">Actions</th>
+                            <th scope="col" style="width: 5%;">#</th>
+                            <th scope="col" style="width: 25%;">Contract Name</th>
+                            <th scope="col" style="width: 15%;">Contract Number</th>
+                            <th scope="col" style="width: 15%;">Client</th>
+                            <th scope="col" style="width: 10%;">Total Value</th>
+                            <th scope="col" style="width: 10%;">Status</th>
+                            <th scope="col" style="width: 8%;">Start Date</th>
+                            <th scope="col" style="width: 8%;">End Date</th>
+                            <th scope="col" style="width: 9%;" class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for contract in contracts %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td>
+                            <td style="word-wrap: break-word; max-width: 250px;">
                                 <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
-                                    {{ contract.contract_name|truncatechars:40 }}
+                                    {{ contract.contract_name }}
                                 </a>
                             </td>
                             <td>{{ contract.contract_number|truncatechars:20 }}</td>

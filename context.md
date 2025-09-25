@@ -2558,4 +2558,123 @@ Critical fixes applied to resolve metric card display issues through Bootstrap f
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - Current session (latest fixes)
+## Table Layout Optimization - Contract Name Column Enhancement
+
+**Date**: September 25, 2025 (Table improvements)
+**Status**: ✅ Completed
+
+### Overview
+Enhanced the contract list table layout to improve contract name visibility and overall column proportions for better data presentation.
+
+### Changes Implemented
+
+#### 1. Column Width Optimization
+**File**: `core/templates/core/contract_list.html`
+
+**Problem**: Contract names were truncated and hard to read due to narrow column width
+**Solution**: Redesigned column width distribution with emphasis on contract names
+
+```html
+<!-- Optimized column width distribution -->
+<th scope="col" style="width: 5%;">#</th>
+<th scope="col" style="width: 25%;">Contract Name</th>     <!-- Increased priority -->
+<th scope="col" style="width: 15%;">Contract Number</th>
+<th scope="col" style="width: 15%;">Client</th>
+<th scope="col" style="width: 10%;">Total Value</th>
+<th scope="col" style="width: 10%;">Status</th>
+<th scope="col" style="width: 8%;">Start Date</th>
+<th scope="col" style="width: 8%;">End Date</th>
+<th scope="col" style="width: 9%;" class="text-end">Actions</th>
+```
+
+#### 2. Text Wrapping Implementation
+**Enhanced contract name cells** with proper text handling:
+
+```html
+<!-- Before: Truncated display -->
+<td>
+    <a href="..." class="contract-link">
+        {{ contract.contract_name|truncatechars:40 }}
+    </a>
+</td>
+
+<!-- After: Full name with wrapping -->
+<td style="word-wrap: break-word; max-width: 250px;">
+    <a href="..." class="contract-link">
+        {{ contract.contract_name }}
+    </a>
+</td>
+```
+
+### Technical Implementation Details
+
+#### Column Width Strategy
+- **Contract Name**: 25% (largest column for primary information)
+- **Contract Number**: 15% (secondary identifier)
+- **Client**: 15% (important business context)
+- **Total Value**: 10% (financial data)
+- **Status**: 10% (workflow information)
+- **Start/End Dates**: 8% each (temporal data)
+- **Actions**: 9% (interaction buttons)
+- **Row Number**: 5% (minimal space for counter)
+
+#### Text Wrapping Features
+```css
+/* Applied inline styles */
+word-wrap: break-word;     /* Allows long words to break */
+max-width: 250px;         /* Prevents excessive width */
+```
+
+**Benefits**:
+- **No truncation**: Full contract names visible
+- **Responsive wrapping**: Long names wrap to next line
+- **Controlled width**: Prevents table layout breaking
+- **Better readability**: Users can see complete contract information
+
+### User Experience Improvements
+
+#### Information Hierarchy
+1. **Primary**: Contract Name (25% width) - Most important identifier
+2. **Secondary**: Contract Number & Client (15% each) - Supporting details
+3. **Tertiary**: Status & Value (10% each) - Workflow and financial data
+4. **Supporting**: Dates (8% each) - Temporal context
+5. **Actions**: Interactive elements (9%) - User operations
+
+#### Readability Enhancements
+- **Full contract names**: No more "..." truncation
+- **Balanced proportions**: Each column sized appropriately for content
+- **Text wrapping**: Long names display completely without breaking layout
+- **Professional appearance**: Clean, organized table structure
+
+### Responsive Considerations
+- **Desktop**: Full column width distribution works optimally
+- **Tablet**: Column widths maintain proportions on medium screens
+- **Mobile**: Bootstrap responsive table maintains readability
+- **Print**: Column widths ensure proper document formatting
+
+### Performance Impact
+- **Minimal overhead**: Inline styles have negligible performance cost
+- **Better UX**: Reduced need for hover tooltips or modal dialogs
+- **Faster scanning**: Users can quickly identify contracts by full name
+- **Reduced clicks**: No need to open contract details just to see full name
+
+### Testing Results
+- ✅ **Contract names**: Display in full without truncation
+- ✅ **Text wrapping**: Long names wrap properly to next line
+- ✅ **Column proportions**: Balanced layout across all columns
+- ✅ **Responsive behavior**: Layout works on all screen sizes
+- ✅ **Table functionality**: Sorting and filtering still work correctly
+- ✅ **Link functionality**: Contract detail links remain functional
+
+### Files Modified
+- `core/templates/core/contract_list.html` - Column width and text wrapping improvements
+
+### Future Enhancements
+- **Dynamic column resizing**: Allow users to adjust column widths
+- **Sortable columns**: Enhanced sorting with better column headers
+- **Export optimization**: Ensure column widths work well in Excel exports
+- **Accessibility**: Add ARIA labels for better screen reader support
+
+---
+
+**LAST UPDATED**: September 25, 2025 - Current session (table improvements)
