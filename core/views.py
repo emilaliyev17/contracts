@@ -532,14 +532,26 @@ def forecast_view(request):
     """View for payment forecast dashboard."""
     from datetime import datetime, timedelta
     
+    # Get date range from request
+    days = request.GET.get('days', '30')
+    try:
+        days_int = int(days) if days != 'all' else 365
+    except ValueError:
+        days_int = 30
+    
+    # Get sort parameters
+    sort_by = request.GET.get('sort', 'due_date')
+    sort_order = request.GET.get('order', 'asc')
+    
     # Get active contracts
     contracts = Contract.objects.filter(
         status__in=['active', 'needs_clarification']
     ).select_related('payment_terms')
     
-    # Calculate upcoming payments for next 30 days
+    # Calculate upcoming payments for specified date range
     upcoming_payments = []
     today = datetime.now().date()
+    end_date = today + timedelta(days=days_int)
     
     for contract in contracts:
         if hasattr(contract, 'payment_terms'):
@@ -548,10 +560,20 @@ def forecast_view(request):
                 upcoming_payments.append({
                     'client': contract.client_name or 'Unknown',
                     'amount': contract.total_value / 12 if contract.total_value else 0,
-                    'due_date': today + timedelta(days=30),
+                    'due_date': end_date,
                     'contract_number': contract.contract_number,
                     'frequency': 'Monthly'
                 })
+    
+    # Sort payments
+    if upcoming_payments:
+        reverse = (sort_order == 'desc')
+        if sort_by == 'client':
+            upcoming_payments.sort(key=lambda x: x['client'], reverse=reverse)
+        elif sort_by == 'amount':
+            upcoming_payments.sort(key=lambda x: x['amount'] or 0, reverse=reverse)
+        elif sort_by == 'due_date':
+            upcoming_payments.sort(key=lambda x: x['due_date'], reverse=reverse)
     
     # Calculate metrics
     total_monthly = sum(p['amount'] for p in upcoming_payments if p['amount'])
@@ -564,5 +586,7 @@ def forecast_view(request):
         'total_monthly': total_monthly,
         'payments_count': payments_count,
         'average_invoice': average_invoice,
+        'sort_by': sort_by,
+        'sort_order': sort_order,
     }
     return render(request, 'core/forecast.html', context)

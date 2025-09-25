@@ -78,15 +78,43 @@
 
   <!-- Content Section -->
   <div class="container mx-auto px-6 py-8">
+    <!-- Date Filter -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <div class="flex items-center gap-4">
+            <label class="text-sm text-gray-600">Date Range:</label>
+            <select id="dateRange" class="px-3 py-2 border rounded-lg" onchange="filterByDate()">
+                <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
+                <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
+                <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
+                <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
+            </select>
+        </div>
+    </div>
+    
     <div id="table-content" class="bg-white rounded-lg shadow-sm mt-6">
         <table class="w-full">
             <thead>
                 <tr class="border-b bg-gray-50">
-                    <th class="text-left p-4">Client</th>
+                    <th class="text-left p-4">
+                        <a href="?days={{ request.GET.days|default:'30' }}&sort=client&order={% if sort_by == 'client' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" 
+                           class="hover:text-purple-600">
+                            Client {% if sort_by == 'client' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+                        </a>
+                    </th>
                     <th class="text-left p-4">Contract</th>
-                    <th class="text-right p-4">Amount</th>
+                    <th class="text-right p-4">
+                        <a href="?days={{ request.GET.days|default:'30' }}&sort=amount&order={% if sort_by == 'amount' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" 
+                           class="hover:text-purple-600">
+                            Amount {% if sort_by == 'amount' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+                        </a>
+                    </th>
                     <th class="text-left p-4">Frequency</th>
-                    <th class="text-left p-4">Due Date</th>
+                    <th class="text-left p-4">
+                        <a href="?days={{ request.GET.days|default:'30' }}&sort=due_date&order={% if sort_by == 'due_date' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" 
+                           class="hover:text-purple-600">
+                            Due Date {% if sort_by == 'due_date' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+                        </a>
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -121,6 +149,11 @@ function switchView(view) {
         }
     });
     // Content switching will be added later
+}
+
+function filterByDate() {
+    const days = document.getElementById('dateRange').value;
+    window.location.href = '?days=' + days;
 }
 </script>
 {% endblock %}

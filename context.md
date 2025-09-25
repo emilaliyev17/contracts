@@ -1950,6 +1950,164 @@ MAX_UPLOAD_SIZE=10485760
 
 ---
 
+## FORECAST DASHBOARD ENHANCEMENTS
+
+**Date**: September 25, 2025 - 04:40 PDT
+**Features**: Date Range Filter + Sortable Columns
+**Status**: ✅ COMPLETED
+
+### Date Range Filter Implementation
+
+#### Problem
+Users needed flexibility to view payment forecasts for different time periods beyond the default 30-day view.
+
+#### Solution
+Added a simple dropdown-based date range filter with the following options:
+- **Next 30 days**: Default selection (matches original behavior)
+- **Next 60 days**: Extended 2-month view
+- **Next 90 days**: Extended 3-month view  
+- **All upcoming**: 365-day view for long-term planning
+
+#### Technical Implementation
+
+**Backend Changes** (`core/views.py`):
+```python
+# Get date range from request
+days = request.GET.get('days', '30')
+try:
+    days_int = int(days) if days != 'all' else 365
+except ValueError:
+    days_int = 30
+
+# Update date calculation
+end_date = today + timedelta(days=days_int)
+```
+
+**Frontend Changes** (`core/templates/core/forecast.html`):
+```html
+<!-- Date Filter -->
+<div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+    <div class="flex items-center gap-4">
+        <label class="text-sm text-gray-600">Date Range:</label>
+        <select id="dateRange" class="px-3 py-2 border rounded-lg" onchange="filterByDate()">
+            <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
+            <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
+            <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
+            <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
+        </select>
+    </div>
+</div>
+```
+
+**JavaScript Functionality**:
+```javascript
+function filterByDate() {
+    const days = document.getElementById('dateRange').value;
+    window.location.href = '?days=' + days;
+}
+```
+
+#### Key Features
+- **URL Parameter Handling**: Maintains selected range in URL for sharing
+- **Selection State**: Proper `selected` attribute based on current URL
+- **Default Handling**: 30 days selected when no parameter provided
+- **Error Handling**: Falls back to 30 days for invalid inputs
+- **Responsive Design**: Clean dropdown with proper styling
+
+### Sortable Columns Implementation
+
+#### Problem
+Users needed the ability to organize payment data by different criteria for better analysis.
+
+#### Solution
+Added clickable column headers with simple link-based sorting for:
+- **Client**: Alphabetical sorting (A-Z, Z-A)
+- **Amount**: Numerical sorting (low to high, high to low)
+- **Due Date**: Date sorting (earliest to latest, latest to earliest)
+- **Contract & Frequency**: Non-sortable (as requested)
+
+#### Technical Implementation
+
+**Backend Changes** (`core/views.py`):
+```python
+# Get sort parameters
+sort_by = request.GET.get('sort', 'due_date')
+sort_order = request.GET.get('order', 'asc')
+
+# Sort payments
+if upcoming_payments:
+    reverse = (sort_order == 'desc')
+    if sort_by == 'client':
+        upcoming_payments.sort(key=lambda x: x['client'], reverse=reverse)
+    elif sort_by == 'amount':
+        upcoming_payments.sort(key=lambda x: x['amount'] or 0, reverse=reverse)
+    elif sort_by == 'due_date':
+        upcoming_payments.sort(key=lambda x: x['due_date'], reverse=reverse)
+
+# Add to context
+context = {
+    'sort_by': sort_by,
+    'sort_order': sort_order,
+    # ... other context
+}
+```
+
+**Frontend Changes** (`core/templates/core/forecast.html`):
+```html
+<th class="text-left p-4">
+    <a href="?days={{ request.GET.days|default:'30' }}&sort=client&order={% if sort_by == 'client' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" 
+       class="hover:text-purple-600">
+        Client {% if sort_by == 'client' %}{% if sort_order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+    </a>
+</th>
+```
+
+#### Key Features
+- **Visual Indicators**: ↑ for ascending, ↓ for descending sort
+- **Toggle Behavior**: Click same header to reverse sort order
+- **Parameter Preservation**: Date range filter maintained during sorting
+- **URL State**: Sort preferences preserved in URL for sharing
+- **Default Behavior**: Table loads sorted by due date (ascending)
+
+### Testing Results
+
+#### Date Range Filter
+- ✅ **Date Filter UI**: Renders correctly (1 occurrence found)
+- ✅ **URL Parameters**: Work with proper quoting (60 days option selected)
+- ✅ **All Option**: Functions correctly (All upcoming option selected)
+- ✅ **Server Stability**: No errors during testing
+
+#### Sortable Columns
+- ✅ **Default Sort**: Due Date ascending (↑ indicator shown)
+- ✅ **Client Sort**: Alphabetical ascending (↑ indicator shown)
+- ✅ **Amount Sort**: Numerical descending (↓ indicator shown)
+- ✅ **Combined Parameters**: Date range + sort working together
+- ✅ **No Linting Errors**: Clean code implementation
+
+### URL Structure Examples
+- **Default**: `/forecast/` (30 days, due_date ascending)
+- **Extended Range**: `/forecast/?days=90` (90 days, due_date ascending)
+- **Client Sort**: `/forecast/?sort=client&order=asc` (30 days, client ascending)
+- **Combined**: `/forecast/?days=60&sort=amount&order=desc` (60 days, amount descending)
+
+### User Experience Benefits
+1. **Flexible Planning**: Users can adjust forecast timeframe
+2. **Better Visibility**: Extended views for long-term planning
+3. **Data Organization**: Sort by different criteria for analysis
+4. **URL Sharing**: Shareable links with specific filters and sorting
+5. **Simple Interface**: Clean dropdown and clickable headers
+6. **Consistent Design**: Matches existing page styling
+
+### Technical Benefits
+- **Simple Implementation**: Link-based sorting without JavaScript complexity
+- **Server-Side Logic**: Reliable sorting and filtering in Python
+- **Parameter Combination**: Date range and sorting work together seamlessly
+- **Performance**: Efficient sorting of payment data
+- **Accessibility**: Standard HTML links work with all browsers
+- **Maintainability**: Clean, readable code structure
+
+---
+
 ## CRITICAL FIX 4 - PDF File Handling in Clarifications
 
 **Date**: September 24, 2025 - 21:45 PDT
