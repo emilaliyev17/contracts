@@ -644,19 +644,35 @@ def forecast_view(request):
         contract_invoices = generate_invoice_schedule(contract, start_date, end_date)
         timeline_invoices.extend(contract_invoices)
         
-        # Keep existing simple calculation for table view
-        if hasattr(contract, 'payment_terms'):
-            # Simple calculation for monthly payments
-            if contract.payment_terms.payment_frequency == 'monthly':
-                upcoming_payments.append({
-                    'client': contract.client_name or 'Unknown',
-                    'amount': contract.total_value / 12 if contract.total_value else 0,
-                    'due_date': end_date,
-                    'contract_number': contract.contract_number,
-                    'frequency': 'Monthly'
-                })
+        # For Table View, generate all payments in date range
+        if contract.total_value and contract.total_value > 0:
+            # Use same logic as Timeline - generate ALL payments in range
+            if hasattr(contract, 'payment_terms') and contract.payment_terms.payment_frequency == 'monthly':
+                current_date = max(contract.start_date, start_date) if contract.start_date else start_date
+                
+                while current_date <= end_date:
+                    if contract.end_date and current_date > contract.end_date:
+                        break
+                        
+                    upcoming_payments.append({
+                        'client': contract.client_name or 'Unknown',
+                        'amount': contract.total_value / 12,
+                        'due_date': current_date,
+                        'contract_number': contract.contract_number,
+                        'frequency': 'Monthly',
+                        'contract_id': contract.id
+                    })
+                    
+                    # Move to next month
+                    if current_date.month == 12:
+                        current_date = current_date.replace(year=current_date.year + 1, month=1)
+                    else:
+                        current_date = current_date.replace(month=current_date.month + 1)
     
-    # Sort payments
+    # Sort payments by date for Table View
+    upcoming_payments.sort(key=lambda x: (x['due_date'], x['client']))
+    
+    # Apply user-specified sorting if different from default
     if upcoming_payments:
         reverse = (sort_order == 'desc')
         if sort_by == 'client':
@@ -690,6 +706,41 @@ def forecast_view(request):
         else:
             current_month = current_month.replace(month=current_month.month + 1)
     
+    # Prepare calendar view data
+    import calendar
+    from collections import defaultdict
+    
+    # Get calendar month from request or use start_date
+    cal_month_param = request.GET.get('cal_month')
+    if cal_month_param:
+        cal_date = datetime.strptime(cal_month_param, '%Y-%m').date()
+        cal_month = cal_date.month
+        cal_year = cal_date.year
+    else:
+        cal_month = start_date.month
+        cal_year = start_date.year
+    
+    # Group invoices by date for calendar
+    invoices_by_date = defaultdict(list)
+    for invoice in timeline_invoices:
+        if invoice['date'].month == cal_month and invoice['date'].year == cal_year:
+            invoices_by_date[invoice['date'].day].append(invoice)
+    
+    # Create calendar grid
+    cal = calendar.monthcalendar(cal_year, cal_month)
+    calendar_days = []
+    
+    for week in cal:
+        for day in week:
+            if day == 0:  # Empty cell
+                calendar_days.append({'date': None, 'invoices': []})
+            else:
+                day_date = datetime(cal_year, cal_month, day).date()
+                calendar_days.append({
+                    'date': day_date,
+                    'invoices': invoices_by_date.get(day, [])
+                })
+    
     # Calculate metrics
     total_monthly = sum(p['amount'] for p in upcoming_payments if p['amount'])
     payments_count = len(upcoming_payments)
@@ -701,6 +752,8 @@ def forecast_view(request):
         'timeline_invoices': timeline_invoices,
         'timeline_by_client': dict(timeline_by_client),
         'timeline_months': timeline_months,
+        'calendar_days': calendar_days,
+        'calendar_month': datetime(cal_year, cal_month, 1).date(),
         'total_monthly': total_monthly,
         'payments_count': payments_count,
         'average_invoice': average_invoice,

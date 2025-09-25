@@ -4823,4 +4823,394 @@ context = {
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 16:24 PDT (Clickable Timeline amounts and context preservation implementations)
+## CALENDAR VIEW IMPLEMENTATION - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 16:57 PDT
+**Status**: ✅ COMPLETED
+**Feature**: Calendar View for Payment Forecast with Month Navigation
+
+### Overview
+Implemented a comprehensive Calendar View for the Payment Forecast dashboard, providing users with an intuitive visual calendar interface to view and manage their payment schedule. The Calendar View includes month navigation, clickable invoice links, and seamless integration with existing Table and Timeline views.
+
+### Implementation Details
+
+#### 1. Calendar Container Structure
+**File**: `core/templates/core/forecast.html`
+**Location**: Added after Timeline View container
+
+```html
+<!-- Calendar View -->
+<div id="calendar-content" class="bg-white rounded-lg shadow-sm mt-6" style="display: none;">
+    <!-- Month Navigation -->
+    <div class="flex items-center justify-between p-4 border-b">
+        <button onclick="changeMonth(-1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+            ‹
+        </button>
+        
+        <h3 class="text-lg font-semibold">
+            {{ calendar_month|date:"F Y" }}
+        </h3>
+        
+        <button onclick="changeMonth(1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+            ›
+        </button>
+    </div>
+    
+    <div class="grid grid-cols-7 gap-1 p-4">
+        <!-- Calendar header -->
+        <div class="text-center font-semibold p-2">Sun</div>
+        <div class="text-center font-semibold p-2">Mon</div>
+        <!-- ... other days ... -->
+        
+        <!-- Calendar days -->
+        {% for day in calendar_days %}
+        <div class="border rounded p-2 min-h-[80px] hover:bg-gray-50">
+            <div class="text-sm text-gray-500">{{ day.date|date:"j" }}</div>
+            {% for invoice in day.invoices %}
+            <div class="text-xs mt-1">
+                <a href="{% url 'core:contract_detail' invoice.contract_id %}?next={{ request.get_full_path|urlencode }}"
+                   class="text-purple-600 hover:text-purple-800">
+                    {{ invoice.client|truncatechars:15 }}: ${{ invoice.amount|floatformat:0 }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+```
+
+#### 2. Calendar Data Preparation
+**File**: `core/views.py`
+**Function**: `forecast_view`
+
+```python
+# Prepare calendar view data
+import calendar
+from collections import defaultdict
+
+# Get calendar month from request or use start_date
+cal_month_param = request.GET.get('cal_month')
+if cal_month_param:
+    cal_date = datetime.strptime(cal_month_param, '%Y-%m').date()
+    cal_month = cal_date.month
+    cal_year = cal_date.year
+else:
+    cal_month = start_date.month
+    cal_year = start_date.year
+
+# Group invoices by date for calendar
+invoices_by_date = defaultdict(list)
+for invoice in timeline_invoices:
+    if invoice['date'].month == cal_month and invoice['date'].year == cal_year:
+        invoices_by_date[invoice['date'].day].append(invoice)
+
+# Create calendar grid
+cal = calendar.monthcalendar(cal_year, cal_month)
+calendar_days = []
+
+for week in cal:
+    for day in week:
+        if day == 0:  # Empty cell
+            calendar_days.append({'date': None, 'invoices': []})
+        else:
+            day_date = datetime(cal_year, cal_month, day).date()
+            calendar_days.append({
+                'date': day_date,
+                'invoices': invoices_by_date.get(day, [])
+            })
+
+# Add to context
+context['calendar_days'] = calendar_days
+context['calendar_month'] = datetime(cal_year, cal_month, 1).date()
+```
+
+#### 3. JavaScript Tab Switching
+**File**: `core/templates/core/forecast.html`
+
+```javascript
+function switchView(view) {
+    // Hide all views
+    document.getElementById('table-content').style.display = 'none';
+    document.getElementById('timeline-content').style.display = 'none';
+    document.getElementById('calendar-content').style.display = 'none';
+    
+    // Show selected view
+    if (view === 'table') {
+        document.getElementById('table-content').style.display = 'block';
+    } else if (view === 'timeline') {
+        document.getElementById('timeline-content').style.display = 'block';
+    } else if (view === 'calendar') {
+        document.getElementById('calendar-content').style.display = 'block';
+    }
+    
+    // Update tab styles and URL...
+}
+```
+
+### Key Features
+
+#### Calendar Grid Layout
+- **7-Column Grid**: Standard calendar layout (Sun-Sat)
+- **Day Headers**: Clear day names displayed
+- **Day Cells**: Individual cells for each day with hover effects
+- **Empty Cells**: Properly handled for days outside current month
+- **Responsive Design**: Works on different screen sizes
+
+#### Invoice Display
+- **Multiple Invoices**: Days can display multiple invoices
+- **Client Names**: Truncated client names for readability
+- **Amounts**: Formatted invoice amounts
+- **Clickable Links**: All invoices link to contract details
+- **Context Preservation**: Navigation preserves calendar state
+
+#### Month Navigation
+- **Previous/Next Buttons**: Intuitive month navigation
+- **Visible Arrows**: HTML entities (‹ ›) for reliable display
+- **Month Display**: Current month and year prominently shown
+- **URL Parameters**: Month state preserved in URL
+- **Tab Preservation**: Calendar tab maintained during navigation
+
+### Testing Results
+
+#### Calendar Structure
+- **Grid Layout**: ✅ 7-column grid properly rendered
+- **Day Headers**: ✅ Sun, Mon, Tue, Wed, Thu, Fri, Sat displayed
+- **Day Numbers**: ✅ Days 1-30+ properly numbered
+- **Empty Cells**: ✅ Empty cells handled correctly
+
+#### Invoice Display
+- **Multiple Invoices**: ✅ Days with multiple invoices (e.g., day 12: 5 invoices)
+- **Client Names**: ✅ Properly truncated (e.g., "Cumberland DRW…", "Paxos Technolo…")
+- **Amounts**: ✅ Properly formatted (e.g., $75,000, $8,712, $121,333)
+- **Clickable Links**: ✅ All invoices link to contract details
+
+#### Month Navigation
+- **Default Month**: ✅ September 2025 (current month) displayed by default
+- **October 2025**: ✅ Month navigation to October works correctly
+- **December 2025**: ✅ Month navigation to December works correctly
+- **Parameter Format**: ✅ YYYY-MM format properly handled
+
+#### Tab State Preservation
+- **Calendar Tab**: ✅ Remains active when changing months
+- **Other Parameters**: ✅ days=365 and other parameters preserved
+- **URL Management**: ✅ All existing parameters maintained in URL
+
+### User Experience Benefits
+
+#### Visual Calendar Interface
+- **Intuitive Layout**: Familiar calendar grid layout
+- **Daily Overview**: See all payments for each day at a glance
+- **Quick Navigation**: Click any invoice to view contract details
+- **Context Preservation**: Return to exact calendar state after navigation
+
+#### Payment Management
+- **Daily Planning**: Plan cash flow by day
+- **Payment Clustering**: Identify days with multiple payments
+- **Amount Visibility**: See payment amounts directly on calendar
+- **Client Identification**: Quickly identify which clients have payments
+
+#### Professional Presentation
+- **Clean Design**: Modern, professional calendar interface
+- **Responsive Layout**: Works on different screen sizes
+- **Hover Effects**: Interactive feedback on hover
+- **Consistent Styling**: Matches overall application design
+
+---
+
+## MONTH NAVIGATION IMPLEMENTATION - CALENDAR VIEW
+
+**Date**: September 25, 2025 - 16:57 PDT
+**Status**: ✅ COMPLETED
+**Feature**: Month Navigation for Calendar View
+
+### Overview
+Added intuitive month navigation to the Calendar View, allowing users to browse through different months while maintaining all their current view settings and filters. The navigation includes visible arrow buttons and preserves tab state.
+
+### Implementation Details
+
+#### 1. Month Navigation UI
+**File**: `core/templates/core/forecast.html`
+
+```html
+<!-- Month Navigation -->
+<div class="flex items-center justify-between p-4 border-b">
+    <button onclick="changeMonth(-1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+        ‹
+    </button>
+    
+    <h3 class="text-lg font-semibold">
+        {{ calendar_month|date:"F Y" }}
+    </h3>
+    
+    <button onclick="changeMonth(1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+        ›
+    </button>
+</div>
+```
+
+#### 2. JavaScript Month Navigation
+**File**: `core/templates/core/forecast.html`
+
+```javascript
+function changeMonth(direction) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentMonth = urlParams.get('cal_month') || '{{ calendar_month|date:"Y-m" }}';
+    
+    const [year, month] = currentMonth.split('-').map(Number);
+    let newMonth = month + direction;
+    let newYear = year;
+    
+    if (newMonth > 12) {
+        newMonth = 1;
+        newYear++;
+    } else if (newMonth < 1) {
+        newMonth = 12;
+        newYear--;
+    }
+    
+    urlParams.set('cal_month', `${newYear}-${String(newMonth).padStart(2, '0')}`);
+    window.location.search = urlParams.toString();
+}
+```
+
+### Key Features
+
+#### Navigation Controls
+- **Previous Button**: Navigate to previous month
+- **Next Button**: Navigate to next month
+- **Month Display**: Current month and year prominently shown
+- **Visible Arrows**: HTML entities (‹ ›) for reliable display
+- **Hover Effects**: Interactive feedback on buttons
+
+#### State Management
+- **URL Parameters**: Month state preserved in URL
+- **Tab Preservation**: Calendar tab maintained during navigation
+- **Filter Preservation**: All existing filters and settings preserved
+- **Bookmarkable URLs**: Users can bookmark specific months
+
+#### Year Rollover
+- **Automatic Year Increment**: December → January of next year
+- **Automatic Year Decrement**: January → December of previous year
+- **Proper Date Handling**: Correct month and year calculations
+
+### Testing Results
+
+#### Month Navigation UI
+- **Navigation Bar**: ✅ Properly rendered with left/right buttons
+- **Month Display**: ✅ "September 2025" correctly displayed
+- **Button Functionality**: ✅ changeMonth function calls properly set up
+- **Styling**: ✅ Clean, professional appearance with hover effects
+
+#### Month Parameter Handling
+- **Default Month**: ✅ September 2025 (current month) displayed by default
+- **October 2025**: ✅ Month navigation to October works correctly
+- **December 2025**: ✅ Month navigation to December works correctly
+- **Parameter Format**: ✅ YYYY-MM format properly handled
+
+#### Tab State Preservation
+- **Calendar Tab**: ✅ Remains active when changing months
+- **Other Parameters**: ✅ days=365 and other parameters preserved
+- **URL Management**: ✅ All existing parameters maintained in URL
+
+#### JavaScript Functionality
+- **Function Definition**: ✅ changeMonth function properly defined
+- **Parameter Handling**: ✅ Direction parameter (+1/-1) correctly processed
+- **Year Rollover**: ✅ Month boundaries properly handled
+- **URL Updates**: ✅ URL parameters correctly updated
+
+### User Experience Benefits
+
+#### Intuitive Navigation
+- **Familiar Interface**: Standard calendar navigation pattern
+- **Clear Month Display**: Current month prominently shown
+- **Easy Navigation**: Simple left/right arrow buttons
+- **Visual Feedback**: Hover effects on navigation buttons
+
+#### Seamless Integration
+- **Tab Preservation**: Users stay in Calendar View when navigating months
+- **Parameter Maintenance**: All filters and settings preserved
+- **URL State**: Bookmarkable URLs for specific months
+- **Consistent Behavior**: Navigation works with all date ranges
+
+#### Professional Presentation
+- **Clean Design**: Modern, professional navigation bar
+- **Responsive Layout**: Works on different screen sizes
+- **Consistent Styling**: Matches overall application design
+- **Accessible Interface**: Clear visual indicators and hover states
+
+---
+
+## NAVIGATION ARROWS FIX - CALENDAR VIEW
+
+**Date**: September 25, 2025 - 16:57 PDT
+**Status**: ✅ COMPLETED
+**Issue**: Invisible navigation arrows in Calendar View
+
+### Problem Analysis
+**Root Cause**: 
+- Navigation buttons were using Bootstrap icons (`<i class="bi bi-chevron-left"></i>`)
+- Bootstrap icons were not loading or visible
+- Users couldn't see how to navigate between months
+
+### Solution Implemented
+**File**: `core/templates/core/forecast.html`
+
+#### Before (Invisible):
+```html
+<button onclick="changeMonth(-1)" class="px-3 py-1 border rounded hover:bg-gray-50">
+    <i class="bi bi-chevron-left"></i>
+</button>
+
+<button onclick="changeMonth(1)" class="px-3 py-1 border rounded hover:bg-gray-50">
+    <i class="bi bi-chevron-right"></i>
+</button>
+```
+
+#### After (Visible):
+```html
+<button onclick="changeMonth(-1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+    ‹
+</button>
+
+<button onclick="changeMonth(1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+    ›
+</button>
+```
+
+### Key Changes
+- **HTML Entities**: Replaced Bootstrap icons with visible HTML arrow entities
+- **Left Arrow**: `‹` (left-pointing single angle quotation mark)
+- **Right Arrow**: `›` (right-pointing single angle quotation mark)
+- **Enhanced Styling**: Added `text-xl` class for larger, more visible arrows
+- **Improved Padding**: Increased padding from `px-3 py-1` to `px-4 py-2` for better button size
+
+### Benefits of the Fix
+
+#### Immediate Visibility
+- **No Dependencies**: HTML entities don't rely on external icon fonts
+- **Universal Support**: Works in all browsers without additional resources
+- **Clear Navigation**: Users can immediately see how to navigate months
+- **Professional Appearance**: Clean, simple arrow symbols
+
+#### Enhanced User Experience
+- **Intuitive Interface**: Standard left/right arrow navigation
+- **Better Accessibility**: Visible symbols are more accessible than hidden icons
+- **Consistent Styling**: Maintains hover effects and button styling
+- **Larger Targets**: Increased button size makes navigation easier
+
+#### Technical Advantages
+- **No External Dependencies**: Doesn't require Bootstrap icon fonts
+- **Faster Loading**: No additional font resources to load
+- **Reliable Rendering**: HTML entities are guaranteed to display
+- **Maintainable Code**: Simple, straightforward implementation
+
+### Testing Results
+- **Left Arrow**: ✅ `‹` symbol properly displayed
+- **Right Arrow**: ✅ `›` symbol properly displayed
+- **Button Styling**: ✅ Proper padding and hover effects maintained
+- **Functionality**: ✅ `changeMonth(-1)` and `changeMonth(1)` functions preserved
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 16:57 PDT (Calendar View implementation, month navigation, and navigation arrows fix)

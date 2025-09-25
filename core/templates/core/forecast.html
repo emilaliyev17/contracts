@@ -149,7 +149,12 @@
                 {% for payment in upcoming_payments %}
                 <tr class="border-b hover:bg-gray-100 {% if forloop.counter|divisibleby:2 %}bg-gray-50{% endif %}">
                     <td class="p-4">{{ payment.client }}</td>
-                    <td class="p-4">{{ payment.contract_number }}</td>
+                    <td class="p-4">
+                        <a href="{% url 'core:contract_detail' payment.contract_id %}?next={{ request.get_full_path|urlencode }}"
+                           class="text-gray-600 hover:text-purple-600 transition-colors">
+                            {{ payment.contract_number }}
+                        </a>
+                    </td>
                     <td class="p-4 text-right">${{ payment.amount|floatformat:0|intcomma }}</td>
                     <td class="p-4">{{ payment.frequency }}</td>
                     <td class="p-4">{{ payment.due_date|date:"M d, Y" }}</td>
@@ -197,6 +202,50 @@
             </table>
         </div>
     </div>
+    
+    <!-- Calendar View -->
+    <div id="calendar-content" class="bg-white rounded-lg shadow-sm mt-6" style="display: none;">
+        <!-- Month Navigation -->
+        <div class="flex items-center justify-between p-4 border-b">
+            <button onclick="changeMonth(-1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+                ‹
+            </button>
+            
+            <h3 class="text-lg font-semibold">
+                {{ calendar_month|date:"F Y" }}
+            </h3>
+            
+            <button onclick="changeMonth(1)" class="px-4 py-2 border rounded hover:bg-gray-50 text-xl">
+                ›
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-7 gap-1 p-4">
+            <!-- Calendar header -->
+            <div class="text-center font-semibold p-2">Sun</div>
+            <div class="text-center font-semibold p-2">Mon</div>
+            <div class="text-center font-semibold p-2">Tue</div>
+            <div class="text-center font-semibold p-2">Wed</div>
+            <div class="text-center font-semibold p-2">Thu</div>
+            <div class="text-center font-semibold p-2">Fri</div>
+            <div class="text-center font-semibold p-2">Sat</div>
+            
+            <!-- Calendar days -->
+            {% for day in calendar_days %}
+            <div class="border rounded p-2 min-h-[80px] hover:bg-gray-50">
+                <div class="text-sm text-gray-500">{{ day.date|date:"j" }}</div>
+                {% for invoice in day.invoices %}
+                <div class="text-xs mt-1">
+                    <a href="{% url 'core:contract_detail' invoice.contract_id %}?next={{ request.get_full_path|urlencode }}"
+                       class="text-purple-600 hover:text-purple-800">
+                        {{ invoice.client|truncatechars:15 }}: ${{ invoice.amount|floatformat:0 }}
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
   </div>
 </div>
 
@@ -205,12 +254,15 @@ function switchView(view) {
     // Hide all views
     document.getElementById('table-content').style.display = 'none';
     document.getElementById('timeline-content').style.display = 'none';
+    document.getElementById('calendar-content').style.display = 'none';
     
     // Show selected view
     if (view === 'table') {
         document.getElementById('table-content').style.display = 'block';
     } else if (view === 'timeline') {
         document.getElementById('timeline-content').style.display = 'block';
+    } else if (view === 'calendar') {
+        document.getElementById('calendar-content').style.display = 'block';
     }
     
     // Update tab styles
@@ -268,5 +320,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const tab = urlParams.get('tab') || 'table';
     switchView(tab);
 });
+
+function changeMonth(direction) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentMonth = urlParams.get('cal_month') || '{{ calendar_month|date:"Y-m" }}';
+    
+    const [year, month] = currentMonth.split('-').map(Number);
+    let newMonth = month + direction;
+    let newYear = year;
+    
+    if (newMonth > 12) {
+        newMonth = 1;
+        newYear++;
+    } else if (newMonth < 1) {
+        newMonth = 12;
+        newYear--;
+    }
+    
+    urlParams.set('cal_month', `${newYear}-${String(newMonth).padStart(2, '0')}`);
+    window.location.search = urlParams.toString();
+}
 </script>
 {% endblock %}
