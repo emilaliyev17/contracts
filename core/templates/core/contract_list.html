@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load humanize %}
 
 {% block title %}Contracts - Contract Analyzer{% endblock %}
 
@@ -9,6 +10,15 @@
 <style>
 .gradient-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.metric-card-new {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.metric-card-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
 }
 </style>
 
@@ -31,10 +41,10 @@
       
       <!-- Tab Navigation -->
       <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
-        <a href="?status=all" class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">All</a>
-        <a href="?status=needs_clarification" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Needs Review</a>
-        <a href="?status=completed" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Completed</a>
-        <a href="?status=processing" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Processing</a>
+        <a href="?status=all" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'all' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">All</a>
+        <a href="?status=needs_review" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'needs_review' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Needs Review</a>
+        <a href="?status=completed" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'completed' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Completed</a>
+        <a href="?status=processing" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'processing' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Processing</a>
       </div>
     </div>
   </div>
@@ -42,25 +52,25 @@
   <div class="container mx-auto px-6 py-8">
     <!-- Metrics Row -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
         <p class="text-sm text-gray-500">Total Contracts</p>
         <p class="text-3xl font-bold mt-1">{{ summary.total_contracts }}</p>
         <p class="text-sm text-gray-500 mt-1">Active in portfolio</p>
       </div>
       
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
         <p class="text-sm text-gray-500">Needs Clarification</p>
         <p class="text-3xl font-bold text-yellow-500 mt-1">{{ summary.needs_clarification }}</p>
         <p class="text-sm text-gray-500 mt-1">Pending review</p>
       </div>
       
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
         <p class="text-sm text-gray-500">Total Contract Value</p>
-        <p class="text-3xl font-bold text-blue-500 mt-1">${{ summary.total_value|floatformat:0 }}</p>
+        <p class="text-3xl font-bold text-blue-500 mt-1">${{ summary.total_value|floatformat:0|intcomma }}</p>
         <p class="text-sm text-gray-500 mt-1">Combined value</p>
       </div>
       
-      <div class="bg-white rounded-lg shadow-sm p-6">
+      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
         <p class="text-sm text-gray-500">Completed This Month</p>
         <p class="text-3xl font-bold text-green-500 mt-1">{{ summary.completed_this_month }}</p>
         <p class="text-sm text-gray-500 mt-1">Successfully processed</p>
@@ -168,45 +178,6 @@
         </div>
     </div>
 
-    <!-- Compact Metric Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-            <div class="metric-card" style="height: 95px;">
-                <div class="metric-label">Total Contracts</div>
-                <div class="metric-value">{{ summary.total_contracts }}</div>
-                <div class="metric-context">Active in portfolio</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-            <div class="metric-card warning" style="height: 95px;">
-                <div class="metric-label">Needs Clarification</div>
-                <div class="metric-value">{{ summary.needs_clarification }}</div>
-                <div class="metric-context">Pending review</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-            <div class="metric-card info" style="height: 95px;">
-                <div class="metric-label">Total Contract Value</div>
-                <div class="metric-value">
-                    {% if summary.total_value >= 1000000 %}
-                        ${{ summary.total_value|floatformat:0|slice:":3" }}M
-                    {% elif summary.total_value >= 1000 %}
-                        ${{ summary.total_value|floatformat:0|slice:":3" }}K
-                    {% else %}
-                        ${{ summary.total_value|floatformat:0 }}
-                    {% endif %}
-                </div>
-                <div class="metric-context">Combined value</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-            <div class="metric-card success" style="height: 95px;">
-                <div class="metric-label">Completed This Month</div>
-                <div class="metric-value">{{ summary.completed_this_month }}</div>
-                <div class="metric-context">Successfully processed</div>
-            </div>
-        </div>
-    </div>
 
     <div class="card shadow-sm border-0 mb-4 w-100">
         <div class="card-body">
@@ -266,16 +237,9 @@
         {% endfor %}
     {% endif %}
 
-    <div class="card shadow-sm border-0 p-3 mb-3">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <ul class="nav nav-pills contract-filters">
-            <li class="nav-item"><a class="nav-link {% if active_filter == 'all' %}active{% endif %}" href="{% url 'core:contract_list' %}">All</a></li>
-            <li class="nav-item"><a class="nav-link {% if active_filter == 'needs_review' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=needs_review">Needs Review</a></li>
-            <li class="nav-item"><a class="nav-link {% if active_filter == 'completed' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=completed">Completed</a></li>
-            <li class="nav-item"><a class="nav-link {% if active_filter == 'processing' %}active{% endif %}" href="{% url 'core:contract_list' %}?status=processing">Processing</a></li>
-        </ul>
-            <span class="text-muted small">Showing {{ contracts|length }} of {{ summary.total_contracts }} contracts</span>
-        </div>
+    <!-- Contract count info -->
+    <div class="mb-4">
+        <span class="text-sm text-gray-500">Showing {{ contracts|length }} of {{ summary.total_contracts }} contracts</span>
     </div>
 
     {% if contracts %}
@@ -331,7 +295,7 @@
               <td class="p-4 text-sm">{{ contract.client_name|default:"—" }}</td>
               <td class="p-4 text-right font-medium text-sm">
                 {% if contract.total_value %}
-                    ${{ contract.total_value|floatformat:0 }}
+                    ${{ contract.total_value|floatformat:0|intcomma }}
                 {% else %}
                     <span class="text-gray-400">N/A</span>
                 {% endif %}
