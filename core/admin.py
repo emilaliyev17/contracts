@@ -10,6 +10,8 @@ class ContractAdmin(admin.ModelAdmin):
         'client_name', 
         'total_value', 
         'currency', 
+        'po_number',
+        'po_budget',
         'status',
         'extraction_method',
         'confidence_score',
@@ -40,7 +42,7 @@ class ContractAdmin(admin.ModelAdmin):
             'fields': ('contract_name', 'contract_number', 'client_name')
         }),
         ('Contract Details', {
-            'fields': ('total_value', 'currency', 'start_date', 'end_date')
+            'fields': ('total_value', 'currency', 'po_number', 'po_budget', 'start_date', 'end_date')
         }),
         ('Extraction Information', {
             'fields': ('extraction_method', 'confidence_score', 'raw_extracted_data')

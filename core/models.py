@@ -43,6 +43,22 @@ class Contract(models.Model):
         help_text="Total contract value"
     )
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD', help_text="Contract currency")
+    
+    # Purchase Order fields
+    po_number = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Client's Purchase Order number"
+    )
+    po_budget = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Budget allocated for this PO in USD"
+    )
+    
     start_date = models.DateField(null=True, blank=True, help_text="Contract start date")
     end_date = models.DateField(null=True, blank=True, help_text="Contract end date (null for ongoing contracts)")
     client_name = models.CharField(max_length=255, help_text="Client/counterparty name")

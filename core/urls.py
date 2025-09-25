@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/metrics/', views.contract_metrics, name='contract_metrics'),
     path('contracts/', views.contract_list, name='contract_list'),
     path('contracts/<int:contract_id>/', views.contract_detail, name='contract_detail'),
+    path('contracts/<int:contract_id>/update-po/', views.update_po_info, name='update_po_info'),
     path('contract/<int:contract_id>/delete/', views.delete_contract, name='delete_contract'),
     path('upload/', views.upload_contract, name='upload_contract'),
     path('upload/status/<int:contract_id>/', views.upload_status, name='upload_status'),

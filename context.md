@@ -5474,4 +5474,85 @@ function changeMonth(direction) {
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 18:25 PDT (Forecast layout optimization, sticky headers implementation, and contract list layout improvements)
+---
+
+## DATABASE ENHANCEMENT 1 - Purchase Order Fields Implementation
+
+**Date**: September 25, 2025 - 21:30 PDT
+**Issue**: Need to track Purchase Order information for contracts
+**Status**: ✅ RESOLVED
+
+### Changes Made
+
+#### 1. Model Fields Added
+- **Location**: `core/models.py` after currency field
+- **PO Number Field**: CharField(max_length=100, null=True, blank=True)
+- **PO Budget Field**: DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+- **Purpose**: Track client Purchase Order numbers and allocated budgets
+
+#### 2. Database Migration
+- **Migration Created**: `0008_contract_po_budget_contract_po_number.py`
+- **Migration Applied**: Successfully added fields to database
+- **Field Specifications**: Both fields optional with proper constraints
+
+#### 3. Admin Interface Updates
+- **Location**: `core/admin.py`
+- **List Display**: Added po_number and po_budget to contract list view
+- **Fieldsets**: Added PO fields to Contract Details section
+- **Logical Grouping**: PO fields grouped with financial data
+
+#### 4. Template Display
+- **Location**: `core/templates/core/contract_detail.html`
+- **Conditional Display**: PO fields only show when they have values
+- **Proper Formatting**: PO Budget formatted as currency with 2 decimal places
+- **Clean Integration**: Seamlessly integrated into existing table layout
+
+### Technical Specifications
+- **PO Number**: Text field for flexibility with client PO formats
+- **PO Budget**: Decimal field matching total_value structure
+- **Currency**: USD only (no separate currency field needed)
+- **Optional Fields**: No impact on existing contracts
+
+---
+
+## UI ENHANCEMENT 1 - Inline PO Fields Editing
+
+**Date**: September 25, 2025 - 21:45 PDT
+**Issue**: Need to edit PO information directly on contract detail page
+**Status**: ✅ RESOLVED
+
+### Implementation Details
+
+#### 1. Template Updates
+- **Location**: `core/templates/core/contract_detail.html`
+- **Inline Editing**: Display spans + hidden input fields
+- **Edit Button**: "Edit PO Info" button to enable editing mode
+- **Save/Cancel Buttons**: Appear when editing mode is active
+
+#### 2. JavaScript Functionality
+- **Edit Mode**: Switches display elements to input fields
+- **Cancel Function**: Reloads page to discard changes
+- **Save Function**: AJAX call to update PO information
+- **CSRF Protection**: Proper CSRF token handling
+
+#### 3. Backend API
+- **URL Pattern**: `contracts/<int:contract_id>/update-po/`
+- **View Function**: `update_po_info` with POST-only restriction
+- **JSON Handling**: Parses JSON request body safely
+- **Response**: Returns JSON success confirmation
+
+### User Experience Features
+- **No Page Navigation**: Edit in place without leaving page
+- **Visual Feedback**: Clear button states and transitions
+- **Data Validation**: Number input with step validation for budget
+- **Real-time Switching**: Instant mode changes between display/edit
+
+### Technical Benefits
+- **AJAX Updates**: No full page reloads during save
+- **Security**: CSRF protection and method restrictions
+- **Performance**: Lightweight client-side code
+- **Responsive**: Works on all screen sizes
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 21:50 PDT (PO fields implementation and inline editing functionality)

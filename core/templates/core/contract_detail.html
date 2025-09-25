@@ -35,6 +35,27 @@
                     <td>{{ contract.total_value }} {{ contract.currency }}</td>
                 </tr>
                 <tr>
+                    <td><strong>PO Number:</strong></td>
+                    <td>
+                        <span id="po-number-display">{{ contract.po_number|default:"Not set" }}</span>
+                        <input type="text" id="po-number-input" value="{{ contract.po_number|default:'' }}" 
+                               class="form-control" style="display: none; width: 200px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>PO Budget:</strong></td>
+                    <td>
+                        <span id="po-budget-display">
+                            {% if contract.po_budget %}${{ contract.po_budget|floatformat:2 }}{% else %}Not set{% endif %}
+                        </span>
+                        <input type="number" id="po-budget-input" value="{{ contract.po_budget|default:'' }}" 
+                               step="0.01" class="form-control" style="display: none; width: 200px;">
+                        <button id="edit-po-btn" class="btn btn-sm btn-outline-primary ms-2">Edit PO Info</button>
+                        <button id="save-po-btn" class="btn btn-sm btn-success ms-2" style="display: none;">Save</button>
+                        <button id="cancel-po-btn" class="btn btn-sm btn-secondary ms-1" style="display: none;">Cancel</button>
+                    </td>
+                </tr>
+                <tr>
                     <td><strong>Status:</strong></td>
                     <td><span class="status {{ contract.status }}">{{ contract.get_status_display }}</span></td>
                 </tr>
@@ -207,4 +228,44 @@
     {% endif %}
 </div>
 {% endif %}
+
+<script>
+document.getElementById('edit-po-btn').addEventListener('click', function() {
+    document.getElementById('po-number-display').style.display = 'none';
+    document.getElementById('po-number-input').style.display = 'inline-block';
+    document.getElementById('po-budget-display').style.display = 'none';
+    document.getElementById('po-budget-input').style.display = 'inline-block';
+    document.getElementById('edit-po-btn').style.display = 'none';
+    document.getElementById('save-po-btn').style.display = 'inline-block';
+    document.getElementById('cancel-po-btn').style.display = 'inline-block';
+});
+
+document.getElementById('cancel-po-btn').addEventListener('click', function() {
+    location.reload();
+});
+
+document.getElementById('save-po-btn').addEventListener('click', function() {
+    const poNumber = document.getElementById('po-number-input').value;
+    const poBudget = document.getElementById('po-budget-input').value;
+    
+    fetch("{% url 'core:update_po_info' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            po_number: poNumber,
+            po_budget: poBudget
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        }
+    });
+});
+</script>
+
 {% endblock %}

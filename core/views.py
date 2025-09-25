@@ -837,3 +837,16 @@ def export_forecast(request):
     response['Content-Disposition'] = f'attachment; filename="forecast_{today}.xlsx"'
     wb.save(response)
     return response
+
+
+@require_http_methods(["POST"])
+def update_po_info(request, contract_id):
+    """Update PO Number and Budget for a contract via AJAX"""
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    contract.po_number = data.get('po_number') or None
+    contract.po_budget = data.get('po_budget') or None
+    contract.save()
+    
+    return JsonResponse({'success': True})
