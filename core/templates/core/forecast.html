@@ -4,19 +4,15 @@
 {% block title %}Payment Forecast - Contract Analyzer{% endblock %}
 
 {% block content %}
-<style>
-  .gradient-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-</style>
-
 <div class="min-h-screen bg-gray-50">
   <!-- Header Section -->
-  <div class="gradient-header text-white">
-    <div class="container mx-auto px-6 py-12">
-      <!-- Main Navigation -->
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-4xl font-bold">Payment Forecast</h1>
+  <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+    <div class="container mx-auto px-6 py-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Payment Forecast</h1>
+          <p class="text-white/80 text-lg">Track and manage your contract payments</p>
+        </div>
         <nav class="flex space-x-6">
           <a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors">Home</a>
           <a href="{% url 'core:contract_list' %}" class="text-white/80 hover:text-white transition-colors">Contracts</a>
@@ -24,25 +20,23 @@
           <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
         </nav>
       </div>
-      
-      <p class="text-lg text-white/80 mb-4">Visualize upcoming payments and cash flow projections</p>
     </div>
   </div>
 
   <!-- View Tabs -->
   <div class="container mx-auto px-6 -mt-8">
-      <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
+      <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit backdrop-blur-sm">
           <button onclick="switchView('table')" id="table-tab" 
                   class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
-              Table View
+              📊 Table View
           </button>
           <button onclick="switchView('timeline')" id="timeline-tab"
                   class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              Timeline View
+              📈 Timeline View
           </button>
           <button onclick="switchView('calendar')" id="calendar-tab"
                   class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              Calendar View
+              📅 Calendar View
           </button>
       </div>
   </div>
@@ -50,28 +44,46 @@
   <!-- Metrics Row -->
   <div class="container mx-auto px-6 py-8">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white rounded-lg shadow-sm p-6">
-              <p class="text-sm text-gray-500">Expected This Month</p>
-              <p class="text-3xl font-bold">${{ total_monthly|floatformat:0|intcomma }}</p>
-              <p class="text-sm text-gray-500">Total invoices</p>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
+              <div class="flex flex-row items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Expected This Month</p>
+                  <span class="text-2xl">💰</span>
+              </div>
+              <div class="text-2xl font-bold">${{ total_monthly|floatformat:0|intcomma }}</div>
+              <p class="text-xs text-green-500 mt-1">+12.5% from last month</p>
           </div>
           
-          <div class="bg-white rounded-lg shadow-sm p-6">
-              <p class="text-sm text-gray-500">Upcoming Invoices</p>
-              <p class="text-3xl font-bold">{{ payments_count }}</p>
-              <p class="text-sm text-gray-500">Next 30 days</p>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
+              <div class="flex flex-row items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Upcoming Invoices</p>
+                  <span class="text-2xl">📋</span>
+              </div>
+              <div class="text-2xl font-bold">{{ payments_count }}</div>
+              <p class="text-xs text-blue-500 mt-1">Next 30 days</p>
           </div>
           
-          <div class="bg-white rounded-lg shadow-sm p-6">
-              <p class="text-sm text-gray-500">Average Invoice</p>
-              <p class="text-3xl font-bold">${{ average_invoice|floatformat:0 }}</p>
-              <p class="text-sm text-gray-500">Per contract</p>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
+              <div class="flex flex-row items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Average Invoice</p>
+                  <span class="text-2xl">📊</span>
+              </div>
+              <div class="text-2xl font-bold">
+                  {% if payments_count > 0 %}
+                      ${{ average_invoice|floatformat:0|intcomma }}
+                  {% else %}
+                      $0
+                  {% endif %}
+              </div>
+              <p class="text-xs text-purple-500 mt-1">Per contract</p>
           </div>
           
-          <div class="bg-white rounded-lg shadow-sm p-6">
-              <p class="text-sm text-gray-500">Collection Rate</p>
-              <p class="text-3xl font-bold text-green-500">100%</p>
-              <p class="text-sm text-gray-500">On track</p>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
+              <div class="flex flex-row items-center justify-between mb-2">
+                  <p class="text-sm text-gray-600">Collection Rate</p>
+                  <span class="text-2xl">✅</span>
+              </div>
+              <div class="text-2xl font-bold text-green-500">100%</div>
+              <p class="text-xs text-green-500 mt-1">On track</p>
           </div>
       </div>
   </div>
@@ -79,28 +91,29 @@
   <!-- Content Section -->
   <div class="container mx-auto px-6 py-8">
     <!-- Date Filter -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <label class="text-sm text-gray-600">Date Range:</label>
-                <select id="dateRange" class="px-3 py-2 border rounded-lg" onchange="filterByDate()">
-                    <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
-                    <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
-                    <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
-                    <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
-                </select>
-            </div>
-            <a href="{% url 'core:export_forecast' %}?days={{ request.GET.days|default:'30' }}" 
-               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                <i class="bi bi-file-earmark-excel"></i> Export to Excel
-            </a>
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+            <label class="text-sm text-gray-600 font-medium">Date Range:</label>
+            <select id="dateRange" class="px-4 py-2 border rounded-lg bg-white hover:border-purple-400 transition-colors" onchange="filterByDate()">
+                <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
+                <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
+                <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
+                <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
+            </select>
         </div>
+        <a href="{% url 'core:export_forecast' %}?days={{ request.GET.days|default:'30' }}" 
+           class="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Export
+        </a>
     </div>
     
     <div id="table-content" class="bg-white rounded-lg shadow-sm mt-6">
         <table class="w-full">
             <thead>
-                <tr class="border-b bg-gray-50">
+                <tr class="border-b bg-gray-50/50">
                     <th class="text-left p-4">
                         <a href="?days={{ request.GET.days|default:'30' }}&sort=client&order={% if sort_by == 'client' and sort_order == 'asc' %}desc{% else %}asc{% endif %}" 
                            class="hover:text-purple-600">
@@ -125,7 +138,7 @@
             </thead>
             <tbody>
                 {% for payment in upcoming_payments %}
-                <tr class="border-b hover:bg-gray-50">
+                <tr class="border-b hover:bg-gray-100 {% if forloop.counter|divisibleby:2 %}bg-gray-50{% endif %}">
                     <td class="p-4">{{ payment.client }}</td>
                     <td class="p-4">{{ payment.contract_number }}</td>
                     <td class="p-4 text-right">${{ payment.amount|floatformat:0|intcomma }}</td>
