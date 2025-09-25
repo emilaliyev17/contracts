@@ -1,0 +1,126 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}Payment Forecast - Contract Analyzer{% endblock %}
+
+{% block content %}
+<style>
+  .gradient-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+</style>
+
+<div class="min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <div class="gradient-header text-white">
+    <div class="container mx-auto px-6 py-12">
+      <!-- Main Navigation -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-4xl font-bold">Payment Forecast</h1>
+        <nav class="flex space-x-6">
+          <a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors">Home</a>
+          <a href="{% url 'core:contract_list' %}" class="text-white/80 hover:text-white transition-colors">Contracts</a>
+          <a href="{% url 'core:forecast' %}" class="text-white font-medium">Forecast</a>
+          <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
+        </nav>
+      </div>
+      
+      <p class="text-lg text-white/80 mb-4">Visualize upcoming payments and cash flow projections</p>
+    </div>
+  </div>
+
+  <!-- View Tabs -->
+  <div class="container mx-auto px-6 -mt-8">
+      <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
+          <button onclick="switchView('table')" id="table-tab" 
+                  class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
+              Table View
+          </button>
+          <button onclick="switchView('timeline')" id="timeline-tab"
+                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
+              Timeline View
+          </button>
+          <button onclick="switchView('calendar')" id="calendar-tab"
+                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
+              Calendar View
+          </button>
+      </div>
+  </div>
+
+  <!-- Metrics Row -->
+  <div class="container mx-auto px-6 py-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-sm p-6">
+              <p class="text-sm text-gray-500">Expected This Month</p>
+              <p class="text-3xl font-bold">${{ total_monthly|floatformat:0|intcomma }}</p>
+              <p class="text-sm text-gray-500">Total invoices</p>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-sm p-6">
+              <p class="text-sm text-gray-500">Upcoming Invoices</p>
+              <p class="text-3xl font-bold">{{ payments_count }}</p>
+              <p class="text-sm text-gray-500">Next 30 days</p>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-sm p-6">
+              <p class="text-sm text-gray-500">Average Invoice</p>
+              <p class="text-3xl font-bold">${{ average_invoice|floatformat:0 }}</p>
+              <p class="text-sm text-gray-500">Per contract</p>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-sm p-6">
+              <p class="text-sm text-gray-500">Collection Rate</p>
+              <p class="text-3xl font-bold text-green-500">100%</p>
+              <p class="text-sm text-gray-500">On track</p>
+          </div>
+      </div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="container mx-auto px-6 py-8">
+    <div id="table-content" class="bg-white rounded-lg shadow-sm mt-6">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b bg-gray-50">
+                    <th class="text-left p-4">Client</th>
+                    <th class="text-left p-4">Contract</th>
+                    <th class="text-right p-4">Amount</th>
+                    <th class="text-left p-4">Frequency</th>
+                    <th class="text-left p-4">Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in upcoming_payments %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">{{ payment.client }}</td>
+                    <td class="p-4">{{ payment.contract_number }}</td>
+                    <td class="p-4 text-right">${{ payment.amount|floatformat:0|intcomma }}</td>
+                    <td class="p-4">{{ payment.frequency }}</td>
+                    <td class="p-4">{{ payment.due_date|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-4 text-center text-gray-500">No upcoming payments</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchView(view) {
+    // Update tab styles
+    ['table', 'timeline', 'calendar'].forEach(tab => {
+        const btn = document.getElementById(tab + '-tab');
+        if (tab === view) {
+            btn.className = "px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm";
+        } else {
+            btn.className = "px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10";
+        }
+    });
+    // Content switching will be added later
+}
+</script>
+{% endblock %}

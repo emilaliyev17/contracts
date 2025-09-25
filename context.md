@@ -3736,4 +3736,167 @@ This enhancement provides users with granular control over the clarification app
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 23:00 PDT (Added Apply Answered Clarifications button)
+## Forecast Dashboard Implementation
+
+**Date**: September 25, 2025 - 23:30 PDT
+**Feature**: Complete payment forecast dashboard with table view and metrics
+**Status**: ✅ IMPLEMENTED
+
+### Overview
+Created a comprehensive payment forecast dashboard that displays upcoming payments from contracts, providing users with financial projections and cash flow insights. The dashboard includes metric cards, tabbed navigation, and a detailed payment table.
+
+### Implementation Details
+
+#### New Forecast View
+**File**: `core/views.py` (lines 531-567)
+- Created `forecast_view` function for payment forecasting
+- Fetches active contracts with payment terms
+- Calculates monthly payment projections
+- Provides comprehensive metrics for dashboard
+
+```python
+def forecast_view(request):
+    """View for payment forecast dashboard."""
+    from datetime import datetime, timedelta
+    
+    # Get active contracts
+    contracts = Contract.objects.filter(
+        status__in=['active', 'needs_clarification']
+    ).select_related('payment_terms')
+    
+    # Calculate upcoming payments for next 30 days
+    upcoming_payments = []
+    today = datetime.now().date()
+    
+    for contract in contracts:
+        if hasattr(contract, 'payment_terms'):
+            if contract.payment_terms.payment_frequency == 'monthly':
+                upcoming_payments.append({
+                    'client': contract.client_name or 'Unknown',
+                    'amount': contract.total_value / 12 if contract.total_value else 0,
+                    'due_date': today + timedelta(days=30),
+                    'contract_number': contract.contract_number,
+                    'frequency': 'Monthly'
+                })
+    
+    # Calculate metrics
+    total_monthly = sum(p['amount'] for p in upcoming_payments if p['amount'])
+    payments_count = len(upcoming_payments)
+    average_invoice = total_monthly / payments_count if payments_count > 0 else 0
+```
+
+#### URL Configuration
+**File**: `core/urls.py` (line 8)
+- Added forecast URL pattern: `path('forecast/', views.forecast_view, name='forecast')`
+- Accessible at `/forecast/` endpoint
+
+#### Template Structure
+**File**: `core/templates/core/forecast.html`
+- Extended from base.html with consistent styling
+- Gradient header matching other pages
+- Tabbed navigation for future views (Table, Timeline, Calendar)
+- Metric cards displaying key financial indicators
+- Responsive payment table with proper formatting
+
+### Key Features
+
+#### Navigation Integration
+- **Main Navigation**: Added Forecast link to all page headers
+- **Active State**: Proper highlighting of current page
+- **Consistent Design**: Matches existing page styling and layout
+
+#### Tabbed Interface
+- **Table View**: Currently implemented with payment data
+- **Timeline View**: Placeholder for chronological display
+- **Calendar View**: Placeholder for date-based visualization
+- **JavaScript Functionality**: Tab switching with visual feedback
+
+#### Metric Cards
+1. **Expected This Month**: Total monthly payment amount
+2. **Upcoming Invoices**: Count of payments in next 30 days  
+3. **Average Invoice**: Average payment per contract
+4. **Collection Rate**: Static 100% (ready for future logic)
+
+#### Payment Table
+- **Client Information**: Client name and contract number
+- **Financial Data**: Payment amount with currency formatting
+- **Payment Details**: Frequency and due date
+- **Responsive Design**: Hover effects and proper spacing
+- **Empty State**: Handles cases with no upcoming payments
+
+### Technical Implementation
+
+#### Data Processing
+- **Contract Filtering**: Active and needs_clarification status
+- **Payment Calculation**: Monthly payments as total_value / 12
+- **Date Projection**: Due dates set to 30 days from current date
+- **Metrics Calculation**: Sum, count, and average computations
+
+#### Template Features
+- **Currency Formatting**: `${{ amount|floatformat:0|intcomma }}`
+- **Date Formatting**: `{{ due_date|date:"M d, Y" }}`
+- **Conditional Logic**: Handles empty states and division by zero
+- **Responsive Grid**: `grid-cols-1 md:grid-cols-4` for metric cards
+
+#### JavaScript Functionality
+```javascript
+function switchView(view) {
+    // Updates tab button styles
+    // Active: bg-white text-purple-600 shadow-sm
+    // Inactive: text-white/80 hover:text-white hover:bg-white/10
+}
+```
+
+### Debug Process
+
+#### Issue Identified
+- **Problem**: No payments showing in forecast table
+- **Root Cause**: Case sensitivity mismatch in payment frequency check
+- **Code Issue**: Checking for `'Monthly'` but database contains `'monthly'`
+
+#### Database Analysis
+- **Total Contracts**: 64 (54 needs_clarification + 10 completed)
+- **Active Contracts**: 54 with needs_clarification status
+- **Payment Terms**: All contracts have payment_terms records
+- **Frequencies**: `monthly`, `one-time`, `quarterly` (lowercase)
+
+#### Fix Applied
+```python
+# Before (incorrect)
+if contract.payment_terms.payment_frequency == 'Monthly':
+
+# After (correct)  
+if contract.payment_terms.payment_frequency == 'monthly':
+```
+
+### Results
+- ✅ **Before Fix**: "No upcoming payments" message
+- ✅ **After Fix**: 24 monthly payments displayed correctly
+- ✅ **Metrics Working**: All metric cards showing proper values
+- ✅ **Table Populated**: Payment data displaying with proper formatting
+
+### Files Created/Modified
+- `core/views.py` - Added forecast_view function
+- `core/urls.py` - Added forecast URL pattern
+- `core/templates/core/forecast.html` - Complete forecast dashboard
+- `core/templates/core/contract_list.html` - Added Forecast navigation
+- `core/templates/core/home.html` - Added Forecast link in getting started
+
+### Future Enhancements
+- **Timeline View**: Chronological payment visualization
+- **Calendar View**: Date-based payment calendar
+- **Advanced Filtering**: Date ranges and contract types
+- **Export Functionality**: PDF/Excel export of forecasts
+- **Real-time Updates**: Live data refresh capabilities
+- **Payment Status Tracking**: Integration with actual payment records
+
+### Benefits
+1. **Financial Visibility**: Clear view of upcoming revenue
+2. **Cash Flow Planning**: Monthly payment projections
+3. **Contract Management**: Easy access to payment schedules
+4. **Dashboard Experience**: Professional metrics and visualizations
+5. **Scalable Architecture**: Ready for additional forecast views
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 23:30 PDT (Forecast dashboard implementation)

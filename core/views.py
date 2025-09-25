@@ -528,3 +528,41 @@ def apply_contract_clarifications(request, contract_id):
     return redirect('core:contract_detail', contract_id=contract.id)
 
 
+def forecast_view(request):
+    """View for payment forecast dashboard."""
+    from datetime import datetime, timedelta
+    
+    # Get active contracts
+    contracts = Contract.objects.filter(
+        status__in=['active', 'needs_clarification']
+    ).select_related('payment_terms')
+    
+    # Calculate upcoming payments for next 30 days
+    upcoming_payments = []
+    today = datetime.now().date()
+    
+    for contract in contracts:
+        if hasattr(contract, 'payment_terms'):
+            # Simple calculation for monthly payments
+            if contract.payment_terms.payment_frequency == 'monthly':
+                upcoming_payments.append({
+                    'client': contract.client_name or 'Unknown',
+                    'amount': contract.total_value / 12 if contract.total_value else 0,
+                    'due_date': today + timedelta(days=30),
+                    'contract_number': contract.contract_number,
+                    'frequency': 'Monthly'
+                })
+    
+    # Calculate metrics
+    total_monthly = sum(p['amount'] for p in upcoming_payments if p['amount'])
+    payments_count = len(upcoming_payments)
+    average_invoice = total_monthly / payments_count if payments_count > 0 else 0
+
+    context = {
+        'active_tab': 'table',
+        'upcoming_payments': upcoming_payments,
+        'total_monthly': total_monthly,
+        'payments_count': payments_count,
+        'average_invoice': average_invoice,
+    }
+    return render(request, 'core/forecast.html', context)
