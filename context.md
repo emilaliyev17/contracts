@@ -2171,4 +2171,90 @@ Complete redesign of the contract list page (`core/templates/core/contract_list.
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - Current session
+## UI Improvements - Full Width Layout & Row Numbers
+
+**Date**: September 25, 2025 (Continued session)
+**Status**: ✅ Completed
+
+### Overview
+Additional UI improvements to enhance the contract list page usability and screen space utilization.
+
+### Changes Implemented
+
+#### 1. Full-Width Container Layout
+**File**: `core/templates/core/contract_list.html`
+
+- **Container Override**: Added `container-fluid px-4` class to main content div
+- **CSS Override**: Neutralized base template width constraints
+  ```css
+  .container {
+      max-width: none !important;
+      margin: 2rem 0 !important;  
+      padding: 0 !important;
+  }
+  ```
+- **Benefits**:
+  - Utilizes entire screen width instead of being constrained to 1200px
+  - More space for table columns and data display
+  - Better use of widescreen monitors
+  - Maintains proper padding with `px-4` (1.5rem each side)
+
+#### 2. Database ID Replacement with Row Numbers
+**File**: `core/templates/core/contract_list.html`
+
+- **Table Header**: Changed `<th>ID</th>` to `<th>#</th>`
+- **Row Display**: Replaced `{{ contract.id }}` with `{{ forloop.counter }}`
+- **Functionality Preserved**: 
+  - Contract detail links still use `contract.id`
+  - Delete forms still reference `contract.id`
+  - All backend operations unchanged
+
+- **Benefits**:
+  - User-friendly sequential numbering (1, 2, 3...)
+  - Easier row referencing in discussions
+  - Cleaner appearance without exposing database internals
+  - Maintains all functionality while improving UX
+
+### Technical Details
+
+#### Full-Width Implementation
+```html
+<!-- Before -->
+<div class="contracts-page">
+
+<!-- After -->
+<div class="contracts-page container-fluid px-4">
+<style>
+.container {
+    max-width: none !important;
+    margin: 2rem 0 !important;
+    padding: 0 !important;
+}
+</style>
+```
+
+#### Row Number Implementation
+```html
+<!-- Before -->
+<th scope="col">ID</th>
+<td>{{ contract.id }}</td>
+
+<!-- After -->
+<th scope="col">#</th>
+<td>{{ forloop.counter }}</td>
+```
+
+### Impact
+- **Screen Utilization**: 100% width usage vs previous ~66% on large screens
+- **User Experience**: Cleaner row identification with sequential numbers
+- **Data Density**: More information visible without horizontal scrolling
+- **Professional Appearance**: Less technical, more user-friendly interface
+
+### Files Modified
+- `core/templates/core/contract_list.html` - Full-width layout + row numbers
+- No backend changes required
+- All existing functionality preserved
+
+---
+
+**LAST UPDATED**: September 25, 2025 - Current session (continued)

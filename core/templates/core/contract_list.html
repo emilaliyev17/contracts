@@ -3,7 +3,15 @@
 {% block title %}Contracts - Contract Analyzer{% endblock %}
 
 {% block content %}
-<div class="contracts-page">
+<div class="contracts-page container-fluid px-4">
+<style>
+/* Override base template container to use full width */
+.container {
+    max-width: none !important;
+    margin: 2rem 0 !important;
+    padding: 0 !important;
+}
+</style>
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
         <div>
             <h2 class="h4 mb-1">Contract Portfolio</h2>
@@ -106,7 +114,7 @@
                 <table class="table contract-table mb-0">
                     <thead>
                         <tr>
-                            <th scope="col">ID</th>
+                            <th scope="col">#</th>
                             <th scope="col">Contract Name</th>
                             <th scope="col">Contract Number</th>
                             <th scope="col">Client</th>
@@ -120,7 +128,7 @@
                     <tbody>
                         {% for contract in contracts %}
                         <tr>
-                            <td>{{ contract.id }}</td>
+                            <td>{{ forloop.counter }}</td>
                             <td>
                                 <a href="{% url 'core:contract_detail' contract.id %}" class="contract-link">
                                     {{ contract.contract_name|truncatechars:40 }}
