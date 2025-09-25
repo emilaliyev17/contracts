@@ -80,14 +80,20 @@
   <div class="container mx-auto px-6 py-8">
     <!-- Date Filter -->
     <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <div class="flex items-center gap-4">
-            <label class="text-sm text-gray-600">Date Range:</label>
-            <select id="dateRange" class="px-3 py-2 border rounded-lg" onchange="filterByDate()">
-                <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
-                <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
-                <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
-                <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
-            </select>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <label class="text-sm text-gray-600">Date Range:</label>
+                <select id="dateRange" class="px-3 py-2 border rounded-lg" onchange="filterByDate()">
+                    <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
+                    <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
+                    <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
+                    <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
+                </select>
+            </div>
+            <a href="{% url 'core:export_forecast' %}?days={{ request.GET.days|default:'30' }}" 
+               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+            </a>
         </div>
     </div>
     

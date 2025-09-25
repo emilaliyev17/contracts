@@ -590,3 +590,63 @@ def forecast_view(request):
         'sort_order': sort_order,
     }
     return render(request, 'core/forecast.html', context)
+
+
+def export_forecast(request):
+    """Export forecast data to Excel."""
+    from openpyxl import Workbook
+    from django.http import HttpResponse
+    from datetime import datetime, timedelta
+    
+    # Get same parameters as forecast view
+    days = request.GET.get('days', '30')
+    try:
+        days_int = int(days) if days != 'all' else 365
+    except ValueError:
+        days_int = 30
+    
+    today = datetime.now().date()
+    end_date = today + timedelta(days=days_int)
+    
+    # Get contracts and calculate payments (same logic as forecast_view)
+    contracts = Contract.objects.filter(
+        status__in=['active', 'needs_clarification']
+    ).select_related('payment_terms')
+    
+    upcoming_payments = []
+    for contract in contracts:
+        if hasattr(contract, 'payment_terms'):
+            # Simple calculation for monthly payments
+            if contract.payment_terms.payment_frequency == 'monthly':
+                upcoming_payments.append({
+                    'client': contract.client_name or 'Unknown',
+                    'contract': contract.contract_number,
+                    'amount': float(contract.total_value / 12) if contract.total_value else 0,
+                    'frequency': 'Monthly',
+                    'due_date': end_date
+                })
+    
+    # Create Excel
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Payment Forecast"
+    
+    # Headers
+    headers = ['Client', 'Contract', 'Amount', 'Frequency', 'Due Date']
+    ws.append(headers)
+    
+    # Data
+    for payment in upcoming_payments:
+        ws.append([
+            payment['client'],
+            payment['contract'],
+            payment['amount'],
+            payment['frequency'],
+            payment['due_date'].strftime('%Y-%m-%d')
+        ])
+    
+    # Response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="forecast_{today}.xlsx"'
+    wb.save(response)
+    return response
