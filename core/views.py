@@ -528,16 +528,103 @@ def apply_contract_clarifications(request, contract_id):
     return redirect('core:contract_detail', contract_id=contract.id)
 
 
+def generate_invoice_schedule(contract, start_date, end_date):
+    """Generate recurring invoice schedule for a contract."""
+    from datetime import datetime, timedelta
+    
+    invoices = []
+    
+    # Handle different frequencies
+    if hasattr(contract, 'payment_terms') and contract.payment_terms:
+        if contract.payment_terms.payment_frequency == 'monthly':
+            current = contract.start_date
+            while current <= end_date and current <= contract.end_date:
+                invoices.append({
+                    'date': current,
+                    'amount': contract.total_value / 12 if contract.total_value else 0,
+                    'type': 'monthly',
+                    'contract_id': contract.id,
+                    'contract_number': contract.contract_number,
+                    'client': contract.client_name or 'Unknown'
+                })
+                # Add 30 days for next month (simplified)
+                current = current + timedelta(days=30)
+                
+        elif contract.payment_terms.payment_frequency == 'quarterly':
+            current = contract.start_date
+            while current <= end_date and current <= contract.end_date:
+                invoices.append({
+                    'date': current,
+                    'amount': contract.total_value / 4 if contract.total_value else 0,
+                    'type': 'quarterly',
+                    'contract_id': contract.id,
+                    'contract_number': contract.contract_number,
+                    'client': contract.client_name or 'Unknown'
+                })
+                # Add 90 days for next quarter (simplified)
+                current = current + timedelta(days=90)
+                
+        elif contract.payment_terms.payment_frequency == 'annually':
+            current = contract.start_date
+            while current <= end_date and current <= contract.end_date:
+                invoices.append({
+                    'date': current,
+                    'amount': contract.total_value if contract.total_value else 0,
+                    'type': 'annually',
+                    'contract_id': contract.id,
+                    'contract_number': contract.contract_number,
+                    'client': contract.client_name or 'Unknown'
+                })
+                # Add 365 days for next year (simplified)
+                current = current + timedelta(days=365)
+    
+    # Add payment milestones
+    for milestone in contract.payment_milestones.all():
+        if milestone.due_date <= end_date and milestone.due_date >= start_date:
+            invoices.append({
+                'date': milestone.due_date,
+                'amount': milestone.amount,
+                'type': 'milestone',
+                'contract_id': contract.id,
+                'contract_number': contract.contract_number,
+                'client': contract.client_name or 'Unknown'
+            })
+    
+    return invoices
+
+
 def forecast_view(request):
     """View for payment forecast dashboard."""
     from datetime import datetime, timedelta
     
-    # Get date range from request
-    days = request.GET.get('days', '30')
-    try:
-        days_int = int(days) if days != 'all' else 365
-    except ValueError:
-        days_int = 30
+    # Get active tab from request
+    active_tab = request.GET.get('tab', 'table')
+    
+    # Get today's date first
+    today = datetime.now().date()
+    
+    # Check for custom date range
+    custom_start = request.GET.get('start_date')
+    custom_end = request.GET.get('end_date')
+    
+    if custom_start and custom_end:
+        start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+        end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+    else:
+        # Default logic for preset ranges
+        days = request.GET.get('days', '30')
+        if days == 'custom':
+            # Show last year by default for custom
+            start_date = today - timedelta(days=365)
+            end_date = today + timedelta(days=365)
+        else:
+            # Existing logic
+            try:
+                days_int = int(days) if days != 'all' else 365
+            except ValueError:
+                days_int = 30
+            start_date = today
+            end_date = today + timedelta(days=days_int)
     
     # Get sort parameters
     sort_by = request.GET.get('sort', 'due_date')
@@ -550,10 +637,14 @@ def forecast_view(request):
     
     # Calculate upcoming payments for specified date range
     upcoming_payments = []
-    today = datetime.now().date()
-    end_date = today + timedelta(days=days_int)
+    timeline_invoices = []
     
     for contract in contracts:
+        # Generate invoice schedule for timeline view
+        contract_invoices = generate_invoice_schedule(contract, start_date, end_date)
+        timeline_invoices.extend(contract_invoices)
+        
+        # Keep existing simple calculation for table view
         if hasattr(contract, 'payment_terms'):
             # Simple calculation for monthly payments
             if contract.payment_terms.payment_frequency == 'monthly':
@@ -575,14 +666,41 @@ def forecast_view(request):
         elif sort_by == 'due_date':
             upcoming_payments.sort(key=lambda x: x['due_date'], reverse=reverse)
     
+    # Sort timeline invoices by date
+    timeline_invoices.sort(key=lambda x: x['date'])
+    
+    # Group invoices by client and prepare months
+    from collections import defaultdict
+    timeline_by_client = defaultdict(list)
+    
+    for invoice in timeline_invoices:
+        timeline_by_client[invoice['client']].append(invoice)
+    
+    # Calculate months span for timeline
+    months_diff = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month
+    
+    # Generate list of months for columns based on actual date range
+    timeline_months = []
+    current_month = start_date.replace(day=1)
+    for i in range(months_diff + 1):
+        timeline_months.append(current_month)
+        # Move to next month
+        if current_month.month == 12:
+            current_month = current_month.replace(year=current_month.year + 1, month=1)
+        else:
+            current_month = current_month.replace(month=current_month.month + 1)
+    
     # Calculate metrics
     total_monthly = sum(p['amount'] for p in upcoming_payments if p['amount'])
     payments_count = len(upcoming_payments)
     average_invoice = total_monthly / payments_count if payments_count > 0 else 0
 
     context = {
-        'active_tab': 'table',
+        'active_tab': active_tab,
         'upcoming_payments': upcoming_payments,
+        'timeline_invoices': timeline_invoices,
+        'timeline_by_client': dict(timeline_by_client),
+        'timeline_months': timeline_months,
         'total_monthly': total_monthly,
         'payments_count': payments_count,
         'average_invoice': average_invoice,
@@ -599,14 +717,30 @@ def export_forecast(request):
     from datetime import datetime, timedelta
     
     # Get same parameters as forecast view
-    days = request.GET.get('days', '30')
-    try:
-        days_int = int(days) if days != 'all' else 365
-    except ValueError:
-        days_int = 30
-    
     today = datetime.now().date()
-    end_date = today + timedelta(days=days_int)
+    
+    # Check for custom date range
+    custom_start = request.GET.get('start_date')
+    custom_end = request.GET.get('end_date')
+    
+    if custom_start and custom_end:
+        start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+        end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+    else:
+        # Default logic for preset ranges
+        days = request.GET.get('days', '30')
+        if days == 'custom':
+            # Show last year by default for custom
+            start_date = today - timedelta(days=365)
+            end_date = today + timedelta(days=365)
+        else:
+            # Existing logic
+            try:
+                days_int = int(days) if days != 'all' else 365
+            except ValueError:
+                days_int = 30
+            start_date = today
+            end_date = today + timedelta(days=days_int)
     
     # Get contracts and calculate payments (same logic as forecast_view)
     contracts = Contract.objects.filter(

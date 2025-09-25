@@ -94,14 +94,23 @@
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-4">
             <label class="text-sm text-gray-600 font-medium">Date Range:</label>
-            <select id="dateRange" class="px-4 py-2 border rounded-lg bg-white hover:border-purple-400 transition-colors" onchange="filterByDate()">
+            <select id="dateRange" class="px-4 py-2 border rounded-lg bg-white hover:border-purple-400 transition-colors" onchange="handleDateChange()">
                 <option value="30" {% if request.GET.days == '30' or not request.GET.days %}selected{% endif %}>Next 30 days</option>
                 <option value="60" {% if request.GET.days == '60' %}selected{% endif %}>Next 60 days</option>
                 <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Next 90 days</option>
-                <option value="all" {% if request.GET.days == 'all' %}selected{% endif %}>All upcoming</option>
+                <option value="365" {% if request.GET.days == '365' %}selected{% endif %}>Next year</option>
+                <option value="custom" {% if request.GET.days == 'custom' %}selected{% endif %}>Custom Range</option>
             </select>
+            
+            <!-- Custom date inputs (hidden by default) -->
+            <div id="customDateInputs" {% if request.GET.days == 'custom' %}style="display: flex;"{% else %}style="display: none;"{% endif %} class="flex items-center gap-2">
+                <input type="date" id="startDate" class="px-3 py-2 border rounded-lg" value="{{ request.GET.start_date|default:'' }}">
+                <span>to</span>
+                <input type="date" id="endDate" class="px-3 py-2 border rounded-lg" value="{{ request.GET.end_date|default:'' }}">
+                <button onclick="applyCustomRange()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Apply</button>
+            </div>
         </div>
-        <a href="{% url 'core:export_forecast' %}?days={{ request.GET.days|default:'30' }}" 
+        <a href="{% url 'core:export_forecast' %}?days={{ request.GET.days|default:'30' }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.tab %}&tab={{ request.GET.tab }}{% endif %}" 
            class="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center transition-colors">
             <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -153,11 +162,54 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Timeline View -->
+    <div id="timeline-content" class="bg-white rounded-lg shadow-sm mt-6" style="display: none;">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="text-left p-4 sticky left-0 bg-gray-50">Client</th>
+                        {% for month in timeline_months %}
+                        <th class="text-center p-4 min-w-[100px]">{{ month|date:"M Y" }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client, invoices in timeline_by_client.items %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-medium sticky left-0 bg-white">{{ client }}</td>
+                        {% for month in timeline_months %}
+                            <td class="text-center p-4">
+                                {% for invoice in invoices %}
+                                    {% if invoice.date|date:"Y-m" == month|date:"Y-m" %}
+                                        <div class="text-sm font-semibold">${{ invoice.amount|floatformat:0 }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
   </div>
 </div>
 
 <script>
 function switchView(view) {
+    // Hide all views
+    document.getElementById('table-content').style.display = 'none';
+    document.getElementById('timeline-content').style.display = 'none';
+    
+    // Show selected view
+    if (view === 'table') {
+        document.getElementById('table-content').style.display = 'block';
+    } else if (view === 'timeline') {
+        document.getElementById('timeline-content').style.display = 'block';
+    }
+    
     // Update tab styles
     ['table', 'timeline', 'calendar'].forEach(tab => {
         const btn = document.getElementById(tab + '-tab');
@@ -167,12 +219,51 @@ function switchView(view) {
             btn.className = "px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10";
         }
     });
-    // Content switching will be added later
+    
+    // Update URL without reload
+    const url = new URL(window.location);
+    url.searchParams.set('tab', view);
+    window.history.replaceState({}, '', url);
 }
 
-function filterByDate() {
-    const days = document.getElementById('dateRange').value;
-    window.location.href = '?days=' + days;
+function handleDateChange() {
+    const value = document.getElementById('dateRange').value;
+    const customInputs = document.getElementById('customDateInputs');
+    
+    if (value === 'custom') {
+        customInputs.style.display = 'flex';
+    } else if (value !== 'custom') {
+        customInputs.style.display = 'none';
+        const currentTab = getActiveTab();
+        window.location.href = '?days=' + value + '&tab=' + currentTab;
+    }
 }
+
+function applyCustomRange() {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const currentTab = getActiveTab();  // Get current tab
+    
+    if (start && end) {
+        window.location.href = '?days=custom&start_date=' + start + '&end_date=' + end + '&tab=' + currentTab;
+    }
+}
+
+function getActiveTab() {
+    // Check which tab has active styling
+    if (document.getElementById('timeline-tab').classList.contains('bg-white')) {
+        return 'timeline';
+    } else if (document.getElementById('calendar-tab').classList.contains('bg-white')) {
+        return 'calendar';
+    }
+    return 'table';
+}
+
+// On page load, set correct tab based on URL
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab') || 'table';
+    switchView(tab);
+});
 </script>
 {% endblock %}

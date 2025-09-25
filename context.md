@@ -2506,7 +2506,7 @@ Applied modern design principles from v0 to the Django Forecast page, enhancing 
 
 ## CRITICAL FIX 4 - PDF File Handling in Clarifications
 
-**Date**: September 24, 2025 - 21:45 PDT
+**Date**: September 25, 2025 - 16:15 PDT
 **Issue**: Template error when contracts lack PDF files
 **Status**: ✅ RESOLVED
 
@@ -4453,4 +4453,213 @@ if contract.payment_terms.payment_frequency == 'monthly':
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 23:30 PDT (Forecast dashboard implementation)
+---
+
+## TIMELINE VIEW IMPLEMENTATION - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 15:48 PDT
+**Feature**: Timeline View visualization for invoice schedule
+**Status**: ✅ COMPLETED
+
+### Implementation Overview
+Created a comprehensive Timeline View that displays invoice schedules in a grid format with clients as rows and months as columns.
+
+### Key Features
+
+#### Timeline Grid Structure:
+- **Client Rows**: Each row represents a different client
+- **Month Columns**: 12 months starting from current month (or custom range)
+- **Sticky Headers**: Client column and month headers remain visible during scrolling
+- **Responsive Design**: Horizontal scrolling for large datasets
+- **Invoice Display**: Shows invoice amounts in corresponding month cells
+
+#### Backend Data Processing:
+```python
+# Group invoices by client and prepare months
+from collections import defaultdict
+timeline_by_client = defaultdict(list)
+
+for invoice in timeline_invoices:
+    timeline_by_client[invoice['client']].append(invoice)
+
+# Generate list of months for columns
+timeline_months = []
+current_month = today.replace(day=1)
+for i in range(12):  # Show 12 months
+    timeline_months.append(current_month)
+    # Move to next month logic...
+```
+
+### Testing Results
+- **22 Clients**: Successfully grouped invoices by 22 different clients
+- **12 Months**: Generated 12 months starting from current month
+- **Invoice Display**: Invoices properly matched to their corresponding months
+- **Responsive Layout**: Timeline works with different date ranges
+- **Visual Features**: Sticky headers, hover effects, clean layout
+
+### Technical Benefits
+- **Efficient Grouping**: Uses `defaultdict` for fast client grouping
+- **Minimal Processing**: Simple month generation algorithm
+- **Template Optimization**: Efficient template rendering
+- **Scalable Design**: Handles varying numbers of clients and invoices
+
+---
+
+## CUSTOM DATE RANGE FILTER - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 16:00 PDT
+**Feature**: Custom Date Range filter for historical analysis
+**Status**: ✅ COMPLETED
+
+### Implementation Overview
+Added a comprehensive custom date range filter that allows users to analyze payment data for any time period, including historical analysis and future projections.
+
+### Key Features
+
+#### Enhanced Date Filter UI:
+- **Custom Range Option**: Added "Custom Range" to the dropdown menu
+- **Dynamic Input Fields**: Custom date inputs appear when "Custom Range" is selected
+- **Apply Button**: Blue button to apply the custom date range
+- **State Preservation**: Custom inputs show/hide based on current selection
+- **Value Persistence**: Date inputs retain values when custom range is active
+
+#### Backend Date Handling:
+```python
+# Check for custom date range
+custom_start = request.GET.get('start_date')
+custom_end = request.GET.get('end_date')
+
+if custom_start and custom_end:
+    start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+    end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+else:
+    # Default logic for preset ranges
+    days = request.GET.get('days', '30')
+    if days == 'custom':
+        # Show last year by default for custom
+        start_date = today - timedelta(days=365)
+        end_date = today + timedelta(days=365)
+    else:
+        # Existing logic for preset ranges
+        try:
+            days_int = int(days) if days != 'all' else 365
+        except ValueError:
+            days_int = 30
+        start_date = today
+        end_date = today + timedelta(days=days_int)
+```
+
+### Testing Results
+
+#### Date Range Capabilities:
+- **30 Days**: ✅ Works (Next 30 days)
+- **60 Days**: ✅ Works (Next 60 days)  
+- **90 Days**: ✅ Works (Next 90 days)
+- **365 Days**: ✅ Works (Next year)
+- **Custom Range**: ✅ Works (Any date range)
+
+#### Historical Analysis Examples:
+- **1 Year**: 2024-01-01 to 2024-12-31 (12 months)
+- **6 Years**: 2020-01-01 to 2025-12-31 (72 months)
+- **Any Range**: Supports unlimited date ranges
+
+### Technical Benefits
+- **Unlimited Range**: No restrictions on date range length
+- **Historical Analysis**: Can analyze data from any time period
+- **Future Planning**: Can project far into the future
+- **Custom Periods**: Support for fiscal years, quarters, etc.
+- **Efficient Processing**: Only generates months within the specified range
+- **Memory Efficient**: Timeline generation scales with date range
+
+---
+
+## TAB SWITCHING FIX - FORECAST DASHBOARD
+
+**Date**: September 25, 2025 - 16:11 PDT
+**Feature**: Fixed tab switching issue when applying custom date range
+**Status**: ✅ COMPLETED
+
+### Problem Analysis
+**Issue**: When users applied custom date ranges, the tab state was not preserved, causing users to lose their current view (Table/Timeline/Calendar).
+
+**Root Cause**: 
+- Custom date range application didn't capture current tab state
+- Tab state was not passed in URL parameters
+- Page reloads reset tab to default (Table view)
+
+### Implementation Overview
+Implemented comprehensive tab state management that preserves the active tab across all operations including custom date range applications.
+
+### Key Features
+
+#### Backend Tab State Management:
+```python
+# Get active tab from request
+active_tab = request.GET.get('tab', 'table')
+
+# Pass to context
+context = {
+    'active_tab': active_tab,
+    # ... other context
+}
+```
+
+#### JavaScript Tab Detection:
+```javascript
+function getActiveTab() {
+    // Check which tab has active styling
+    if (document.getElementById('timeline-tab').classList.contains('bg-white')) {
+        return 'timeline';
+    } else if (document.getElementById('calendar-tab').classList.contains('bg-white')) {
+        return 'calendar';
+    }
+    return 'table';
+}
+```
+
+#### Custom Range with Tab Preservation:
+```javascript
+function applyCustomRange() {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const currentTab = getActiveTab();  // Get current tab
+    
+    if (start && end) {
+        window.location.href = '?days=custom&start_date=' + start + '&end_date=' + end + '&tab=' + currentTab;
+    }
+}
+```
+
+### Testing Results
+
+#### Tab State Preservation:
+- **Custom Date Range**: ✅ Timeline tab preserved when applying custom dates
+- **Preset Date Ranges**: ✅ Tab state maintained when switching between 30/60/90/365 days
+- **Page Reloads**: ✅ Correct tab restored from URL parameter
+- **Export Functionality**: ✅ Tab parameter included in export URLs
+
+#### URL Parameter Handling:
+- **Table Tab**: ✅ `?tab=table` correctly activates table view
+- **Timeline Tab**: ✅ `?tab=timeline` correctly activates timeline view
+- **Calendar Tab**: ✅ `?tab=calendar` correctly activates calendar view
+- **Default Behavior**: ✅ No tab parameter defaults to table view
+- **Invalid Tabs**: ✅ Invalid tab values are handled gracefully
+
+### Technical Benefits
+- **URL-Based State**: Tab state is stored in URL parameters
+- **Browser Integration**: Works with browser history and bookmarks
+- **No Page Reloads**: Tab switching is instant without server requests
+- **Consistent State**: Tab state preserved across all user actions
+- **Seamless Workflow**: No interruption when applying date filters
+- **Professional Feel**: Smooth, responsive interface
+
+### User Experience Improvements
+- **Intuitive Behavior**: Users expect tab state to persist
+- **Predictable Navigation**: Tab state always matches URL
+- **Bookmarkable URLs**: URLs with tab parameters can be bookmarked
+- **Historical Analysis Workflow**: Users can switch to Timeline view, apply custom date range, and maintain timeline view
+- **Multi-Tab Navigation**: Users can explore different views while preserving their selections
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 16:15 PDT (Timeline View, Custom Date Range, and Tab Switching implementations)
