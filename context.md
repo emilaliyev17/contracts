@@ -2677,4 +2677,128 @@ max-width: 250px;         /* Prevents excessive width */
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - Current session (table improvements)
+## Contract Detail Enhancement - PDF Preview Button
+
+**Date**: September 25, 2025 (Detail page improvements)
+**Status**: ✅ Completed
+
+### Overview
+Enhanced the contract detail page with a PDF preview button to provide easy access to the original contract document while maintaining clean layout and user experience.
+
+### Changes Implemented
+
+#### 1. PDF Preview Button Integration
+**File**: `core/templates/core/contract_detail.html`
+
+**Problem**: Users had to navigate away from contract details to view the original PDF
+**Solution**: Added prominent PDF preview button at the top of the detail page
+
+```html
+<!-- Enhanced header layout with PDF preview -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2>{{ contract.contract_name }}</h2>
+    {% if contract.pdf_file %}
+    <a href="{{ contract.pdf_file.url }}" target="_blank" class="btn btn-primary">
+        <i class="bi bi-file-pdf"></i> Preview PDF
+    </a>
+    {% endif %}
+</div>
+```
+
+#### 2. Layout Enhancement
+**Before**: Simple heading structure
+```html
+<h2>{{ contract.contract_name }}</h2>
+```
+
+**After**: Flexbox layout with integrated button
+- **Flexbox container**: `display: flex; justify-content: space-between`
+- **Vertical alignment**: `align-items: center`
+- **Proper spacing**: `margin-bottom: 1rem`
+
+### Technical Implementation Details
+
+#### Conditional Rendering
+```html
+{% if contract.pdf_file %}
+    <!-- PDF preview button -->
+{% endif %}
+```
+- **Smart display**: Button only appears when PDF file exists
+- **No errors**: Graceful handling of contracts without PDF files
+- **Clean UI**: No empty space when PDF is not available
+
+#### Button Features
+```html
+<a href="{{ contract.pdf_file.url }}" target="_blank" class="btn btn-primary">
+    <i class="bi bi-file-pdf"></i> Preview PDF
+</a>
+```
+
+**Key Attributes**:
+- **`target="_blank"`**: Opens PDF in new tab/window
+- **`btn btn-primary`**: Bootstrap primary button styling
+- **`bi-file-pdf`**: Bootstrap Icons PDF file icon
+- **Clear labeling**: "Preview PDF" text for accessibility
+
+#### Flexbox Layout Benefits
+- **Responsive design**: Button adjusts to different screen sizes
+- **Proper alignment**: Title and button perfectly aligned
+- **Space distribution**: Equal spacing between title and button
+- **Clean appearance**: Professional layout with proper spacing
+
+### User Experience Improvements
+
+#### Enhanced Accessibility
+- **Easy PDF access**: One-click access to original document
+- **Non-disruptive**: Opens in new tab, preserves current page
+- **Clear identification**: PDF icon and descriptive text
+- **Keyboard navigation**: Accessible via keyboard controls
+
+#### Workflow Benefits
+- **Reduced clicks**: No need to navigate back and forth
+- **Context preservation**: Contract details remain visible
+- **Quick comparison**: Side-by-side viewing of details and PDF
+- **Professional appearance**: Clean, modern interface
+
+### Integration with Existing Features
+
+#### Bootstrap Compatibility
+- **Icons**: Uses existing Bootstrap Icons (`bi-file-pdf`)
+- **Buttons**: Consistent with existing button styling
+- **Responsive**: Works with existing responsive design
+- **Theme**: Matches current color scheme
+
+#### Template Structure
+- **Non-intrusive**: Added without modifying existing content
+- **Conditional**: Only displays when appropriate
+- **Maintainable**: Clean, readable template code
+- **Extensible**: Easy to modify or enhance in future
+
+### Performance Considerations
+- **Minimal overhead**: Simple HTML/CSS addition
+- **Conditional loading**: Only renders when PDF exists
+- **CDN icons**: Bootstrap Icons loaded from CDN
+- **No JavaScript**: Pure HTML/CSS implementation
+
+### Testing Results
+- ✅ **PDF preview**: Opens original PDF in new tab
+- ✅ **Conditional display**: Only shows when PDF file exists
+- ✅ **Responsive layout**: Works on all screen sizes
+- ✅ **Bootstrap styling**: Consistent with existing design
+- ✅ **Accessibility**: Proper keyboard navigation and screen reader support
+- ✅ **Cross-browser**: Compatible with modern browsers
+
+### Files Modified
+- `core/templates/core/contract_detail.html` - PDF preview button integration
+
+### Future Enhancements
+- **PDF viewer integration**: Embedded PDF viewer within the page
+- **Download option**: Add download button alongside preview
+- **PDF thumbnails**: Show PDF preview thumbnails
+- **Version history**: Access to different PDF versions
+- **Annotations**: Allow PDF annotations and notes
+
+---
+
+**LAST UPDATED**: September 25, 2025 - Current session (detail page improvements)
