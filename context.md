@@ -3360,4 +3360,163 @@ def contract_detail(request, contract_id):
 
 ---
 
-**LAST UPDATED**: September 25, 2025 - 21:50 PDT (AI clarifications integration)
+## Back Button with Navigation Memory
+
+**Date**: September 25, 2025 - 22:20 PDT
+**Feature**: Smart back navigation that remembers user's origin
+**Status**: ✅ IMPLEMENTED
+
+### Overview
+Implemented an intelligent back button on the contract detail page that remembers where users came from, preserving their filter state (needs_review, all, completed) and any query parameters.
+
+### Implementation Details
+
+#### Template Updates
+**File**: `core/templates/core/contract_list.html` (lines 290, 318)
+- Modified all contract detail links to include current URL
+- Added `?next={{ request.get_full_path|urlencode }}` to preserve state
+
+```html
+<!-- Before -->
+href="{% url 'core:contract_detail' contract.id %}"
+
+<!-- After -->
+href="{% url 'core:contract_detail' contract.id %}?next={{ request.get_full_path|urlencode }}"
+```
+
+#### Backend Security
+**File**: `core/views.py` (lines 94-115)
+- Added secure URL validation to prevent open redirects
+- Imported `reverse` and `url_has_allowed_host_and_scheme`
+- Validates 'next' parameter against allowed hosts
+- Falls back to contract list if validation fails
+
+```python
+# Get and validate the 'next' parameter
+next_url = request.GET.get('next', '')
+if next_url:
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = reverse('core:contract_list')
+else:
+    next_url = reverse('core:contract_list')
+
+context['back_url'] = next_url
+```
+
+#### UI Enhancement
+**File**: `core/templates/core/contract_detail.html` (lines 9-18)
+- Added secondary-styled Back button with arrow icon
+- Positioned alongside Preview PDF button
+- Maintains consistent Bootstrap styling
+
+```html
+<div>
+    <a href="{{ back_url }}" class="btn btn-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+    {% if contract.pdf_file %}
+    <a href="{{ contract.pdf_file.url }}" target="_blank" class="btn btn-primary">
+        <i class="bi bi-file-pdf"></i> Preview PDF
+    </a>
+    {% endif %}
+</div>
+```
+
+### Security Features
+- **URL Validation**: Django's built-in `url_has_allowed_host_and_scheme`
+- **Host Restriction**: Only allows redirects within the same host
+- **Safe Fallback**: Defaults to contract list on validation failure
+- **XSS Prevention**: URL encoding prevents injection attacks
+
+### User Experience Benefits
+1. **State Preservation**: Maintains filter selections (needs_review, completed, all)
+2. **Query Parameter Retention**: Keeps search terms and pagination
+3. **Intuitive Navigation**: Clear visual hierarchy with secondary button style
+4. **Consistent Experience**: Works across all entry points to contract details
+
+### Testing Validation
+- ✅ Filter states preserved when navigating back
+- ✅ URL parameters properly encoded and decoded
+- ✅ Security validation prevents malicious redirects
+- ✅ Fallback mechanism works for direct access
+- ✅ Button styling consistent with Bootstrap theme
+
+---
+
+## Fixed Clarification Answer Submission Flow
+
+**Date**: September 25, 2025 - 22:30 PDT
+**Fix**: Keep users on contract detail page after answering clarifications
+**Status**: ✅ RESOLVED
+
+### Problem Statement
+Users were being redirected to the clarifications list page after answering a question, disrupting their workflow when reviewing multiple clarifications for the same contract.
+
+### Solution Implementation
+
+#### View Logic Update
+**File**: `core/views.py` - `answer_clarification` view (lines 453-514)
+
+##### Validation Failure Case (line 464):
+```python
+# OLD: Redirect to clarifications list
+return redirect('core:clarifications')
+
+# NEW: Stay on contract detail page
+return redirect('core:contract_detail', contract_id=clarification.contract.id)
+```
+
+##### Success Case (line 514):
+```python
+# OLD: Redirect to clarifications list
+return redirect('core:clarifications')
+
+# NEW: Stay on contract detail page
+return redirect('core:contract_detail', contract_id=clarification.contract.id)
+```
+
+### Workflow Improvements
+
+#### Before Fix:
+1. User views contract detail page
+2. Answers clarification question
+3. ❌ Gets redirected to clarifications list
+4. Must navigate back to continue answering
+5. Loses context and momentum
+
+#### After Fix:
+1. User views contract detail page
+2. Answers clarification question
+3. ✅ Stays on same contract detail page
+4. Can immediately answer next question
+5. Maintains focus and context
+
+### Benefits
+- **Improved Efficiency**: No unnecessary navigation between pages
+- **Better Context**: Users stay focused on one contract
+- **Faster Processing**: Sequential clarifications handled quickly
+- **Preserved Messages**: All success/error notifications still display
+- **Seamless Experience**: Aligns with integrated UI design
+
+### Technical Considerations
+- Uses `clarification.contract.id` for correct redirect
+- Handles both success and validation failure cases
+- Maintains all existing functionality:
+  - Auto-apply when all clarifications answered
+  - Status updates to 'completed'
+  - Success/error message display
+- No breaking changes to form submission process
+
+### Preserved Functionality
+- ✅ Clarification answers saved correctly
+- ✅ Auto-apply logic still triggers
+- ✅ Status updates work as expected
+- ✅ All messages display properly
+- ✅ Contract updates apply when complete
+
+### Files Modified
+- `core/views.py` - Updated redirect logic in answer_clarification view
+
+---
+
+**LAST UPDATED**: September 25, 2025 - 22:30 PDT (Back button navigation & clarification flow fixes)

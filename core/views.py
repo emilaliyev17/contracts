@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse, FileResponse
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.files.storage import default_storage
@@ -95,11 +97,20 @@ def contract_detail(request, contract_id):
     payment_milestones = contract.payment_milestones.all().order_by('due_date')
     clarifications = contract.clarifications.all().order_by('-created_at')  # ADD THIS
     
+    # Get and validate the 'next' parameter
+    next_url = request.GET.get('next', '')
+    if next_url:
+        if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            next_url = reverse('core:contract_list')
+    else:
+        next_url = reverse('core:contract_list')
+    
     context = {
         'contract': contract,
         'payment_milestones': payment_milestones,
         'payment_terms': getattr(contract, 'payment_terms', None),
         'clarifications': clarifications,  # ADD THIS
+        'back_url': next_url,
     }
     return render(request, 'core/contract_detail.html', context)
 
@@ -449,7 +460,8 @@ def answer_clarification(request, clarification_id):
         
         if not answer:
             messages.error(request, 'Please provide an answer before submitting.')
-            return redirect('core:clarifications')
+            # Stay on the contract detail page after validation failure
+            return redirect('core:contract_detail', contract_id=clarification.contract.id)
         
         # Mark the clarification as answered
         clarification.mark_as_answered(answer)
@@ -498,7 +510,8 @@ def answer_clarification(request, clarification_id):
         logger.error(f"Error answering clarification {clarification_id}: {str(e)}")
         messages.error(request, f'Failed to save answer: {str(e)}')
     
-    return redirect('core:clarifications')
+    # Stay on the contract detail page after answering
+    return redirect('core:contract_detail', contract_id=clarification.contract.id)
 
 
 @require_http_methods(["POST"])
