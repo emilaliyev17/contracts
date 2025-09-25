@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Contract Analyzer{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        success: '#22c55e',
+                        warning: '#eab308', 
+                        info: '#3b82f6',
+                        primary: '#6366f1',
+                        destructive: '#ef4444',
+                        muted: '#6b7280',
+                        background: '#ffffff'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -111,20 +129,9 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Contract Payment Analyzer</h1>
-    </div>
+    <!-- Old navigation removed - using new gradient header -->
     
-    <div class="nav">
-        <a href="{% url 'core:home' %}">Home</a>
-        <a href="{% url 'core:contract_list' %}">Contracts</a>
-        <a href="{% url 'core:clarifications' %}">Clarifications</a>
-        <a href="/admin/">Admin</a>
-    </div>
-    
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
+    {% block content %}
+    {% endblock %}
 </body>
 </html>
