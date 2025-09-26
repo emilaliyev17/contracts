@@ -14,8 +14,6 @@
           <p class="text-white/80 text-lg">Track and manage your contract payments</p>
         </div>
         <nav class="flex space-x-6">
-          <a href="{% url 'core:contract_list' %}" class="text-white/80 hover:text-white transition-colors">Contracts</a>
-          <a href="{% url 'core:forecast' %}" class="text-white font-medium">Forecast</a>
           <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
         </nav>
       </div>
@@ -36,6 +34,11 @@
           <button onclick="switchView('calendar')" id="calendar-tab"
                   class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
               Calendar View
+          </button>
+          <button type="button" 
+                  onclick="window.location.href='{% url 'core:contract_list' %}'"
+                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors">
+              Contracts
           </button>
       </div>
   </div>
