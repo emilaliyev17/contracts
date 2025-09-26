@@ -7154,3 +7154,72 @@ document.querySelectorAll('.qbo-amount').forEach(input => {
 - Uses `querySelectorAll()` with `forEach()` for consistent element handling
 - Preserves existing `updateMilestone()` function integration
 - Maintains backward compatibility with existing functionality
+
+---
+
+### Accounting Page Redesign
+**Date**: December 19, 2024
+**File**: `core/templates/core/accounting.html`
+
+**Changes Made**:
+- **Complete UI Redesign**: Redesigned Accounting page to match Contract Portfolio design pattern
+- **Added Thousand Separators**: Implemented currency formatting with commas for better readability
+- **Enhanced User Experience**: Added stats dashboard, filter tabs, and improved layout
+
+**New Features**:
+
+1. **Gradient Header**:
+   - Purple to blue gradient background matching Contract Portfolio
+   - Updated navigation to "Back to Contracts" link
+   - Consistent branding and styling
+
+2. **Tab Filters Section**:
+   - Added filter tabs: All, Reconciled, Pending, Discrepancies
+   - Purple background with interactive button styling
+   - Ready for future filtering functionality
+
+3. **Stats Cards Dashboard**:
+   - 4-column responsive grid layout
+   - Total Invoices, Total Amount, Reconciled, Discrepancies metrics
+   - Color-coded values (blue for amount, green for reconciled, red for discrepancies)
+   - Uses Django humanize `intcomma` filter for thousand separators
+
+4. **Enhanced Table Card**:
+   - Wrapped table in white card with shadow
+   - Added "Invoice Reconciliation" section header
+   - Moved Edit/Save buttons to card header for better UX
+
+**Currency Formatting Improvements**:
+- **Django Template**: Added `{% load humanize %}` and `|intcomma` filter
+- **JavaScript Function**: Added `formatCurrency()` function for dynamic formatting
+- **Before**: `$34500.00` → **After**: `$34,500.00`
+- **Real-time Calculations**: Difference calculations now use formatted display
+- **Input Formatting**: QBO Amount fields format to 2 decimal places on blur
+
+**Technical Implementation**:
+```javascript
+function formatCurrency(num) {
+    return '$' + parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+```
+
+**Preserved Functionality**:
+- All existing JavaScript functionality maintained
+- Edit/Save button behavior unchanged
+- Real-time difference calculations preserved
+- QBO input field interactions intact
+- Sticky table header maintained
+- Responsive design preserved
+
+**Template Variables Expected**:
+- `total_invoices` - Total number of invoices
+- `total_amount` - Sum of all invoice amounts  
+- `reconciled_count` - Number of reconciled invoices
+- `discrepancy_count` - Number of invoices with discrepancies
+
+**Benefits**:
+- Consistent design language across the application
+- Better information hierarchy and visual organization
+- Improved readability with thousand separators
+- Enhanced user experience with stats dashboard
+- Ready for future filtering and analytics features

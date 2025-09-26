@@ -1,5 +1,8 @@
 {% extends 'core/base.html' %}
+{% load humanize %}
 {% block content %}
+
+<!-- Gradient Header -->
 <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
     <div class="px-4 py-8">
         <div class="flex justify-between items-start">
@@ -7,93 +10,144 @@
                 <h1 class="text-3xl font-bold mb-2">Accounting</h1>
                 <p class="text-purple-100">Invoice reconciliation with QuickBooks</p>
             </div>
-            <button onclick="history.back()" 
-                    class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
-                Back
-            </button>
+            <a href="{% url 'core:contract_list' %}" 
+               class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
+                Back to Contracts
+            </a>
         </div>
     </div>
 </div>
 
-<div class="p-6">
-    <div class="flex justify-end mb-4 space-x-2">
-        <button id="editBtn" 
-                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Edit
+<!-- Tab filters -->
+<div class="bg-purple-500 px-4 py-2">
+    <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
+        <button class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
+            All
         </button>
-        <button id="saveBtn" 
-                class="px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed" 
-                disabled>
-            Save
+        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
+            Reconciled
+        </button>
+        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
+            Pending
+        </button>
+        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
+            Discrepancies
         </button>
     </div>
+</div>
 
-    <table class="w-full">
-        <thead>
-            <tr class="border-b bg-gray-50">
-                <th class="text-left p-4">Contract Name</th>
-                <th class="text-left p-4">Contract Number</th>
-                <th class="text-left p-4">Invoice Date</th>
-                <th class="text-left p-4">Invoice#</th>
-                <th class="text-right p-4">Amount</th>
-                <th class="text-left p-4">QBO Invoice#</th>
-                <th class="text-left p-4">QBO Inv Date</th>
-                <th class="text-right p-4">QBO Amount</th>
-                <th class="text-right p-4">Difference</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for milestone in milestones %}
-            <tr class="border-b">
-                <td class="p-4">{{ milestone.contract.contract_name }}</td>
-                <td class="p-4">{{ milestone.contract.contract_number }}</td>
-                <td class="p-4">
-                    {% if milestone.invoice_date %}
-                        {{ milestone.invoice_date|date:"M d, Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td class="p-4">{{ milestone.milestone_name }}</td>
-                <td class="p-4 text-right">${{ milestone.amount|floatformat:2 }}</td>
-                <td class="p-4">
-                    <input type="text" 
-                           class="border rounded px-2 py-1 w-32 qbo-input" 
-                           value="{{ milestone.qbo_invoice_number|default:'' }}"
-                           placeholder="QBO Invoice#"
-                           data-milestone-id="{{ milestone.id }}"
-                           data-field="qbo_invoice_number"
-                           disabled>
-                </td>
-                <td class="p-4">
-                    <input type="date" 
-                           class="border rounded px-2 py-1 qbo-input" 
-                           value="{{ milestone.qbo_invoice_date|date:'Y-m-d'|default:'' }}"
-                           data-milestone-id="{{ milestone.id }}"
-                           data-field="qbo_invoice_date"
-                           disabled>
-                </td>
-                <td class="p-4">
-                    <input type="number" 
-                           step="0.01"
-                           class="border rounded px-2 py-1 w-32 text-right qbo-amount qbo-input" 
-                           value="{{ milestone.qbo_amount|default:'' }}"
-                           placeholder="0.00"
-                           data-milestone-id="{{ milestone.id }}"
-                           data-field="qbo_amount"
-                           data-original-amount="{{ milestone.amount }}"
-                           disabled>
-                </td>
-                <td class="p-4 text-right difference">
-                    <span id="diff-{{ milestone.id }}">-</span>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- Stats Cards -->
+<div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Total Invoices</div>
+            <div class="text-2xl font-bold">{{ total_invoices|default:"0" }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Total Amount</div>
+            <div class="text-2xl font-bold text-blue-600">${{ total_amount|floatformat:2|intcomma }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Reconciled</div>
+            <div class="text-2xl font-bold text-green-600">{{ reconciled_count|default:"0" }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Discrepancies</div>
+            <div class="text-2xl font-bold text-red-600">{{ discrepancy_count|default:"0" }}</div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Invoice Reconciliation</h2>
+                <div class="space-x-2">
+                    <button id="editBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Edit
+                    </button>
+                    <button id="saveBtn" class="px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed" disabled>
+                        Save
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Table with sticky header -->
+            <div class="overflow-auto max-h-[calc(100vh-400px)]">
+                <table class="w-full">
+                    <thead class="sticky top-0 z-10">
+                        <tr class="border-b bg-gray-50/95 backdrop-blur">
+                        <th class="text-left p-4">Contract Name</th>
+                        <th class="text-left p-4">Contract Number</th>
+                        <th class="text-left p-4">Invoice Date</th>
+                        <th class="text-left p-4">Invoice#</th>
+                        <th class="text-right p-4">Amount</th>
+                        <th class="text-left p-4">QBO Invoice#</th>
+                        <th class="text-left p-4">QBO Inv Date</th>
+                        <th class="text-right p-4">QBO Amount</th>
+                        <th class="text-right p-4">Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for milestone in milestones %}
+                    <tr class="border-b">
+                        <td class="p-4">{{ milestone.contract.contract_name }}</td>
+                        <td class="p-4">{{ milestone.contract.contract_number }}</td>
+                        <td class="p-4">
+                            {% if milestone.invoice_date %}
+                                {{ milestone.invoice_date|date:"M d, Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="p-4">{{ milestone.milestone_name }}</td>
+                        <td class="p-4 text-right">${{ milestone.amount|floatformat:2|intcomma }}</td>
+                        <td class="p-4">
+                            <input type="text" 
+                                   class="border rounded px-2 py-1 w-32 qbo-input" 
+                                   value="{{ milestone.qbo_invoice_number|default:'' }}"
+                                   placeholder="QBO Invoice#"
+                                   data-milestone-id="{{ milestone.id }}"
+                                   data-field="qbo_invoice_number"
+                                   disabled>
+                        </td>
+                        <td class="p-4">
+                            <input type="date" 
+                                   class="border rounded px-2 py-1 qbo-input" 
+                                   value="{{ milestone.qbo_invoice_date|date:'Y-m-d'|default:'' }}"
+                                   data-milestone-id="{{ milestone.id }}"
+                                   data-field="qbo_invoice_date"
+                                   disabled>
+                        </td>
+                        <td class="p-4">
+                            <input type="number" 
+                                   step="0.01"
+                                   class="border rounded px-2 py-1 w-32 text-right qbo-amount qbo-input" 
+                                   value="{{ milestone.qbo_amount|default:'' }}"
+                                   placeholder="0.00"
+                                   data-milestone-id="{{ milestone.id }}"
+                                   data-field="qbo_amount"
+                                   data-original-amount="{{ milestone.amount }}"
+                                   disabled>
+                        </td>
+                        <td class="p-4 text-right difference">
+                            <span id="diff-{{ milestone.id }}">-</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+// Currency formatting function
+function formatCurrency(num) {
+    return '$' + parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 const editBtn = document.getElementById('editBtn');
 const saveBtn = document.getElementById('saveBtn');
 const inputs = document.querySelectorAll('.qbo-input');
@@ -140,12 +194,21 @@ document.querySelectorAll('.qbo-amount').forEach(input => {
         const difference = originalAmount - qboAmount;
         
         const diffElement = document.getElementById('diff-' + milestoneId);
-        diffElement.textContent = '$' + difference.toFixed(2);
+        diffElement.textContent = formatCurrency(difference);
         
         if (Math.abs(difference) > 0.01) {
             diffElement.style.color = 'red';
         } else {
             diffElement.style.color = 'green';
+        }
+    });
+    
+    // Add formatting on blur for QBO Amount fields
+    input.addEventListener('blur', function() {
+        if (this.value) {
+            const formatted = parseFloat(this.value).toFixed(2);
+            // Keep raw value for calculations but show formatted
+            this.value = formatted;
         }
     });
 });
