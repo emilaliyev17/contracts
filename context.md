@@ -1,6 +1,6 @@
 # Contract Payment Extraction Project
 
-**LAST UPDATED: September 24, 2025 - 14:16 PDT**
+**LAST UPDATED: December 19, 2024 - 15:30 PST**
 
 ## Project Overview
 - **Project Name**: contract_analyzer
@@ -7106,3 +7106,51 @@ document.querySelectorAll('.qbo-amount').forEach(input => {
 ---
 
 **LAST UPDATED**: January 25, 2025 - 18:00 PDT (Accounting Page with QBO Data Persistence)
+
+---
+
+## Recent Updates (December 19, 2024)
+
+### Invoice Date Field UI Improvement
+**Issue Fixed**: Invoice Date field in milestone editing was not following the same edit pattern as other milestone fields.
+
+**Changes Made**:
+- **File**: `core/templates/core/contract_detail.html`
+- **Location**: Invoice Date field (around line 193-199)
+
+**Before**:
+```html
+<input type="date" 
+       value="{{ milestone.invoice_date|date:'Y-m-d' }}"
+       onchange="updateMilestone({{ milestone.id }}, 'invoice_date', this.value)"
+       class="form-control form-control-sm editable-field"
+       readonly>
+```
+
+**After**:
+```html
+<span class="milestone-invoice-display">
+    {{ milestone.invoice_date|date:"M d, Y"|default:"-" }}
+</span>
+<input type="date" 
+       value="{{ milestone.invoice_date|date:'Y-m-d' }}"
+       onchange="updateMilestone({{ milestone.id }}, 'invoice_date', this.value)"
+       class="form-control form-control-sm milestone-invoice-input"
+       style="display: none;">
+```
+
+**JavaScript Updates**:
+- Added Invoice Date field handling to edit toggle functionality
+- Added Invoice Date field handling to save action functionality
+- Now follows same pattern as Due Date, Amount, and Payment Reference fields
+
+**Benefits**:
+- Consistent user experience across all milestone fields
+- Better visual feedback during editing
+- Proper display formatting (e.g., "Jan 15, 2024" instead of raw date)
+- Maintains real-time update functionality
+
+**Technical Notes**:
+- Uses `querySelectorAll()` with `forEach()` for consistent element handling
+- Preserves existing `updateMilestone()` function integration
+- Maintains backward compatibility with existing functionality

@@ -189,10 +189,14 @@
                     <input type="text" class="form-control milestone-name-input" value="{{ milestone.milestone_name }}" style="display: none; width: 150px;">
                 </td>
                 <td>
+                    <span class="milestone-invoice-display">
+                        {{ milestone.invoice_date|date:"M d, Y"|default:"-" }}
+                    </span>
                     <input type="date" 
                            value="{{ milestone.invoice_date|date:'Y-m-d' }}"
                            onchange="updateMilestone({{ milestone.id }}, 'invoice_date', this.value)"
-                           class="form-control form-control-sm">
+                           class="form-control form-control-sm milestone-invoice-input"
+                           style="display: none;">
                 </td>
                 <td>
                     <span class="milestone-date-display">{{ milestone.due_date|date:"M d, Y" }}</span>
@@ -372,6 +376,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide display elements and show input elements
             row.querySelector('.milestone-name-display').style.display = 'none';
             row.querySelector('.milestone-name-input').style.display = 'inline-block';
+            row.querySelectorAll('.milestone-invoice-display').forEach(el => el.style.display = 'none');
+            row.querySelectorAll('.milestone-invoice-input').forEach(el => el.style.display = 'inline-block');
             row.querySelector('.milestone-date-display').style.display = 'none';
             row.querySelector('.milestone-date-input').style.display = 'inline-block';
             row.querySelector('.milestone-amount-display').style.display = 'none';
@@ -421,6 +427,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if(data.success) {
+                    // Show display elements and hide input elements
+                    row.querySelectorAll('.milestone-invoice-display').forEach(el => el.style.display = 'inline-block');
+                    row.querySelectorAll('.milestone-invoice-input').forEach(el => el.style.display = 'none');
                     location.reload();
                 } else {
                     alert('Error updating milestone: ' + (data.error || 'Unknown error'));
