@@ -964,3 +964,15 @@ def save_qbo_data(request):
             setattr(milestone, update['field'], update['value'])
             milestone.save()
         return JsonResponse({'status': 'success'})
+
+
+@require_http_methods(["POST"])
+def update_client_name(request, contract_id):
+    """Update client name for a contract."""
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    contract.client_name = data.get('value', '')
+    contract.save()
+    
+    return JsonResponse({'success': True})

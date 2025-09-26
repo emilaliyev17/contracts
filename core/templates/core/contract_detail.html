@@ -28,7 +28,24 @@
                 </tr>
                 <tr>
                     <td><strong>Client:</strong></td>
-                    <td>{{ contract.client_name }}</td>
+                    <td>
+                        <div class="flex items-center">
+                            <span id="clientDisplay">{{ contract.client_name|default:"None" }}</span>
+                            <input type="text" id="clientInput" 
+                                   value="{{ contract.client_name }}" 
+                                   class="hidden border rounded px-2 py-1 ml-2">
+                            <button id="clientEditBtn" 
+                                    onclick="editClient()" 
+                                    class="ml-2 text-sm text-blue-600 hover:text-blue-800">
+                                Edit
+                            </button>
+                            <button id="clientSaveBtn" 
+                                    onclick="saveClient()" 
+                                    class="hidden ml-2 text-sm text-green-600 hover:text-green-800">
+                                Save
+                            </button>
+                        </div>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>Total Value:</strong></td>
@@ -490,6 +507,29 @@ document.getElementById('save-new-invoice').addEventListener('click', function()
         }
     });
 });
+
+// Client editing functionality
+function editClient() {
+    document.getElementById('clientDisplay').classList.add('hidden');
+    document.getElementById('clientInput').classList.remove('hidden');
+    document.getElementById('clientEditBtn').classList.add('hidden');
+    document.getElementById('clientSaveBtn').classList.remove('hidden');
+}
+
+function saveClient() {
+    const clientName = document.getElementById('clientInput').value;
+    
+    fetch("{% url 'core:update_client_name' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            value: clientName
+        })
+    }).then(() => location.reload());
+}
 </script>
 
 {% endblock %}
