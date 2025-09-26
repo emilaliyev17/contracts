@@ -44,7 +44,7 @@
         <a href="?status=processing" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'processing' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Processing</a>
         <a href="#" onclick="alert('HubSpot sync functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">HubSpot Sync</a>
         <a href="#" onclick="alert('FP&A functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">FP&A</a>
-        <a href="#" onclick="alert('Accounting functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Accounting</a>
+        <a href="{% url 'core:accounting' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Accounting</a>
         <a href="{% url 'core:forecast' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Forecast</a>
         <a href="{% url 'core:home' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Upload</a>
       </div>

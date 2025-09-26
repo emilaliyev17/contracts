@@ -22,4 +22,5 @@ urlpatterns = [
     path('check-contracts/', views.check_contracts, name='check_contracts'),
     path('clarifications/<int:clarification_id>/answer/', views.answer_clarification, name='answer_clarification'),
     path('contracts/<int:contract_id>/apply-clarifications/', views.apply_contract_clarifications, name='apply_contract_clarifications'),
+    path('accounting/', views.accounting, name='accounting'),
 ]

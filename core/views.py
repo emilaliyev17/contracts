@@ -941,3 +941,14 @@ def add_milestone(request, contract_id):
     )
     
     return JsonResponse({'success': True, 'id': milestone.id})
+
+
+def accounting(request):
+    """Accounting page with reconciliation table."""
+    # Get all contracts with milestones
+    milestones = PaymentMilestone.objects.select_related('contract').all()
+    
+    context = {
+        'milestones': milestones
+    }
+    return render(request, 'core/accounting.html', context)

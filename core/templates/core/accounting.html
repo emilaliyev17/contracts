@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+    <div class="px-4 py-8">
+        <h1 class="text-3xl font-bold mb-2">Accounting</h1>
+        <p class="text-purple-100">Invoice reconciliation with QuickBooks</p>
+    </div>
+</div>
+
+<div class="p-6">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b bg-gray-50">
+                <th class="text-left p-4">Contract Name</th>
+                <th class="text-left p-4">Contract Number</th>
+                <th class="text-left p-4">Due Date</th>
+                <th class="text-left p-4">Invoice#</th>
+                <th class="text-right p-4">Amount</th>
+                <th class="text-left p-4">QBO Invoice#</th>
+                <th class="text-left p-4">QBO Inv Date</th>
+                <th class="text-right p-4">QBO Amount</th>
+                <th class="text-right p-4">Difference</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for milestone in milestones %}
+            <tr class="border-b">
+                <td class="p-4">{{ milestone.contract.contract_name }}</td>
+                <td class="p-4">{{ milestone.contract.contract_number }}</td>
+                <td class="p-4">{{ milestone.due_date|date:"M d, Y" }}</td>
+                <td class="p-4">{{ milestone.milestone_name }}</td>
+                <td class="p-4 text-right">${{ milestone.amount|floatformat:2 }}</td>
+                <td class="p-4">-</td>
+                <td class="p-4">-</td>
+                <td class="p-4 text-right">-</td>
+                <td class="p-4 text-right">-</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
