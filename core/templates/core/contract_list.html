@@ -30,12 +30,7 @@
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-4xl font-bold">Contract Portfolio</h1>
         <nav class="flex flex-wrap gap-4">
-          <a href="{% url 'core:contract_list' %}" class="text-white font-medium">Contracts</a>
-          <a href="{% url 'core:forecast' %}" class="text-white/80 hover:text-white transition-colors">Forecast</a>
           <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
-          <a href="{% url 'core:home' %}" class="text-white/80 hover:text-white transition-colors px-4 py-2 bg-white/10 rounded-md hover:bg-white/20">
-            Upload Contract
-          </a>
         </nav>
       </div>
       
@@ -47,6 +42,11 @@
         <a href="?status=needs_review" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'needs_review' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Needs Review</a>
         <a href="?status=completed" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'completed' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Completed</a>
         <a href="?status=processing" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'processing' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Processing</a>
+        <a href="#" onclick="alert('HubSpot sync functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">HubSpot Sync</a>
+        <a href="#" onclick="alert('FP&A functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">FP&A</a>
+        <a href="#" onclick="alert('Accounting functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Accounting</a>
+        <a href="{% url 'core:forecast' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Forecast</a>
+        <a href="{% url 'core:home' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Upload</a>
       </div>
     </div>
   </div>
