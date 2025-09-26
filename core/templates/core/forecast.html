@@ -27,15 +27,15 @@
       <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit backdrop-blur-sm">
           <button onclick="switchView('table')" id="table-tab" 
                   class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
-              📊 Table View
+              Table View
           </button>
           <button onclick="switchView('timeline')" id="timeline-tab"
                   class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              📈 Timeline View
+              Timeline View
           </button>
           <button onclick="switchView('calendar')" id="calendar-tab"
                   class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              📅 Calendar View
+              Calendar View
           </button>
       </div>
   </div>
@@ -46,7 +46,11 @@
           <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
               <div class="flex flex-row items-center justify-between mb-2">
                   <p class="text-sm text-gray-600">Expected This Month</p>
-                  <span class="text-2xl">💰</span>
+                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                  </div>
               </div>
               <div class="text-2xl font-bold">${{ total_monthly|floatformat:0|intcomma }}</div>
               <p class="text-xs text-green-500 mt-1">+12.5% from last month</p>
@@ -55,7 +59,11 @@
           <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
               <div class="flex flex-row items-center justify-between mb-2">
                   <p class="text-sm text-gray-600">Upcoming Invoices</p>
-                  <span class="text-2xl">📋</span>
+                  <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                  </div>
               </div>
               <div class="text-2xl font-bold">{{ payments_count }}</div>
               <p class="text-xs text-blue-500 mt-1">Next 30 days</p>
@@ -64,7 +72,11 @@
           <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
               <div class="flex flex-row items-center justify-between mb-2">
                   <p class="text-sm text-gray-600">Average Invoice</p>
-                  <span class="text-2xl">📊</span>
+                  <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                      </svg>
+                  </div>
               </div>
               <div class="text-2xl font-bold">
                   {% if payments_count > 0 %}
@@ -79,7 +91,11 @@
           <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
               <div class="flex flex-row items-center justify-between mb-2">
                   <p class="text-sm text-gray-600">Collection Rate</p>
-                  <span class="text-2xl">✅</span>
+                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                  </div>
               </div>
               <div class="text-2xl font-bold text-green-500">100%</div>
               <p class="text-xs text-green-500 mt-1">On track</p>
