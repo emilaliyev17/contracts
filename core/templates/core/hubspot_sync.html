@@ -1,4 +1,8 @@
 {% extends 'core/base.html' %}
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+{% endblock %}
 {% block content %}
 
 <!-- Gradient Header -->
@@ -57,7 +61,6 @@
                     <tr class="border-b bg-gray-50">
                         <th class="text-left p-4">Record ID</th>
                         <th class="text-left p-4">Deal Name</th>
-                        <th class="text-left p-4">Deal Stage</th>
                         <th class="text-left p-4">Letter Sent</th>
                         <th class="text-left p-4">Closed Won</th>
                         <th class="text-left p-4">Signed Contract</th>
@@ -68,23 +71,24 @@
                     <tr class="border-b">
                         <td class="p-4">{{ deal.record_id }}</td>
                         <td class="p-4">{{ deal.deal_name }}</td>
-                        <td class="p-4">{{ deal.stage }}</td>
                         <td class="p-4">
-                            {% if "Engagement Letter Sent" in deal.stage %}
-                                {{ deal.close_date|date:"M d, Y"|default:"-" }}
+                            {% if deal.stage == "Engagement Letter Sent" %}
+                                <span class="bg-yellow-500 text-white px-3 py-1 rounded font-semibold">HERE</span>
                             {% else %}
                                 -
                             {% endif %}
                         </td>
                         <td class="p-4">
-                            {% if "Closed Won" in deal.stage %}
-                                {{ deal.close_date|date:"M d, Y"|default:"-" }}
+                            {% if deal.stage == "Closed Won" %}
+                                <span class="bg-green-500 text-white px-3 py-1 rounded font-semibold">HERE</span>
                             {% else %}
                                 -
                             {% endif %}
                         </td>
                         <td class="p-4">
-                            <select class="border rounded px-2 py-1" onchange="matchContract({{ deal.id }}, this.value, this)">
+                            <select id="contract-select-{{ deal.id }}" 
+                                    class="contract-select border rounded px-2 py-1" 
+                                    onchange="matchContract({{ deal.id }}, this.value, this)">
                                 <option value="">- Select Contract -</option>
                                 {% for contract in contracts %}
                                 <option value="{{ contract.id }}">
@@ -106,7 +110,25 @@
         </div>
     </div>
 </div>
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.contract-select').forEach(function(select) {
+        new TomSelect(select, {
+            sortField: 'text',
+            searchField: ['text'],
+            placeholder: '- Type to search contract -',
+            render: {
+                option: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                },
+                item: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                }
+            }
+        });
+    });
+});
+</script>
 <script>
 function matchContract(dealId, contractId, selectElement) {
     // Show saving indicator

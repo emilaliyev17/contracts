@@ -1,12 +1,37 @@
 # Contract Payment Extraction Project
 
-**LAST UPDATED: December 19, 2024 - 15:30 PST**
+**LAST UPDATED: December 19, 2024 - 16:45 PST**
 
 ## Project Overview
 - **Project Name**: contract_analyzer
 - **Project Location**: /Users/emil.aliyev/My Projects/Cont_pars
 - **Purpose**: Extract payment information from PDF contracts and store in PostgreSQL for future FP&A reporting and invoice generation
 - **Created**: $(date)
+
+## Recent Updates (December 19, 2024)
+
+### Latest Commits
+1. **fc77d05** - Complete HubSpot CRM integration for deal tracking and contract matching
+2. **9f7c945** - Redesign Accounting page with unified design pattern and currency formatting
+3. **72ef44f** - Major feature update: Invoice date tracking and Accounting module
+4. **d121dd3** - Fix Invoice Date field to use consistent edit pattern
+5. **aca4711** - Make Invoice Date editable in payment milestones table
+6. **355c3c1** - Add one-time script to populate missing invoice dates
+7. **78b7d56** - Add Invoice Date field to new invoice form
+8. **4dcb90d** - Add editable Client name field to contract detail page
+9. **7619a4d** - Display invoice_date in contract detail and accounting pages
+10. **217acb1** - Update milestone extraction to handle invoice_date
+
+### Current Uncommitted Changes
+- **base.html**: Added `{% block extra_head %}{% endblock %}` for template extensibility
+- **hubspot_sync.html**: Enhanced with Tom Select library for improved contract selection UI
+
+### Key Features Added
+- **Invoice Date Tracking**: Complete invoice date management system
+- **HubSpot Integration**: Full CRM integration with deal tracking and contract matching
+- **Enhanced UI**: Improved contract selection with searchable dropdowns
+- **Accounting Module**: Redesigned accounting page with better formatting
+- **Template Extensibility**: Added extra_head block for custom CSS/JS in templates
 
 ## BUSINESS CONTEXT AND RULES
 
