@@ -381,6 +381,7 @@ class ContractProcessor:
             milestone = {
                 'milestone_name': schedule.get('description', 'Payment Milestone'),
                 'milestone_description': schedule.get('description', ''),
+                'invoice_date': self._parse_date_from_string(schedule.get('invoice_date')),
                 'due_date': self._parse_date_from_string(schedule.get('due_date')),
                 'amount': amount,
                 'percentage': None,  # Could be calculated if total value is known
@@ -397,6 +398,7 @@ class ContractProcessor:
                 milestone = {
                     'milestone_name': match['match_text'],
                     'milestone_description': f"Phase {match.get('parsed_value', 'Unknown')}",
+                    'invoice_date': None,
                     'due_date': None,
                     'amount': None,
                     'percentage': None,
@@ -769,6 +771,7 @@ class ContractProcessor:
                 milestone = {
                     'milestone_name': milestone_data.get('description', 'Payment Milestone'),
                     'milestone_description': milestone_data.get('description', ''),
+                    'invoice_date': self._parse_date_from_string(milestone_data.get('invoice_date')),
                     'due_date': self._parse_date_from_string(milestone_data.get('due_date')),
                     'amount': milestone_data.get('amount'),
                     'status': 'pending'
