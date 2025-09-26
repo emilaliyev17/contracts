@@ -30,13 +30,51 @@
                 <td class="p-4">{{ milestone.due_date|date:"M d, Y" }}</td>
                 <td class="p-4">{{ milestone.milestone_name }}</td>
                 <td class="p-4 text-right">${{ milestone.amount|floatformat:2 }}</td>
-                <td class="p-4">-</td>
-                <td class="p-4">-</td>
-                <td class="p-4 text-right">-</td>
-                <td class="p-4 text-right">-</td>
+                <td class="p-4">
+                    <input type="text" 
+                           class="border rounded px-2 py-1 w-32" 
+                           placeholder="QBO Invoice#"
+                           data-milestone-id="{{ milestone.id }}">
+                </td>
+                <td class="p-4">
+                    <input type="date" 
+                           class="border rounded px-2 py-1" 
+                           data-milestone-id="{{ milestone.id }}">
+                </td>
+                <td class="p-4">
+                    <input type="number" 
+                           step="0.01"
+                           class="border rounded px-2 py-1 w-32 text-right qbo-amount" 
+                           placeholder="0.00"
+                           data-milestone-id="{{ milestone.id }}"
+                           data-original-amount="{{ milestone.amount }}">
+                </td>
+                <td class="p-4 text-right difference">
+                    <span id="diff-{{ milestone.id }}">-</span>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script>
+document.querySelectorAll('.qbo-amount').forEach(input => {
+    input.addEventListener('input', function() {
+        const milestoneId = this.dataset.milestoneId;
+        const originalAmount = parseFloat(this.dataset.originalAmount);
+        const qboAmount = parseFloat(this.value) || 0;
+        const difference = originalAmount - qboAmount;
+        
+        const diffElement = document.getElementById('diff-' + milestoneId);
+        diffElement.textContent = '$' + difference.toFixed(2);
+        
+        if (Math.abs(difference) > 0.01) {
+            diffElement.style.color = 'red';
+        } else {
+            diffElement.style.color = 'green';
+        }
+    });
+});
+</script>
 {% endblock %}
