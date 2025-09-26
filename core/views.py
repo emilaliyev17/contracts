@@ -935,6 +935,7 @@ def add_milestone(request, contract_id):
     milestone = PaymentMilestone.objects.create(
         contract=contract,
         milestone_name=data.get('milestone_name'),
+        invoice_date=data.get('invoice_date'),
         due_date=data.get('due_date'),
         amount=data.get('amount'),
         status='pending'

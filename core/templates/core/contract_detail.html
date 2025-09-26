@@ -236,6 +236,10 @@
                 <input type="text" id="new-invoice-name" class="form-control" placeholder="Invoice #4">
             </div>
             <div class="col-md-3">
+                <label>Invoice Date</label>
+                <input type="date" id="new-invoice-invoice-date" class="form-control">
+            </div>
+            <div class="col-md-3">
                 <label>Due Date</label>
                 <input type="date" id="new-invoice-date" class="form-control">
             </div>
@@ -243,8 +247,9 @@
                 <label>Amount (USD)</label>
                 <input type="number" id="new-invoice-amount" class="form-control" step="0.01">
             </div>
-            <div class="col-md-3">
-                <label>&nbsp;</label><br>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
                 <button id="save-new-invoice" class="btn btn-success">Save</button>
                 <button id="cancel-new-invoice" class="btn btn-secondary">Cancel</button>
             </div>
@@ -478,11 +483,12 @@ document.getElementById('cancel-new-invoice').addEventListener('click', function
 
 document.getElementById('save-new-invoice').addEventListener('click', function() {
     const name = document.getElementById('new-invoice-name').value;
-    const date = document.getElementById('new-invoice-date').value;
+    const invoiceDate = document.getElementById('new-invoice-invoice-date').value;
+    const dueDate = document.getElementById('new-invoice-date').value;
     const amount = document.getElementById('new-invoice-amount').value;
     
-    if (!name || !date || !amount) {
-        alert('Please fill all fields');
+    if (!name || !dueDate || !amount) {
+        alert('Please fill all required fields');
         return;
     }
     
@@ -494,7 +500,8 @@ document.getElementById('save-new-invoice').addEventListener('click', function()
         },
         body: JSON.stringify({
             milestone_name: name,
-            due_date: date,
+            invoice_date: invoiceDate,
+            due_date: dueDate,
             amount: amount
         })
     })
