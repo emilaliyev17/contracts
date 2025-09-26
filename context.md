@@ -7223,3 +7223,199 @@ function formatCurrency(num) {
 - Improved readability with thousand separators
 - Enhanced user experience with stats dashboard
 - Ready for future filtering and analytics features
+
+---
+
+## HubSpot Integration (December 19, 2024)
+
+### Overview
+Complete HubSpot CRM integration for deal tracking and contract matching, enabling seamless synchronization between sales pipeline and contract management.
+
+### Database Models
+
+#### HubSpotDeal Model
+**Purpose**: Store HubSpot deal data for tracking and matching with contracts
+
+**Key Fields**:
+- `record_id` - Unique HubSpot deal record ID (CharField, max_length=50, unique=True)
+- `deal_name` - Name of the deal (CharField, max_length=255)
+- `stage` - Current deal stage (CharField, max_length=100)
+- `amount` - Deal amount (DecimalField, max_digits=15, decimal_places=2)
+- `currency` - Deal currency (CharField, max_length=10, default='USD')
+- `close_date` - Expected or actual close date (DateField, null=True, blank=True)
+- `letter_sent_date` - Date when engagement letter was sent (DateField, null=True, blank=True)
+- `owner` - Deal owner (CharField, max_length=255, null=True, blank=True)
+- `raw_data` - JSONField for storing full row data for debugging
+- **Audit Fields**: `uploaded_at`, `uploaded_by`, `last_updated`
+
+#### HubSpotDealMatch Model
+**Purpose**: Track matches between HubSpot deals and contracts
+
+**Key Fields**:
+- `deal` - ForeignKey to HubSpotDeal
+- `contract` - ForeignKey to Contract
+- `matched_by` - User who created the match (ForeignKey to User)
+- `matched_at` - When match was created (DateTimeField, auto_now_add=True)
+- `confidence_note` - Notes about match confidence (TextField, blank=True)
+- `is_active` - Boolean for soft delete/reassignment (default=True)
+
+**Database Schema**:
+- **Migration**: `0013_hubspotdeal_hubspotdealmatch.py`
+- **Unique Constraints**: `record_id` unique for deals, `['deal', 'contract', 'is_active']` for matches
+- **Ordering**: Deals by close_date/letter_sent_date, matches by matched_at
+
+### Import Service
+
+#### HubSpotImporter Class
+**File**: `core/services/hubspot_importer.py`
+
+**Features**:
+- **File Support**: CSV and XLSX formats
+- **Column Mapping**: Automatic mapping of HubSpot export columns
+- **Stage Filtering**: Only imports "Engagement Letter Sent" and "Closed Won" deals
+- **Data Validation**: Handles missing data and invalid formats
+- **Audit Trail**: Tracks who uploaded what data
+
+**Column Mapping**:
+```python
+COLUMN_MAP = {
+    'Record ID': 'record_id',
+    'Deal Name': 'deal_name',
+    'Deal Stage': 'stage',
+    'Amount': 'amount',
+    'Close Date': 'close_date',
+    'Deal owner': 'owner',
+}
+```
+
+**Stage Filtering Logic**:
+- Filters deals to only include "Engagement Letter Sent" and "Closed Won" stages
+- Processes before column renaming for efficiency
+- Provides filtering statistics in logs
+- Returns accurate count of imported deals
+
+### User Interface
+
+#### HubSpot Sync Page
+**File**: `core/templates/core/hubspot_sync.html`
+**URL**: `/hubspot-sync/`
+
+**Design Features**:
+- **Gradient Header**: Purple to blue gradient matching application theme
+- **File Upload**: Drag-and-drop CSV/XLSX upload with auto-submit
+- **Stats Dashboard**: 4-column grid showing key metrics
+- **Deals Table**: Comprehensive deal listing with contract matching
+
+**Stats Cards**:
+- **Total Deals**: Count of all uploaded deals
+- **Letter Sent**: Count of deals with engagement letters sent
+- **Closed Won**: Count of successfully closed deals
+- **Unmatched**: Count of deals without contract matches
+
+**Contract Matching**:
+- Dropdown selectors for each deal
+- Real-time AJAX matching with visual feedback
+- Auto-save functionality with success/error indicators
+- Dynamic counter updates
+
+#### Auto-Save Feedback System
+**Visual States**:
+- **Gray** (`#f3f4f6`): Processing/Saving state
+- **Green** (`#dcfce7`): Success state
+- **Red** (`#fee2e2`): Error state
+- **White**: Default/Reset state
+
+**Features**:
+- Immediate visual feedback during save operations
+- Non-blocking interface (dropdown disabled only during save)
+- Auto-reset visual indicators after 2 seconds
+- Real-time unmatched count updates
+
+### Backend Implementation
+
+#### Views
+**File**: `core/views.py`
+
+**hubspot_sync View**:
+- Handles both GET (display) and POST (file upload) requests
+- Integrates with HubSpotImporter service
+- Calculates real-time statistics
+- Provides user feedback via Django messages
+
+**match_hubspot_deal View**:
+- AJAX endpoint for contract matching
+- POST-only security with CSRF protection
+- Returns JSON responses for frontend integration
+
+#### URL Configuration
+**File**: `core/urls.py`
+
+**Routes**:
+- `hubspot-sync/` → `hubspot_sync` view
+- `match-hubspot-deal/` → `match_hubspot_deal` view
+
+### Django Admin Integration
+
+#### HubSpotDeal Admin
+**Features**:
+- List display: record_id, deal_name, stage, amount, close_date
+- Filters: stage, close_date
+- Search: deal_name, record_id
+
+#### HubSpotDealMatch Admin
+**Features**:
+- List display: deal, contract, matched_at, matched_by
+- Filters: matched_at
+- Search: deal__deal_name, contract__contract_number
+
+### Navigation Integration
+
+#### Contract List Integration
+**File**: `core/templates/core/contract_list.html`
+- Updated "HubSpot Sync" button to navigate to sync page
+- Removed placeholder alert, now functional navigation
+
+### Technical Implementation
+
+#### Data Flow
+1. **File Upload** → HubSpotImporter service processes CSV/XLSX
+2. **Stage Filtering** → Only relevant deals imported
+3. **Database Storage** → Deals saved with audit trail
+4. **UI Display** → Real-time statistics and deal listing
+5. **Contract Matching** → AJAX-based matching with feedback
+
+#### Error Handling
+- Graceful handling of malformed files
+- Clear error messages for users
+- Debug logging for troubleshooting
+- Fallback handling for missing columns
+
+#### Performance Optimizations
+- Pre-filtering reduces database operations
+- Efficient queries for statistics
+- AJAX matching without page reloads
+- Optimized column mapping
+
+### Use Cases
+
+1. **Sales Pipeline Tracking**: Monitor deals from engagement letter to close
+2. **Contract Matching**: Link closed deals to signed contracts
+3. **Revenue Reconciliation**: Track deal-to-contract conversion
+4. **Audit Trail**: Complete history of deal processing and matching
+5. **Reporting**: Generate insights on sales pipeline performance
+
+### Future Enhancements
+
+1. **Automated Matching**: AI-powered deal-to-contract matching
+2. **Bulk Operations**: Mass matching and data operations
+3. **Advanced Filtering**: Date ranges, amount ranges, custom filters
+4. **Export Functionality**: Export matched/unmatched data
+5. **API Integration**: Direct HubSpot API sync (future consideration)
+
+### Benefits
+
+- **Streamlined Workflow**: Seamless integration between sales and contract management
+- **Data Accuracy**: Single source of truth for deal and contract data
+- **Audit Compliance**: Complete tracking of deal processing and matching
+- **User Experience**: Intuitive interface with real-time feedback
+- **Scalability**: Efficient processing of large deal datasets

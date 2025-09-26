@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
+from django.contrib.auth.models import User
 from decimal import Decimal
 
 
@@ -330,6 +331,89 @@ class PaymentMilestone(models.Model):
         if self.is_overdue and self.status == 'pending':
             self.status = 'overdue'
         super().save(*args, **kwargs)
+
+
+class HubSpotDeal(models.Model):
+    """Model for storing HubSpot deal data for tracking and matching with contracts."""
+    
+    record_id = models.CharField(max_length=50, unique=True, help_text="HubSpot deal record ID")
+    deal_name = models.CharField(max_length=255, help_text="Name of the deal")
+    stage = models.CharField(max_length=100, help_text="Current deal stage")
+    amount = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        help_text="Deal amount"
+    )
+    currency = models.CharField(max_length=10, default='USD', help_text="Deal currency")
+    close_date = models.DateField(null=True, blank=True, help_text="Expected or actual close date")
+    letter_sent_date = models.DateField(null=True, blank=True, help_text="Date when engagement letter was sent")
+    owner = models.CharField(max_length=255, null=True, blank=True, help_text="Deal owner")
+    raw_data = models.JSONField(
+        null=True, 
+        blank=True,
+        help_text="Store full row for debugging and future reference"
+    )
+    
+    # Audit fields
+    uploaded_at = models.DateTimeField(auto_now_add=True, help_text="When deal was uploaded")
+    uploaded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        help_text="User who uploaded the deal"
+    )
+    last_updated = models.DateTimeField(auto_now=True, help_text="Last update timestamp")
+    
+    class Meta:
+        ordering = ['-close_date', '-letter_sent_date']
+        verbose_name = "HubSpot Deal"
+        verbose_name_plural = "HubSpot Deals"
+    
+    def __str__(self):
+        return f"{self.deal_name} ({self.record_id})"
+
+
+class HubSpotDealMatch(models.Model):
+    """Model for tracking matches between HubSpot deals and contracts."""
+    
+    deal = models.ForeignKey(
+        HubSpotDeal, 
+        on_delete=models.CASCADE, 
+        related_name='matches',
+        help_text="Associated HubSpot deal"
+    )
+    contract = models.ForeignKey(
+        Contract, 
+        on_delete=models.CASCADE, 
+        related_name='hubspot_matches',
+        help_text="Associated contract"
+    )
+    matched_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        help_text="User who created the match"
+    )
+    matched_at = models.DateTimeField(auto_now_add=True, help_text="When match was created")
+    confidence_note = models.TextField(
+        blank=True,
+        help_text="Notes about match confidence or reasoning"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="For soft delete/reassignment"
+    )
+    
+    class Meta:
+        unique_together = ['deal', 'contract', 'is_active']
+        ordering = ['-matched_at']
+        verbose_name = "HubSpot Deal Match"
+        verbose_name_plural = "HubSpot Deal Matches"
+    
+    def __str__(self):
+        return f"{self.deal.deal_name} ↔ {self.contract.contract_name}"
 
 
 class PaymentTerms(models.Model):

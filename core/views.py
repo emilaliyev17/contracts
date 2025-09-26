@@ -3,20 +3,21 @@ from django.http import HttpResponse, JsonResponse, FileResponse
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.apps import apps
 import json
 import logging
 import os
 import tempfile
 from datetime import datetime, date, timedelta
 
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch
 from .services.contract_processor import ContractProcessor, ContractProcessingError
 from .services.excel_exporter import ExcelExporter
 from django.db import models
@@ -1004,3 +1005,51 @@ def update_client_name(request, contract_id):
     contract.save()
     
     return JsonResponse({'success': True})
+
+
+def hubspot_sync(request):
+    """HubSpot Sync page view"""
+    
+    # Handle file upload
+    if request.method == 'POST' and request.FILES.get('hubspot_file'):
+        file = request.FILES['hubspot_file']
+        
+        # Import the HubSpotImporter
+        from core.services.hubspot_importer import HubSpotImporter
+        
+        importer = HubSpotImporter()
+        result = importer.import_file(file, request.user)
+        
+        if result['success']:
+            messages.success(request, f"Successfully imported {result['count']} deals")
+        else:
+            messages.error(request, f"Import failed: {result.get('error', 'Unknown error')}")
+            
+        # Redirect to same page to show results
+        return redirect('core:hubspot_sync')
+    
+    # Get deals and contracts
+    deals = HubSpotDeal.objects.all()
+    contracts = Contract.objects.all().order_by('-upload_date')
+    
+    # Calculate stats
+    letter_sent_count = deals.filter(letter_sent_date__isnull=False).count()
+    closed_won_count = deals.filter(stage__icontains="Closed Won").count()
+    unmatched_count = deals.exclude(matches__is_active=True).count()
+    
+    context = {
+        'deals': deals,
+        'contracts': contracts,
+        'letter_sent_count': letter_sent_count,
+        'closed_won_count': closed_won_count,
+        'unmatched_count': unmatched_count,
+    }
+    return render(request, 'core/hubspot_sync.html', context)
+
+
+@require_POST
+def match_hubspot_deal(request):
+    """Match deal with contract"""
+    data = json.loads(request.body)
+    # For now, just return success
+    return JsonResponse({'status': 'success'})

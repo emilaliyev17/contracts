@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch
 
 
 @admin.register(ContractType)
@@ -234,3 +234,17 @@ class ContractClarificationAdmin(admin.ModelAdmin):
         """Show truncated AI question in list view."""
         return obj.ai_question[:100] + '...' if len(obj.ai_question) > 100 else obj.ai_question
     ai_question_preview.short_description = 'AI Question'
+
+
+@admin.register(HubSpotDeal)
+class HubSpotDealAdmin(admin.ModelAdmin):
+    list_display = ['record_id', 'deal_name', 'stage', 'amount', 'close_date']
+    list_filter = ['stage', 'close_date']
+    search_fields = ['deal_name', 'record_id']
+
+
+@admin.register(HubSpotDealMatch)
+class HubSpotDealMatchAdmin(admin.ModelAdmin):
+    list_display = ['deal', 'contract', 'matched_at', 'matched_by']
+    list_filter = ['matched_at']
+    search_fields = ['deal__deal_name', 'contract__contract_number']

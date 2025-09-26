@@ -25,4 +25,6 @@ urlpatterns = [
     path('accounting/', views.accounting, name='accounting'),
     path('save-qbo-data/', views.save_qbo_data, name='save_qbo_data'),
     path('contracts/<int:contract_id>/update-client/', views.update_client_name, name='update_client_name'),
+    path('hubspot-sync/', views.hubspot_sync, name='hubspot_sync'),
+    path('match-hubspot-deal/', views.match_hubspot_deal, name='match_hubspot_deal'),
 ]

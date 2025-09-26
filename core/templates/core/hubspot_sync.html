@@ -1,0 +1,151 @@
+{% extends 'core/base.html' %}
+{% block content %}
+
+<!-- Gradient Header -->
+<div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+    <div class="px-4 py-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">HubSpot Sync</h1>
+                <p class="text-purple-100">Deal Pipeline and Contract Matching</p>
+            </div>
+            <a href="{% url 'core:contract_list' %}" 
+               class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
+                Back to Contracts
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Section -->
+<div class="bg-purple-500 px-4 py-3">
+    <form method="post" enctype="multipart/form-data" class="inline-block">
+        {% csrf_token %}
+        <label class="bg-white text-purple-600 px-4 py-2 rounded cursor-pointer hover:bg-gray-100">
+            Upload CSV/XLSX
+            <input type="file" name="hubspot_file" accept=".csv,.xlsx" class="hidden" onchange="this.form.submit()">
+        </label>
+    </form>
+</div>
+
+<!-- Stats Cards -->
+<div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Total Deals</div>
+            <div class="text-2xl font-bold">{{ deals.count|default:"0" }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Letter Sent</div>
+            <div class="text-2xl font-bold text-yellow-600">{{ letter_sent_count|default:"0" }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Closed Won</div>
+            <div class="text-2xl font-bold text-green-600">{{ closed_won_count|default:"0" }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm text-gray-600">Unmatched</div>
+            <div id="unmatched-count" class="text-2xl font-bold text-red-600">{{ unmatched_count|default:"0" }}</div>
+        </div>
+    </div>
+
+    <!-- Deals Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="text-left p-4">Record ID</th>
+                        <th class="text-left p-4">Deal Name</th>
+                        <th class="text-left p-4">Deal Stage</th>
+                        <th class="text-left p-4">Letter Sent</th>
+                        <th class="text-left p-4">Closed Won</th>
+                        <th class="text-left p-4">Signed Contract</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for deal in deals %}
+                    <tr class="border-b">
+                        <td class="p-4">{{ deal.record_id }}</td>
+                        <td class="p-4">{{ deal.deal_name }}</td>
+                        <td class="p-4">{{ deal.stage }}</td>
+                        <td class="p-4">
+                            {% if "Engagement Letter Sent" in deal.stage %}
+                                {{ deal.close_date|date:"M d, Y"|default:"-" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if "Closed Won" in deal.stage %}
+                                {{ deal.close_date|date:"M d, Y"|default:"-" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            <select class="border rounded px-2 py-1" onchange="matchContract({{ deal.id }}, this.value, this)">
+                                <option value="">- Select Contract -</option>
+                                {% for contract in contracts %}
+                                <option value="{{ contract.id }}">
+                                    {{ contract.contract_number }} - {{ contract.client_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center p-8 text-gray-500">
+                            No deals uploaded yet. Upload a CSV/XLSX file to start.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function matchContract(dealId, contractId, selectElement) {
+    // Show saving indicator
+    selectElement.disabled = true;
+    selectElement.style.background = '#f3f4f6';
+    
+    fetch("{% url 'core:match_hubspot_deal' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            deal_id: dealId,
+            contract_id: contractId
+        })
+    }).then(response => response.json())
+    .then(data => {
+        // Show success
+        selectElement.disabled = false;
+        selectElement.style.background = '#dcfce7';  // Light green
+        
+        // Update unmatched count
+        if (contractId) {
+            document.getElementById('unmatched-count').textContent = 
+                parseInt(document.getElementById('unmatched-count').textContent) - 1;
+        }
+        
+        // Reset color after 2 seconds
+        setTimeout(() => {
+            selectElement.style.background = 'white';
+        }, 2000);
+    })
+    .catch(error => {
+        selectElement.disabled = false;
+        selectElement.style.background = '#fee2e2';  // Light red for error
+        alert('Failed to save. Please try again.');
+    });
+}
+</script>
+
+{% endblock %}
