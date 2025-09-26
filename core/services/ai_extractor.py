@@ -292,6 +292,7 @@ Return ONLY the JSON, no other text"""
             
             validated_milestone = {
                 'amount': self._parse_numeric_value(milestone.get('amount')),
+                'invoice_date': self._parse_date(milestone.get('invoice_date')),
                 'due_date': self._parse_date(milestone.get('due_date')),
                 'description': self._clean_string(milestone.get('description', ''))
             }
