@@ -137,7 +137,7 @@ class AIExtractor:
     "start_date": "YYYY-MM-DD or null",
     "end_date": "YYYY-MM-DD or null",
     "payment_milestones": [
-      {{"amount": numeric, "due_date": "YYYY-MM-DD", "description": "text"}}
+      {{"amount": numeric, "invoice_date": "YYYY-MM-DD", "due_date": "YYYY-MM-DD", "description": "text"}}
     ],
     "payment_frequency": "monthly/quarterly/one-time/null",
     "confidence_score": 95
@@ -161,6 +161,8 @@ CRITICAL RULES:
 - Extract ONLY what is explicitly written in the contract
 - Use null for missing information
 - Format dates as YYYY-MM-DD
+- Extract BOTH invoice date (when invoice is sent) and due date (when payment is expected)
+- If only due date is mentioned, calculate invoice date as 30 days before
 
 Examples when to ask for clarification:
 - "effective upon signature" → ask for actual date: "What is the actual signature date for this contract?"
