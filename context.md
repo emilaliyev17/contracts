@@ -1,6 +1,6 @@
 # Contract Payment Extraction Project
 
-**LAST UPDATED: December 19, 2024 - 16:45 PST**
+**LAST UPDATED: December 19, 2024 - 17:15 PST**
 
 ## Project Overview
 - **Project Name**: contract_analyzer
@@ -23,6 +23,7 @@
 10. **217acb1** - Update milestone extraction to handle invoice_date
 
 ### Current Uncommitted Changes
+- **core/views.py**: Fixed HubSpot sync stats calculation - changed letter_sent_count from checking `letter_sent_date__isnull=False` to checking `stage='Engagement Letter Sent'` for more accurate counting
 - **base.html**: Added `{% block extra_head %}{% endblock %}` for template extensibility
 - **hubspot_sync.html**: Enhanced with Tom Select library for improved contract selection UI
 

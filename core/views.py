@@ -1033,7 +1033,7 @@ def hubspot_sync(request):
     contracts = Contract.objects.all().order_by('-upload_date')
     
     # Calculate stats
-    letter_sent_count = deals.filter(letter_sent_date__isnull=False).count()
+    letter_sent_count = deals.filter(stage='Engagement Letter Sent').count()
     closed_won_count = deals.filter(stage__icontains="Closed Won").count()
     unmatched_count = deals.exclude(matches__is_active=True).count()
     
