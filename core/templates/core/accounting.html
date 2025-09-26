@@ -2,8 +2,16 @@
 {% block content %}
 <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
     <div class="px-4 py-8">
-        <h1 class="text-3xl font-bold mb-2">Accounting</h1>
-        <p class="text-purple-100">Invoice reconciliation with QuickBooks</p>
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">Accounting</h1>
+                <p class="text-purple-100">Invoice reconciliation with QuickBooks</p>
+            </div>
+            <button onclick="history.back()" 
+                    class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors duration-200">
+                Back
+            </button>
+        </div>
     </div>
 </div>
 
