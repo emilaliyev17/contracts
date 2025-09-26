@@ -6796,4 +6796,113 @@ Applied consistent navigation patterns across all pages to eliminate redundant l
 
 ---
 
-**LAST UPDATED**: January 25, 2025 - 17:00 PDT (Payment Forecast Navigation Consistency)
+## Recent Updates - Add Invoice Button Always Visible
+
+**Date**: January 25, 2025
+**Status**: ✅ COMPLETED
+
+### Feature: Always Show Add Invoice Button
+
+Implemented changes to ensure the "Add Invoice" button is always visible on the contract detail page, regardless of whether the contract has existing payment milestones.
+
+#### **Problem Solved**
+- **Issue**: Add Invoice button was only visible when contracts already had payment milestones
+- **Impact**: Users couldn't add milestones to contracts with $1M+ value that had no existing milestones
+- **Business Need**: All contracts should allow milestone creation for invoice management
+
+#### **Solution Implemented**
+
+**Files Modified**:
+- `core/templates/core/contract_detail.html`: Restructured Invoice Milestones section
+
+**Changes Made**:
+
+1. **Removed Conditional Wrapper**:
+   - Eliminated the outer `{% if payment_milestones %}` condition that was hiding the entire section
+   - Made the Invoice Milestones section always visible
+
+2. **Added Warning Message**:
+   - Added Bootstrap alert for contracts without milestones:
+   ```html
+   {% if not payment_milestones %}
+   <div class="alert alert-warning">
+       No payment milestones found for this contract.
+   </div>
+   {% endif %}
+   ```
+
+3. **Restructured Template Logic**:
+   - **Before**: Entire section (including Add button) was conditional on `payment_milestones` existing
+   - **After**: Section always shows, table only shows when milestones exist, button always visible
+
+4. **Preserved Functionality**:
+   - All existing JavaScript for milestone editing remains unchanged
+   - Add Invoice form functionality preserved
+   - No breaking changes to existing features
+
+#### **Technical Implementation**
+
+**Template Structure Changes**:
+```html
+<!-- OLD: Conditional entire section -->
+{% if payment_milestones %}
+<div class="card">
+    <!-- All content including button -->
+{% else %}
+    <p>No payment milestones found for this contract.</p>
+{% endif %}
+
+<!-- NEW: Always show section, conditional content -->
+<div class="card">
+    <h3>Invoice Milestones</h3>
+    
+    {% if not payment_milestones %}
+    <div class="alert alert-warning">
+        No payment milestones found for this contract.
+    </div>
+    {% endif %}
+    
+    {% if payment_milestones %}
+    <!-- Table with existing milestones -->
+    {% endif %}
+    
+    <!-- Add Invoice button always visible -->
+    <div class="mt-3">
+        <button id="add-invoice-btn" class="btn btn-primary">+ Add Invoice</button>
+    </div>
+</div>
+```
+
+#### **User Experience Improvements**
+
+**Enhanced Accessibility**:
+- **Always Available**: Add Invoice button visible for all contracts
+- **Clear Messaging**: Warning alert explains when no milestones exist
+- **Consistent Interface**: Same functionality available regardless of contract state
+- **Intuitive Design**: Users can always add milestones when needed
+
+**Business Benefits**:
+- **Complete Coverage**: All contracts support milestone creation
+- **No Edge Cases**: High-value contracts without milestones can now be managed
+- **Improved Workflow**: Users don't need to understand why button is missing
+- **Better UX**: Consistent interface reduces confusion
+
+#### **Quality Assurance**
+
+**Testing Completed**:
+- ✅ Verified Add Invoice button shows for contracts with existing milestones
+- ✅ Verified Add Invoice button shows for contracts without milestones
+- ✅ Confirmed warning message displays appropriately
+- ✅ Tested all existing milestone editing functionality
+- ✅ Validated JavaScript functionality remains intact
+- ✅ No linting errors introduced
+
+**Code Quality**:
+- **Clean Implementation**: Simple, logical template restructuring
+- **No Breaking Changes**: All existing functionality preserved
+- **Maintainable Code**: Clear separation of conditional and always-visible elements
+- **Consistent Styling**: Uses existing Bootstrap classes and patterns
+
+---
+
+**LAST UPDATED**: January 25, 2025 - 17:30 PDT (Add Invoice Button Always Visible)
