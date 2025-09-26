@@ -150,6 +150,7 @@
         <thead>
             <tr>
                 <th>Milestone Name</th>
+                <th>Invoice Date</th>
                 <th>Due Date</th>
                 <th>Amount</th>
                 <th>Percentage</th>
@@ -169,6 +170,13 @@
                         {% endif %}
                     </span>
                     <input type="text" class="form-control milestone-name-input" value="{{ milestone.milestone_name }}" style="display: none; width: 150px;">
+                </td>
+                <td>
+                    {% if milestone.invoice_date %}
+                        {{ milestone.invoice_date|date:"M d, Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
                 <td>
                     <span class="milestone-date-display">{{ milestone.due_date|date:"M d, Y" }}</span>
