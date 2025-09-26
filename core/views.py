@@ -952,3 +952,15 @@ def accounting(request):
         'milestones': milestones
     }
     return render(request, 'core/accounting.html', context)
+
+
+@require_http_methods(["POST"])
+def save_qbo_data(request):
+    """Save QBO data for payment milestones."""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        for update in data['updates']:
+            milestone = PaymentMilestone.objects.get(id=update['id'])
+            setattr(milestone, update['field'], update['value'])
+            milestone.save()
+        return JsonResponse({'status': 'success'})

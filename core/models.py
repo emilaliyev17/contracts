@@ -305,6 +305,9 @@ class PaymentMilestone(models.Model):
     payment_reference = models.CharField(max_length=100, blank=True, help_text="Reference number for payment")
     created_date = models.DateTimeField(auto_now_add=True, help_text="When milestone was created")
     modified_date = models.DateTimeField(auto_now=True, help_text="Last modification timestamp")
+    qbo_invoice_number = models.CharField(max_length=50, blank=True, null=True)
+    qbo_invoice_date = models.DateField(blank=True, null=True)
+    qbo_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     
     class Meta:
         ordering = ['due_date', 'created_date']
