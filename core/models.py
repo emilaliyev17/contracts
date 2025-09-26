@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 from decimal import Decimal
 
 
@@ -103,11 +105,15 @@ class Contract(models.Model):
         default=dict,
         help_text="Raw extracted data from PDF parsing for future reference and debugging"
     )
+    search_vector = SearchVectorField(null=True, blank=True)
     
     class Meta:
         ordering = ['-upload_date']
         verbose_name = "Contract"
         verbose_name_plural = "Contracts"
+        indexes = [
+            GinIndex(fields=['search_vector']),
+        ]
     
     def __str__(self):
         return f"{self.contract_name} ({self.contract_number})"
