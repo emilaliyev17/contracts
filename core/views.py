@@ -897,7 +897,34 @@ def update_milestone(request, contract_id):
         milestone_id = data.get('milestone_id')
         milestone = get_object_or_404(PaymentMilestone, id=milestone_id, contract=contract)
         
-        # Update milestone fields
+        # Handle generic field updates
+        field = data.get('field')
+        value = data.get('value')
+        
+        if field and value is not None:
+            if field == 'invoice_date':
+                try:
+                    milestone.invoice_date = datetime.strptime(value, '%Y-%m-%d').date()
+                except ValueError:
+                    return JsonResponse({'success': False, 'error': 'Invalid invoice date format'})
+            elif field == 'due_date':
+                try:
+                    milestone.due_date = datetime.strptime(value, '%Y-%m-%d').date()
+                except ValueError:
+                    return JsonResponse({'success': False, 'error': 'Invalid due date format'})
+            elif field == 'amount':
+                try:
+                    milestone.amount = float(value)
+                except ValueError:
+                    return JsonResponse({'success': False, 'error': 'Invalid amount format'})
+            elif field == 'milestone_name':
+                milestone.milestone_name = value
+            elif field == 'payment_reference':
+                milestone.payment_reference = value
+            else:
+                return JsonResponse({'success': False, 'error': f'Unknown field: {field}'})
+        
+        # Legacy support for direct field updates
         milestone.milestone_name = data.get('milestone_name', milestone.milestone_name)
         
         # Handle date conversion

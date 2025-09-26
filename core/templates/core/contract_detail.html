@@ -189,11 +189,10 @@
                     <input type="text" class="form-control milestone-name-input" value="{{ milestone.milestone_name }}" style="display: none; width: 150px;">
                 </td>
                 <td>
-                    {% if milestone.invoice_date %}
-                        {{ milestone.invoice_date|date:"M d, Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
+                    <input type="date" 
+                           value="{{ milestone.invoice_date|date:'Y-m-d' }}"
+                           onchange="updateMilestone({{ milestone.id }}, 'invoice_date', this.value)"
+                           class="form-control form-control-sm">
                 </td>
                 <td>
                     <span class="milestone-date-display">{{ milestone.due_date|date:"M d, Y" }}</span>
@@ -536,6 +535,35 @@ function saveClient() {
             value: clientName
         })
     }).then(() => location.reload());
+}
+
+// Milestone editing functionality
+function updateMilestone(milestoneId, field, value) {
+    fetch("{% url 'core:update_milestone' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            milestone_id: milestoneId,
+            field: field,
+            value: value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            // Optionally show success feedback
+            console.log('Milestone updated successfully');
+        } else {
+            alert('Error updating milestone: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating milestone');
+    });
 }
 </script>
 
