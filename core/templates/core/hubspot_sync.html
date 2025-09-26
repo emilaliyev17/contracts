@@ -5,31 +5,29 @@
 {% endblock %}
 {% block content %}
 
-<!-- Gradient Header -->
-<div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+<!-- Unified Header with Upload -->
+<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('/media/images/header.png'); background-size: cover; background-position: center; color: white;">
     <div class="px-4 py-8">
         <div class="flex justify-between items-start">
             <div>
                 <h1 class="text-3xl font-bold mb-2">HubSpot Sync</h1>
                 <p class="text-purple-100">Deal Pipeline and Contract Matching</p>
             </div>
-            <a href="{% url 'core:contract_list' %}" 
-               class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
-                Back to Contracts
-            </a>
+            <div class="flex items-center space-x-4">
+                <form method="post" enctype="multipart/form-data" class="inline-block">
+                    {% csrf_token %}
+                    <label class="bg-white text-purple-600 px-4 py-2 rounded cursor-pointer hover:bg-gray-100">
+                        Upload CSV/XLSX
+                        <input type="file" name="hubspot_file" accept=".csv,.xlsx" class="hidden" onchange="this.form.submit()">
+                    </label>
+                </form>
+                <a href="{% url 'core:contract_list' %}" 
+                   class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
+                    Back to Contracts
+                </a>
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Upload Section -->
-<div class="bg-purple-500 px-4 py-3">
-    <form method="post" enctype="multipart/form-data" class="inline-block">
-        {% csrf_token %}
-        <label class="bg-white text-purple-600 px-4 py-2 rounded cursor-pointer hover:bg-gray-100">
-            Upload CSV/XLSX
-            <input type="file" name="hubspot_file" accept=".csv,.xlsx" class="hidden" onchange="this.form.submit()">
-        </label>
-    </form>
 </div>
 
 <!-- Stats Cards -->
