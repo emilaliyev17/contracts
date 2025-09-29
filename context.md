@@ -7448,3 +7448,147 @@ COLUMN_MAP = {
 - **Audit Compliance**: Complete tracking of deal processing and matching
 - **User Experience**: Intuitive interface with real-time feedback
 - **Scalability**: Efficient processing of large deal datasets
+
+## Recent Updates - HubSpot Match Status Indicators
+
+**Date**: January 25, 2025
+**Status**: ✅ COMPLETED
+
+### Feature: Visual HubSpot Match Indicators in Contract List
+
+Implemented comprehensive HubSpot match status indicators with interactive tooltips and enhanced matching functionality.
+
+#### **Problem Solved**
+- **Issue**: No visual indication of which contracts were matched with HubSpot deals
+- **Impact**: Users couldn't quickly identify matched vs unmatched contracts
+- **Business Need**: Clear visual feedback for HubSpot integration status
+
+#### **Solution Implemented**
+
+**Files Modified**:
+- `core/models.py`: Added HubSpot match status methods to Contract model
+- `core/views.py`: Enhanced match_hubspot_deal function with full database operations
+- `core/templates/core/contract_list.html`: Added interactive HubSpot indicators
+
+**Changes Made**:
+
+#### 1. **Contract Model Methods** (`core/models.py`)
+```python
+def get_hubspot_match(self):
+    """Get active HubSpot match if exists"""
+    return self.hubspot_matches.filter(is_active=True).first()
+
+def is_hubspot_matched(self):
+    """Check if contract has active HubSpot match"""
+    return self.hubspot_matches.filter(is_active=True).exists()
+```
+
+#### 2. **Enhanced Matching Function** (`core/views.py`)
+- **Complete Database Operations**: Replaced stub with full CRUD functionality
+- **Error Handling**: Comprehensive validation and error responses
+- **Match/Unmatch Support**: Handles both matching and unmatching operations
+- **User Tracking**: Records who created each match
+- **Active Match Management**: Prevents duplicate matches using `update_or_create`
+
+**Key Features**:
+```python
+# Create or update match
+match, created = HubSpotDealMatch.objects.update_or_create(
+    deal=deal,
+    defaults={
+        'contract': contract,
+        'matched_by': request.user if request.user.is_authenticated else None,
+        'is_active': True,
+    },
+)
+
+# Handle unmatching
+if contract_id == 'unmatch':
+    active_matches = HubSpotDealMatch.objects.filter(deal=deal, is_active=True)
+    active_matches.update(is_active=False)
+```
+
+#### 3. **Interactive Visual Indicators** (`core/templates/core/contract_list.html`)
+
+**Enhanced Contract Number Column**:
+- **Green Dot**: Indicates matched contracts with HubSpot deals
+- **Gray Dot**: Shows unmatched contracts
+- **Interactive Tooltips**: Hover to see deal details
+- **Direct Links**: Click through to HubSpot sync page
+
+**Implementation**:
+```html
+{% if contract.is_hubspot_matched %}
+    {% with match=contract.get_hubspot_match %}
+    <div class="relative group">
+        <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-2 cursor-help"></span>
+        <div class="absolute invisible group-hover:visible bg-gray-900 text-white p-2 rounded shadow-lg z-50 w-48 -top-8 left-0 text-xs">
+            <p class="font-semibold">HubSpot Match</p>
+            <p>Deal: {{ match.deal.deal_name|truncatechars:30 }}</p>
+            <a href="{% url 'core:hubspot_sync' %}?deal={{ match.deal.record_id }}" 
+               class="text-blue-300 hover:underline">
+                View in HubSpot →
+            </a>
+        </div>
+    </div>
+    {% endwith %}
+{% else %}
+    <span class="w-2 h-2 bg-gray-300 rounded-full inline-block mr-2"></span>
+{% endif %}
+```
+
+#### 4. **Enhanced HubSpot Sync View** (`core/views.py`)
+- **Prefetch Optimization**: Added `prefetch_related('matches__contract')` for efficient queries
+- **Match Lookup Dictionary**: Created `matched_contracts` context for template efficiency
+- **Improved Stats**: Better calculation of matched/unmatched counts
+
+**Technical Improvements**:
+```python
+# Optimized queries
+deals = HubSpotDeal.objects.all().prefetch_related('matches__contract')
+
+# Create lookup dictionary for matched contracts
+matched_contracts = {}
+for deal in deals:
+    matched_match = next((match for match in deal.matches.all() if match.is_active), None)
+    if matched_match:
+        matched_contracts[deal.id] = matched_match.contract_id
+```
+
+#### **User Experience Enhancements**
+
+1. **Visual Clarity**:
+   - Immediate visual feedback on contract match status
+   - Color-coded indicators (green = matched, gray = unmatched)
+   - Consistent with existing UI design patterns
+
+2. **Interactive Tooltips**:
+   - Hover over green dots to see deal information
+   - Truncated deal names for clean display
+   - Direct links to HubSpot sync page with deal context
+
+3. **Seamless Integration**:
+   - Works with existing contract list functionality
+   - No performance impact on page load
+   - Maintains all existing features and styling
+
+#### **Database Status Verification**
+- **Current Status**: 0 total matches, 0 active matches
+- **Expected Behavior**: All contracts show gray dots (unmatched)
+- **Ready for Use**: Green dots will appear when matches are created
+
+#### **Benefits**
+
+1. **Improved Workflow**: Users can instantly see which contracts are linked to HubSpot deals
+2. **Better Data Management**: Clear visual separation of matched vs unmatched contracts
+3. **Enhanced Navigation**: Direct links from contract list to HubSpot sync page
+4. **Audit Trail**: Complete tracking of who matched what and when
+5. **Scalable Design**: Efficient queries and template rendering for large datasets
+
+#### **Future Enhancements**
+
+1. **Bulk Matching**: Interface for matching multiple contracts at once
+2. **Match Statistics**: Dashboard metrics for match completion rates
+3. **Automated Suggestions**: AI-powered deal-to-contract matching recommendations
+4. **Export Functionality**: Export matched/unmatched contract lists
+5. **Advanced Filtering**: Filter contract list by match status

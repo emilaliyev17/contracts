@@ -278,8 +278,17 @@
               <td class="p-4">
                 <a href="{% url 'core:contract_detail' contract.id %}?next={{ request.get_full_path|urlencode }}" class="font-medium text-sm hover:text-primary">{{ contract.contract_name|default:"—" }}</a>
               </td>
-              <td class="p-4">
-                <code class="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{{ contract.contract_number }}</code>
+              <td class="px-6 py-4">
+                <div class="flex items-center">
+                  {% if contract.is_hubspot_matched %}
+                    <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-2" title="Matched with HubSpot"></span>
+                  {% else %}
+                    <span class="w-2 h-2 bg-gray-300 rounded-full inline-block mr-2" title="Not matched"></span>
+                  {% endif %}
+                  <span class="text-blue-600 hover:text-blue-800">
+                    {{ contract.contract_number }}
+                  </span>
+                </div>
               </td>
               <td class="p-4 text-sm">{{ contract.client_name|default:"—" }}</td>
               <td class="p-4 text-right font-medium text-sm">

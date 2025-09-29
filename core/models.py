@@ -268,6 +268,14 @@ class Contract(models.Model):
             return updates_made
         
         return []
+    
+    def get_hubspot_match(self):
+        """Get active HubSpot match if exists"""
+        return self.hubspot_matches.filter(is_active=True).first()
+    
+    def is_hubspot_matched(self):
+        """Check if contract has active HubSpot match"""
+        return self.hubspot_matches.filter(is_active=True).exists()
 
 
 class PaymentMilestone(models.Model):

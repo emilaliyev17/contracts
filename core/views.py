@@ -1029,17 +1029,25 @@ def hubspot_sync(request):
         return redirect('core:hubspot_sync')
     
     # Get deals and contracts
-    deals = HubSpotDeal.objects.all()
+    deals = HubSpotDeal.objects.all().prefetch_related('matches__contract')
     contracts = Contract.objects.all().order_by('-upload_date')
-    
+
+    # Create lookup dictionary for matched contracts
+    matched_contracts = {}
+    for deal in deals:
+        matched_match = next((match for match in deal.matches.all() if match.is_active), None)
+        if matched_match:
+            matched_contracts[deal.id] = matched_match.contract_id
+
     # Calculate stats
     letter_sent_count = deals.filter(stage='Engagement Letter Sent').count()
     closed_won_count = deals.filter(stage__icontains="Closed Won").count()
     unmatched_count = deals.exclude(matches__is_active=True).count()
-    
+
     context = {
         'deals': deals,
         'contracts': contracts,
+        'matched_contracts': matched_contracts,
         'letter_sent_count': letter_sent_count,
         'closed_won_count': closed_won_count,
         'unmatched_count': unmatched_count,
@@ -1049,7 +1057,83 @@ def hubspot_sync(request):
 
 @require_POST
 def match_hubspot_deal(request):
-    """Match deal with contract"""
-    data = json.loads(request.body)
-    # For now, just return success
-    return JsonResponse({'status': 'success'})
+    """Create or update a HubSpotDealMatch record."""
+    try:
+        data = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Invalid JSON payload'},
+            status=400,
+        )
+
+    deal_id = data.get('deal_id')
+    contract_id = data.get('contract_id')
+
+    if not deal_id:
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': 'deal_id is required',
+            },
+            status=400,
+        )
+
+    try:
+        deal = HubSpotDeal.objects.get(pk=deal_id)
+    except HubSpotDeal.DoesNotExist:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Deal not found'},
+            status=404,
+        )
+
+    if contract_id == 'unmatch':
+        active_matches = HubSpotDealMatch.objects.filter(deal=deal, is_active=True)
+        had_active_match = active_matches.exists()
+        if had_active_match:
+            active_matches.update(is_active=False)
+
+        return JsonResponse(
+            {
+                'status': 'success',
+                'action': 'unmatched',
+                'had_active_match': had_active_match,
+            }
+        )
+
+    if not contract_id:
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': 'contract_id is required',
+            },
+            status=400,
+        )
+
+    try:
+        contract = Contract.objects.get(pk=contract_id)
+    except Contract.DoesNotExist:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Contract not found'},
+            status=404,
+        )
+
+    had_active_match = HubSpotDealMatch.objects.filter(deal=deal, is_active=True).exists()
+
+    match, created = HubSpotDealMatch.objects.update_or_create(
+        deal=deal,
+        defaults={
+            'contract': contract,
+            'matched_by': request.user if request.user.is_authenticated else None,
+            'is_active': True,
+        },
+    )
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'action': 'matched',
+            'created': created,
+            'match_id': match.id,
+            'was_previously_matched': had_active_match,
+        }
+    )
