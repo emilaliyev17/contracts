@@ -1075,19 +1075,36 @@ def update_milestone(request, contract_id):
 
 @require_http_methods(["POST"])
 def add_milestone(request, contract_id):
+    """Add new payment milestone/invoice via AJAX"""
+    from datetime import datetime
+    
     contract = get_object_or_404(Contract, id=contract_id)
     data = json.loads(request.body)
     
-    milestone = PaymentMilestone.objects.create(
-        contract=contract,
-        milestone_name=data.get('milestone_name'),
-        invoice_date=data.get('invoice_date'),
-        due_date=data.get('due_date'),
-        amount=data.get('amount'),
-        status='pending'
-    )
-    
-    return JsonResponse({'success': True, 'id': milestone.id})
+    try:
+        # Parse dates from strings
+        invoice_date_str = data.get('invoice_date')
+        due_date_str = data.get('due_date')
+        
+        invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d').date() if invoice_date_str else None
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
+        
+        # Parse amount
+        amount = float(data.get('amount')) if data.get('amount') else 0
+        
+        milestone = PaymentMilestone.objects.create(
+            contract=contract,
+            milestone_name=data.get('milestone_name'),
+            invoice_date=invoice_date,
+            due_date=due_date,
+            amount=amount,
+            status='pending'
+        )
+        
+        return JsonResponse({'success': True, 'id': milestone.id})
+        
+    except (ValueError, TypeError) as e:
+        return JsonResponse({'success': False, 'error': f'Invalid data: {str(e)}'}, status=400)
 
 
 def accounting(request):
