@@ -91,7 +91,19 @@
                 </tr>
                 <tr>
                     <td><strong>Status:</strong></td>
-                    <td><span class="status {{ contract.status }}">{{ contract.get_status_display }}</span></td>
+                    <td>
+                        <span id="status-display" class="status {{ contract.status }}">{{ contract.get_status_display }}</span>
+                        <select id="status-select" class="form-control" style="display: none; width: 200px;">
+                            {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if contract.status == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button id="edit-status-btn" class="btn btn-sm btn-outline-primary ms-2">Edit</button>
+                        <button id="save-status-btn" class="btn btn-sm btn-success ms-2" style="display: none;">Save</button>
+                        <button id="cancel-status-btn" class="btn btn-sm btn-secondary ms-1" style="display: none;">Cancel</button>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>Start Date:</strong></td>
@@ -474,6 +486,42 @@ document.getElementById('save-type-btn').addEventListener('click', function() {
     .then(data => {
         if(data.success) {
             location.reload();
+        }
+    });
+});
+
+// Status editing
+document.getElementById('edit-status-btn').addEventListener('click', function() {
+    document.getElementById('status-display').style.display = 'none';
+    document.getElementById('status-select').style.display = 'inline-block';
+    this.style.display = 'none';
+    document.getElementById('save-status-btn').style.display = 'inline-block';
+    document.getElementById('cancel-status-btn').style.display = 'inline-block';
+});
+
+document.getElementById('cancel-status-btn').addEventListener('click', function() {
+    location.reload();
+});
+
+document.getElementById('save-status-btn').addEventListener('click', function() {
+    const status = document.getElementById('status-select').value;
+    
+    fetch("{% url 'core:update_contract_status' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            status: status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to update status'));
         }
     });
 });

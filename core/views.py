@@ -132,6 +132,11 @@ def contract_detail(request, contract_id):
         'unanswered_count': unanswered_count,
         'back_url': next_url,
         'contract_types': ContractType.objects.filter(is_active=True),
+        'status_choices': [
+            ('needs_clarification', 'Needs Review'),
+            ('processing', 'Processing'),
+            ('completed', 'Completed'),
+        ],
     }
     return render(request, 'core/contract_detail.html', context)
 
@@ -886,6 +891,25 @@ def update_contract_type(request, contract_id):
 
     contract.save(update_fields=['contract_type'])
 
+    return JsonResponse({'success': True})
+
+
+@require_http_methods(["POST"])
+def update_contract_status(request, contract_id):
+    """Update contract status via AJAX"""
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    new_status = data.get('status')
+    
+    # Validate status - only allow these three
+    valid_statuses = ['needs_clarification', 'processing', 'completed']
+    if new_status not in valid_statuses:
+        return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+    
+    contract.status = new_status
+    contract.save()
+    
     return JsonResponse({'success': True})
 
 

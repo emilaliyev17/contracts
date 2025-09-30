@@ -12,6 +12,7 @@ urlpatterns = [
     path('contracts/<int:contract_id>/', views.contract_detail, name='contract_detail'),
     path('contracts/<int:contract_id>/update-po/', views.update_po_info, name='update_po_info'),
     path('contracts/<int:contract_id>/update-type/', views.update_contract_type, name='update_contract_type'),
+    path('contracts/<int:contract_id>/update-status/', views.update_contract_status, name='update_contract_status'),
     path('contracts/<int:contract_id>/update-milestone/', views.update_milestone, name='update_milestone'),
     path('contracts/<int:contract_id>/add-milestone/', views.add_milestone, name='add_milestone'),
     path('contract/<int:contract_id>/delete/', views.delete_contract, name='delete_contract'),
