@@ -556,11 +556,18 @@ def generate_invoice_schedule(contract, start_date, end_date):
     
     invoices = []
     
+    # Skip contracts without start date
+    if not contract.start_date:
+        return invoices
+    
     # Handle different frequencies
     if hasattr(contract, 'payment_terms') and contract.payment_terms:
         if contract.payment_terms.payment_frequency == 'monthly':
             current = contract.start_date
-            while current <= end_date and current <= contract.end_date:
+            # Use forecast end_date if contract has no end_date (ongoing)
+            contract_end = contract.end_date if contract.end_date else end_date
+            
+            while current <= end_date and current <= contract_end:
                 invoices.append({
                     'date': current,
                     'amount': contract.total_value / 12 if contract.total_value else 0,
@@ -574,7 +581,9 @@ def generate_invoice_schedule(contract, start_date, end_date):
                 
         elif contract.payment_terms.payment_frequency == 'quarterly':
             current = contract.start_date
-            while current <= end_date and current <= contract.end_date:
+            contract_end = contract.end_date if contract.end_date else end_date
+            
+            while current <= end_date and current <= contract_end:
                 invoices.append({
                     'date': current,
                     'amount': contract.total_value / 4 if contract.total_value else 0,
@@ -588,7 +597,9 @@ def generate_invoice_schedule(contract, start_date, end_date):
                 
         elif contract.payment_terms.payment_frequency == 'annually':
             current = contract.start_date
-            while current <= end_date and current <= contract.end_date:
+            contract_end = contract.end_date if contract.end_date else end_date
+            
+            while current <= end_date and current <= contract_end:
                 invoices.append({
                     'date': current,
                     'amount': contract.total_value if contract.total_value else 0,
