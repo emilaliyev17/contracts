@@ -137,6 +137,8 @@ def contract_detail(request, contract_id):
             ('processing', 'Processing'),
             ('completed', 'Completed'),
         ],
+        'payment_method_choices': PaymentTerms.PAYMENT_METHOD_CHOICES,
+        'payment_frequency_choices': PaymentTerms.PAYMENT_FREQUENCY_CHOICES,
     }
     return render(request, 'core/contract_detail.html', context)
 
@@ -956,6 +958,49 @@ def update_contract_dates(request, contract_id):
             'success': False, 
             'error': 'Invalid date format'
         }, status=400)
+
+
+@require_http_methods(["POST"])
+def update_payment_terms(request, contract_id):
+    """Update or create payment terms via AJAX"""
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    payment_method = data.get('payment_method')
+    payment_frequency = data.get('payment_frequency')
+    
+    # Validate choices
+    from core.models import PaymentTerms
+    valid_methods = [choice[0] for choice in PaymentTerms.PAYMENT_METHOD_CHOICES]
+    valid_frequencies = [choice[0] for choice in PaymentTerms.PAYMENT_FREQUENCY_CHOICES]
+    
+    if payment_method not in valid_methods:
+        return JsonResponse({'success': False, 'error': 'Invalid payment method'}, status=400)
+    if payment_frequency not in valid_frequencies:
+        return JsonResponse({'success': False, 'error': 'Invalid payment frequency'}, status=400)
+    
+    # Create or update PaymentTerms
+    payment_terms, created = PaymentTerms.objects.get_or_create(
+        contract=contract,
+        defaults={
+            'payment_method': payment_method,
+            'payment_frequency': payment_frequency,
+            'grace_period_days': 0
+        }
+    )
+    
+    if not created:
+        # Warn about frequency change impact
+        old_frequency = payment_terms.payment_frequency
+        if old_frequency != payment_frequency:
+            # Log or track frequency change if needed
+            pass
+            
+        payment_terms.payment_method = payment_method
+        payment_terms.payment_frequency = payment_frequency
+        payment_terms.save()
+    
+    return JsonResponse({'success': True, 'created': created})
 
 
 @require_http_methods(["POST"])

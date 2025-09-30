@@ -148,11 +148,32 @@
             <table class="table">
                 <tr>
                     <td><strong>Payment Method:</strong></td>
-                    <td>{{ payment_terms.get_payment_method_display }}</td>
+                    <td>
+                        <span id="payment-method-display">{{ payment_terms.get_payment_method_display }}</span>
+                        <select id="payment-method-select" class="form-control" style="display: none; width: 200px;">
+                            {% for value, label in payment_method_choices %}
+                            <option value="{{ value }}" {% if payment_terms.payment_method == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>Payment Frequency:</strong></td>
-                    <td>{{ payment_terms.get_payment_frequency_display }}</td>
+                    <td>
+                        <span id="payment-frequency-display">{{ payment_terms.get_payment_frequency_display }}</span>
+                        <select id="payment-frequency-select" class="form-control" style="display: none; width: 200px;">
+                            {% for value, label in payment_frequency_choices %}
+                            <option value="{{ value }}" {% if payment_terms.payment_frequency == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button id="edit-payment-terms-btn" class="btn btn-sm btn-outline-primary ms-2">Edit</button>
+                        <button id="save-payment-terms-btn" class="btn btn-sm btn-success ms-2" style="display: none;">Save</button>
+                        <button id="cancel-payment-terms-btn" class="btn btn-sm btn-secondary ms-1" style="display: none;">Cancel</button>
+                    </td>
                 </tr>
                 {% if payment_terms.late_fee_percentage %}
                 <tr>
@@ -173,6 +194,9 @@
                 </tr>
                 {% endif %}
             </table>
+            {% else %}
+            <h3>Payment Terms</h3>
+            <p>No payment terms set. <button id="create-payment-terms-btn" class="btn btn-sm btn-primary">Create Payment Terms</button></p>
             {% endif %}
         </div>
     </div>
@@ -578,6 +602,81 @@ document.getElementById('save-dates-btn').addEventListener('click', function() {
         }
     });
 });
+
+// Payment Terms editing
+if(document.getElementById('edit-payment-terms-btn')) {
+    document.getElementById('edit-payment-terms-btn').addEventListener('click', function() {
+        document.getElementById('payment-method-display').style.display = 'none';
+        document.getElementById('payment-method-select').style.display = 'inline-block';
+        document.getElementById('payment-frequency-display').style.display = 'none';
+        document.getElementById('payment-frequency-select').style.display = 'inline-block';
+        this.style.display = 'none';
+        document.getElementById('save-payment-terms-btn').style.display = 'inline-block';
+        document.getElementById('cancel-payment-terms-btn').style.display = 'inline-block';
+    });
+    
+    document.getElementById('cancel-payment-terms-btn').addEventListener('click', function() {
+        location.reload();
+    });
+    
+    document.getElementById('save-payment-terms-btn').addEventListener('click', function() {
+        const method = document.getElementById('payment-method-select').value;
+        const frequency = document.getElementById('payment-frequency-select').value;
+        const oldFrequency = '{{ payment_terms.payment_frequency }}';
+        
+        // Warn if frequency is changing
+        if(oldFrequency && oldFrequency !== frequency) {
+            if(!confirm('WARNING: Changing payment frequency will recalculate all payment forecasts. Continue?')) {
+                return;
+            }
+        }
+        
+        fetch("{% url 'core:update_payment_terms' contract.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                payment_method: method,
+                payment_frequency: frequency
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update'));
+            }
+        });
+    });
+}
+
+// Create payment terms if doesn't exist
+if(document.getElementById('create-payment-terms-btn')) {
+    document.getElementById('create-payment-terms-btn').addEventListener('click', function() {
+        if(confirm('Create default payment terms (Wire Transfer, One Time)?')) {
+            fetch("{% url 'core:update_payment_terms' contract.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    payment_method: 'wire_transfer',
+                    payment_frequency: 'one_time'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
+                }
+            });
+        }
+    });
+}
 
 // Add Invoice functionality
 document.getElementById('add-invoice-btn').addEventListener('click', function() {
