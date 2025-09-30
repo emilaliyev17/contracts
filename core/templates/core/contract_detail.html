@@ -107,11 +107,24 @@
                 </tr>
                 <tr>
                     <td><strong>Start Date:</strong></td>
-                    <td>{{ contract.start_date }}</td>
+                    <td>
+                        <span id="start-date-display">{{ contract.start_date|date:"M d, Y"|default:"Not set" }}</span>
+                        <input type="date" id="start-date-input" value="{{ contract.start_date|date:'Y-m-d' }}" 
+                               class="form-control" style="display: none; width: 200px;">
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>End Date:</strong></td>
-                    <td>{{ contract.end_date }}</td>
+                    <td>
+                        <span id="end-date-display">
+                            {% if contract.end_date %}{{ contract.end_date|date:"M d, Y" }}{% else %}Ongoing{% endif %}
+                        </span>
+                        <input type="date" id="end-date-input" value="{{ contract.end_date|date:'Y-m-d' }}" 
+                               class="form-control" style="display: none; width: 200px;">
+                        <button id="edit-dates-btn" class="btn btn-sm btn-outline-primary ms-2">Edit Dates</button>
+                        <button id="save-dates-btn" class="btn btn-sm btn-success ms-2" style="display: none;">Save</button>
+                        <button id="cancel-dates-btn" class="btn btn-sm btn-secondary ms-1" style="display: none;">Cancel</button>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>Duration:</strong></td>
@@ -522,6 +535,46 @@ document.getElementById('save-status-btn').addEventListener('click', function() 
             location.reload();
         } else {
             alert('Error: ' + (data.error || 'Failed to update status'));
+        }
+    });
+});
+
+// Date editing
+document.getElementById('edit-dates-btn').addEventListener('click', function() {
+    document.getElementById('start-date-display').style.display = 'none';
+    document.getElementById('start-date-input').style.display = 'inline-block';
+    document.getElementById('end-date-display').style.display = 'none';
+    document.getElementById('end-date-input').style.display = 'inline-block';
+    this.style.display = 'none';
+    document.getElementById('save-dates-btn').style.display = 'inline-block';
+    document.getElementById('cancel-dates-btn').style.display = 'inline-block';
+});
+
+document.getElementById('cancel-dates-btn').addEventListener('click', function() {
+    location.reload();
+});
+
+document.getElementById('save-dates-btn').addEventListener('click', function() {
+    const startDate = document.getElementById('start-date-input').value;
+    const endDate = document.getElementById('end-date-input').value;
+    
+    fetch("{% url 'core:update_contract_dates' contract.id %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to update dates'));
         }
     });
 });

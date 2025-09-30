@@ -914,6 +914,51 @@ def update_contract_status(request, contract_id):
 
 
 @require_http_methods(["POST"])
+def update_contract_dates(request, contract_id):
+    """Update contract start and end dates via AJAX"""
+    from datetime import datetime
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    data = json.loads(request.body)
+    
+    start_date_str = data.get('start_date')
+    end_date_str = data.get('end_date')
+    
+    try:
+        # Parse start_date
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        else:
+            start_date = None
+        
+        # Parse end_date (allow empty for ongoing contracts)
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date = None
+        
+        # Validate: start_date <= end_date (if both exist)
+        if start_date and end_date and start_date > end_date:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Start date must be before end date'
+            }, status=400)
+        
+        # Update contract
+        contract.start_date = start_date
+        contract.end_date = end_date
+        contract.save()
+        
+        return JsonResponse({'success': True})
+        
+    except ValueError:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Invalid date format'
+        }, status=400)
+
+
+@require_http_methods(["POST"])
 def update_milestone(request, contract_id):
     """Update milestone information for a contract via AJAX"""
     from .models import PaymentMilestone
