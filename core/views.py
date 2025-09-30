@@ -73,13 +73,17 @@ def contract_list(request):
         contracts = contracts_queryset
         status_filter = 'all'
 
-    # Search functionality
+    # Search functionality  
     search_query = request.GET.get('search', '')
     if search_query:
-        from django.contrib.postgres.search import SearchVector
-        contracts = contracts.annotate(
-            search=SearchVector('raw_extracted_data', 'client_name', 'contract_name')
-        ).filter(search=search_query)
+        from django.db.models import Q
+        
+        # Use icontains for partial case-insensitive matching
+        contracts = contracts.filter(
+            Q(client_name__icontains=search_query) |
+            Q(contract_name__icontains=search_query) |
+            Q(notes__icontains=search_query)
+        )
 
     summary = _get_contract_summary()
 

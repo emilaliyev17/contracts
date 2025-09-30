@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load core_extras %}
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
@@ -87,12 +88,17 @@
                             <select id="contract-select-{{ deal.id }}" 
                                     class="contract-select border rounded px-2 py-1" 
                                     onchange="matchContract({{ deal.id }}, this.value, this)">
-                                <option value="">- Select Contract -</option>
-                                {% for contract in contracts %}
-                                <option value="{{ contract.id }}">
-                                    {{ contract.contract_number }} - {{ contract.client_name }}
-                                </option>
-                                {% endfor %}
+                                <option value="">- Type to search contract -</option>
+                                {% with matched_id=matched_contracts|get:deal.id %}
+                                    {% if matched_id %}
+                                        <option value="unmatch">❌ Remove match</option>
+                                    {% endif %}
+                                    {% for contract in contracts %}
+                                    <option value="{{ contract.id }}" {% if contract.id == matched_id %}selected{% endif %}>
+                                        {{ contract.contract_number }} - {{ contract.client_name }}
+                                    </option>
+                                    {% endfor %}
+                                {% endwith %}
                             </select>
                         </td>
                     </tr>
@@ -129,10 +135,11 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script>
 function matchContract(dealId, contractId, selectElement) {
+
     // Show saving indicator
     selectElement.disabled = true;
     selectElement.style.background = '#f3f4f6';
-    
+
     fetch("{% url 'core:match_hubspot_deal' %}", {
         method: 'POST',
         headers: {
@@ -145,16 +152,56 @@ function matchContract(dealId, contractId, selectElement) {
         })
     }).then(response => response.json())
     .then(data => {
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Failed to save');
+        }
+
         // Show success
         selectElement.disabled = false;
         selectElement.style.background = '#dcfce7';  // Light green
-        
-        // Update unmatched count
-        if (contractId) {
-            document.getElementById('unmatched-count').textContent = 
-                parseInt(document.getElementById('unmatched-count').textContent) - 1;
+
+        const tomSelectInstance = selectElement.tomselect;
+        const unmatchedElement = document.getElementById('unmatched-count');
+        const currentUnmatched = unmatchedElement ? parseInt(unmatchedElement.textContent, 10) || 0 : 0;
+
+        if (data.action === 'matched') {
+            if (!data.was_previously_matched && unmatchedElement) {
+                unmatchedElement.textContent = Math.max(currentUnmatched - 1, 0);
+            }
+
+            if (tomSelectInstance && !tomSelectInstance.options['unmatch']) {
+                tomSelectInstance.addOption({
+                    value: 'unmatch',
+                    text: '❌ Remove match'
+                });
+                tomSelectInstance.refreshOptions(false);
+            }
+
+            if (!selectElement.querySelector('option[value="unmatch"]')) {
+                const removeOption = document.createElement('option');
+                removeOption.value = 'unmatch';
+                removeOption.textContent = '❌ Remove match';
+                selectElement.insertBefore(removeOption, selectElement.options[1] || null);
+            }
+        } else if (data.action === 'unmatched') {
+            if (data.had_active_match && unmatchedElement) {
+                unmatchedElement.textContent = currentUnmatched + 1;
+            }
+
+            if (tomSelectInstance) {
+                tomSelectInstance.clear(true);
+                tomSelectInstance.removeOption('unmatch');
+                tomSelectInstance.refreshOptions(false);
+            } else {
+                selectElement.value = '';
+            }
+
+            const unmatchOption = selectElement.querySelector('option[value="unmatch"]');
+            if (unmatchOption) {
+                unmatchOption.remove();
+            }
         }
-        
+
         // Reset color after 2 seconds
         setTimeout(() => {
             selectElement.style.background = 'white';
@@ -163,6 +210,7 @@ function matchContract(dealId, contractId, selectElement) {
     .catch(error => {
         selectElement.disabled = false;
         selectElement.style.background = '#fee2e2';  // Light red for error
+        console.error(error);
         alert('Failed to save. Please try again.');
     });
 }
