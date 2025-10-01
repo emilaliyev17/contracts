@@ -1,3 +1,4 @@
+# Existing dependencies
 asgiref==3.9.2
 cffi==2.0.0
 charset-normalizer==3.4.3
@@ -19,3 +20,15 @@ pytz==2025.2
 six==1.17.0
 sqlparse==0.5.3
 tzdata==2025.2
+
+# Production server
+gunicorn==23.0.0
+
+# OpenAI for AI-powered contract extraction
+openai==1.59.5
+
+# Static files serving in production
+whitenoise==6.8.2
+
+# Requests library (may be used by OpenAI or HubSpot)
+requests==2.32.3

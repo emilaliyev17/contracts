@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Documentation
+*.md
+context.md
+
+# Backup files
+*.sql
+backup*.sql
+
+# Test files
+test_contracts/
+test_*.py
+test_*.txt
+test_*.xlsx
+
+# Build files
+*.egg-info/
+dist/
+build/
+
+# Cloud SQL Proxy (local development tool)
+cloud-sql-proxy
+
+# Year folders with contracts (if large)
+2025/
+
