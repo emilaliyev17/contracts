@@ -29,6 +29,9 @@ COPY . .
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
+# Verify static files were collected (for debugging)
+RUN ls -la /app/staticfiles/
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
