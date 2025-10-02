@@ -157,18 +157,41 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration for efficient static file serving
 # Using CompressedStaticFilesStorage instead of Manifest version for reliability
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Google Cloud Storage configuration
+GS_BUCKET_NAME = config('GS_BUCKET_NAME', default='contract-analyzer-media')
+GS_PROJECT_ID = config('GS_PROJECT_ID', default='contract-management-473819')
+GS_DEFAULT_ACL = None  # Use bucket's default ACL
+GS_FILE_OVERWRITE = False  # Don't overwrite files with same name
+GS_QUERYSTRING_AUTH = False  # Public URLs without query string authentication
+
+# Storage backends configuration
+if IS_CLOUD_RUN:
+    # Production: Use Google Cloud Storage for media files
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+    # Media files served from GCS
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+    MEDIA_ROOT = ''  # Not used with GCS
+else:
+    # Local development: Use filesystem storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+    # Media files served from local filesystem
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = config('MAX_UPLOAD_SIZE', default=10485760, cast=int)  # 10MB

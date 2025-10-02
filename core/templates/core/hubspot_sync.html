@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load core_extras %}
+{% load static %}
 {% block extra_head %}
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
@@ -7,7 +8,7 @@
 {% block content %}
 
 <!-- Unified Header with Upload -->
-<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('/media/images/header.png'); background-size: cover; background-position: center; color: white;">
+<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center; color: white;">
     <div class="px-4 py-8">
         <div class="flex justify-between items-start">
             <div>
