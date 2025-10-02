@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import HttpResponse, JsonResponse, FileResponse, Http404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
@@ -144,6 +144,30 @@ def contract_detail(request, contract_id):
         'payment_frequency_choices': PaymentTerms.PAYMENT_FREQUENCY_CHOICES,
     }
     return render(request, 'core/contract_detail.html', context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def contract_pdf_signed_url(request, contract_id):
+    """Redirect authenticated users to a fresh signed URL for the contract PDF."""
+    contract = get_object_or_404(Contract, id=contract_id)
+
+    if not contract.pdf_file:
+        raise Http404("Contract PDF not found.")
+
+    storage = contract.pdf_file.storage
+    expiration = getattr(settings, 'GS_EXPIRATION', None)
+
+    try:
+        if expiration:
+            signed_url = storage.url(contract.pdf_file.name, expiration=expiration)
+        else:
+            signed_url = storage.url(contract.pdf_file.name)
+    except TypeError:
+        # Local storage backends ignore the expiration keyword.
+        signed_url = storage.url(contract.pdf_file.name)
+
+    return redirect(signed_url)
 
 
 @login_required
@@ -624,9 +648,9 @@ def generate_invoice_schedule(contract, start_date, end_date):
     
     # Add payment milestones
     for milestone in contract.payment_milestones.all():
-        if milestone.due_date <= end_date and milestone.due_date >= start_date:
+        if milestone.invoice_date and (start_date <= milestone.invoice_date <= end_date):
             invoices.append({
-                'date': milestone.due_date,
+                'date': milestone.invoice_date if milestone.invoice_date else milestone.due_date,
                 'amount': milestone.amount,
                 'type': 'milestone',
                 'contract_id': contract.id,
@@ -677,7 +701,7 @@ def forecast_view(request):
     
     # Get active contracts
     contracts = Contract.objects.filter(
-        status__in=['active', 'needs_clarification']
+        status__in=['completed', 'needs_clarification']
     ).select_related('payment_terms')
     
     # Calculate upcoming payments for specified date range
@@ -843,7 +867,7 @@ def export_forecast(request):
     
     # Get contracts and calculate payments (same logic as forecast_view)
     contracts = Contract.objects.filter(
-        status__in=['active', 'needs_clarification']
+        status__in=['completed', 'needs_clarification']
     ).select_related('payment_terms')
     
     upcoming_payments = []
