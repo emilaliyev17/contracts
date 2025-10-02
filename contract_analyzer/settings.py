@@ -161,9 +161,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Google Cloud Storage configuration
 GS_BUCKET_NAME = config('GS_BUCKET_NAME', default='contract-analyzer-media')
 GS_PROJECT_ID = config('GS_PROJECT_ID', default='contract-management-473819')
-GS_DEFAULT_ACL = None  # Use bucket's default ACL
+GS_DEFAULT_ACL = None  # Use bucket's default ACL (should be private at bucket level)
 GS_FILE_OVERWRITE = False  # Don't overwrite files with same name
-GS_QUERYSTRING_AUTH = False  # Public URLs without query string authentication
+GS_QUERYSTRING_AUTH = config('GS_QUERYSTRING_AUTH', default=True, cast=bool)
+GS_EXPIRATION = config('GS_URL_EXPIRATION', default=600, cast=int)  # Signed URL lifetime in seconds
 
 # Storage backends configuration
 if IS_CLOUD_RUN:

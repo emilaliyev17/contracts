@@ -701,7 +701,7 @@ def forecast_view(request):
     
     # Get active contracts
     contracts = Contract.objects.filter(
-        status__in=['completed', 'needs_clarification']
+        status__in=['completed', 'needs_clarification', 'processing']
     ).select_related('payment_terms')
     
     # Calculate upcoming payments for specified date range
@@ -867,7 +867,7 @@ def export_forecast(request):
     
     # Get contracts and calculate payments (same logic as forecast_view)
     contracts = Contract.objects.filter(
-        status__in=['completed', 'needs_clarification']
+        status__in=['completed', 'needs_clarification', 'processing']
     ).select_related('payment_terms')
     
     upcoming_payments = []
