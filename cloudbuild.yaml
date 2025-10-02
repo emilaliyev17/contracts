@@ -27,7 +27,7 @@ steps:
       - '--region=us-west1'
       - '--platform=managed'
       - '--set-env-vars=DATABASE_NAME=contract_db,DATABASE_USER=postgres,INSTANCE_CONNECTION_NAME=contract-management-473819:us-west1:contract-db,DEBUG=False'
-      - '--set-secrets=DATABASE_PASSWORD=database-password:latest,SECRET_KEY=django-secret-key:latest,OPENAI_API_KEY=openai-api-key:latest'
+      - '--set-secrets=DATABASE_PASSWORD=database-password:latest,SECRET_KEY=django-secret-key:latest,GEMINI_API_KEY=gemini-api-key:latest'
       - '--add-cloudsql-instances=contract-management-473819:us-west1:contract-db'
       - '--memory=1Gi'
       - '--cpu=1'

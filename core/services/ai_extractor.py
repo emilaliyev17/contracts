@@ -1,5 +1,5 @@
 """
-AI-powered contract extraction using OpenAI GPT-4o.
+AI-powered contract extraction using Google Gemini.
 
 This service replaces regex pattern matching with advanced AI extraction
 capabilities for more accurate and comprehensive contract analysis.
@@ -11,29 +11,29 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, date
 from decimal import Decimal
 
-import openai
+import google.generativeai as genai
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
 class AIExtractor:
-    """AI-powered contract extraction using OpenAI GPT-4o."""
+    """AI-powered contract extraction using Google Gemini."""
     
     def __init__(self):
-        """Initialize OpenAI client with API key from settings."""
-        self.api_key = settings.OPENAI_API_KEY
-        self.model = settings.OPENAI_MODEL
+        """Initialize Gemini client with API key from settings."""
+        self.api_key = settings.GEMINI_API_KEY
+        self.model = settings.GEMINI_MODEL
         
         if not self.api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment variables. Please add it to .env file.")
+            raise ValueError("GEMINI_API_KEY not found in environment variables. Please add it to .env file.")
         
-        # Initialize OpenAI client
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # Configure Gemini API
+        genai.configure(api_key=self.api_key)
     
     def extract_contract_with_ai(self, pdf_text: str, file_name: str, contract=None) -> Dict[str, Any]:
         """
-        Extract contract information using OpenAI GPT-4o.
+        Extract contract information using Google Gemini.
         
         Args:
             pdf_text: Extracted text from PDF
@@ -44,29 +44,27 @@ class AIExtractor:
             Dict containing extracted contract data and clarifications
         """
         try:
-            # Prepare the prompt for GPT-4o
+            # Prepare the system instruction and prompt
+            system_instruction = "You are an expert contract analyst specializing in payment extraction. Extract ALL payment information from contracts with high accuracy. Ask for clarification when uncertain."
             prompt = self._create_extraction_prompt(pdf_text, file_name)
             
-            # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert contract analyst specializing in payment extraction. Extract ALL payment information from contracts with high accuracy. Ask for clarification when uncertain."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.1,  # Low temperature for consistent results
-                max_tokens=2000,  # Sufficient for detailed extraction
-                timeout=30  # 30 second timeout
+            # Combine system instruction with prompt for Gemini
+            full_prompt = f"{system_instruction}\n\n{prompt}"
+            
+            # Initialize Gemini model with generation config
+            model = genai.GenerativeModel(
+                model_name=self.model,
+                generation_config={
+                    'temperature': 0.1,  # Low temperature for consistent results
+                    'max_output_tokens': 2000,  # Sufficient for detailed extraction
+                }
             )
             
+            # Call Gemini API
+            response = model.generate_content(full_prompt)
+            
             # Extract response content
-            ai_response = response.choices[0].message.content.strip()
+            ai_response = response.text.strip()
             
             # Parse JSON response (now includes both extracted_data and clarifications)
             full_response = self._parse_ai_response(ai_response)
@@ -78,6 +76,12 @@ class AIExtractor:
             # Validate extracted data
             validated_data = self._validate_extracted_data(extracted_data)
             
+            # Calculate token usage estimate (Gemini doesn't provide exact counts in the same way)
+            # Estimate: ~1 token per 4 characters for input, response length for output
+            estimated_prompt_tokens = len(full_prompt) // 4
+            estimated_completion_tokens = len(ai_response) // 4
+            estimated_total_tokens = estimated_prompt_tokens + estimated_completion_tokens
+            
             # Add metadata
             validated_data.update({
                 'extraction_method': 'ai_assisted',
@@ -85,9 +89,9 @@ class AIExtractor:
                 'extraction_timestamp': datetime.now().isoformat(),
                 'file_name': file_name,
                 'token_usage': {
-                    'prompt_tokens': response.usage.prompt_tokens,
-                    'completion_tokens': response.usage.completion_tokens,
-                    'total_tokens': response.usage.total_tokens
+                    'prompt_tokens': estimated_prompt_tokens,
+                    'completion_tokens': estimated_completion_tokens,
+                    'total_tokens': estimated_total_tokens
                 },
                 'clarifications_needed': clarifications,
                 'has_clarifications': len(clarifications) > 0
@@ -97,25 +101,9 @@ class AIExtractor:
             if contract and clarifications:
                 self._save_clarifications(contract, clarifications)
             
-            logger.info(f"AI extraction completed for {file_name}. Tokens used: {response.usage.total_tokens}. Clarifications needed: {len(clarifications)}")
+            logger.info(f"AI extraction completed for {file_name}. Estimated tokens used: {estimated_total_tokens}. Clarifications needed: {len(clarifications)}")
             
             return validated_data
-            
-        except openai.AuthenticationError:
-            logger.error("OpenAI authentication failed. Please check your API key.")
-            raise ValueError("OpenAI API key is invalid. Please check your OPENAI_API_KEY in .env file.")
-            
-        except openai.RateLimitError:
-            logger.error("OpenAI rate limit exceeded.")
-            raise ValueError("OpenAI rate limit exceeded. Please try again later.")
-            
-        except openai.APITimeoutError:
-            logger.error("OpenAI API request timed out.")
-            raise ValueError("OpenAI API request timed out. Please try again.")
-            
-        except openai.APIError as e:
-            logger.error(f"OpenAI API error: {str(e)}")
-            raise ValueError(f"OpenAI API error: {str(e)}")
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {str(e)}")
@@ -123,10 +111,19 @@ class AIExtractor:
             
         except Exception as e:
             logger.error(f"Unexpected error in AI extraction: {str(e)}")
-            raise ValueError(f"AI extraction failed: {str(e)}")
+            # Check for common Gemini API errors
+            error_msg = str(e).lower()
+            if 'api key' in error_msg or 'authentication' in error_msg:
+                raise ValueError("Gemini API key is invalid. Please check your GEMINI_API_KEY in .env file.")
+            elif 'quota' in error_msg or 'rate limit' in error_msg:
+                raise ValueError("Gemini rate limit exceeded. Please try again later.")
+            elif 'timeout' in error_msg:
+                raise ValueError("Gemini API request timed out. Please try again.")
+            else:
+                raise ValueError(f"AI extraction failed: {str(e)}")
     
     def _create_extraction_prompt(self, pdf_text: str, file_name: str) -> str:
-        """Create the extraction prompt for GPT-4o."""
+        """Create the extraction prompt for Gemini."""
         return f"""Extract ALL payment information from this contract. Return JSON with two sections:
 
 {{
@@ -331,14 +328,16 @@ Return ONLY the JSON, no other text"""
     
     def estimate_cost(self, extraction_result: Dict[str, Any]) -> float:
         """Estimate the cost of the AI extraction based on token usage."""
-        # GPT-4o pricing (as of 2024)
-        # Input: $5.00 per 1M tokens
-        # Output: $15.00 per 1M tokens
+        # Google Gemini 1.5 Pro pricing (as of 2024)
+        # Input: $3.50 per 1M tokens (prompts up to 128k tokens)
+        # Output: $10.50 per 1M tokens
+        # For prompts over 128k tokens: $7.00 input / $21.00 output per 1M tokens
         
         token_usage = self.get_token_usage(extraction_result)
         
-        input_cost = (token_usage['prompt_tokens'] / 1_000_000) * 5.00
-        output_cost = (token_usage['completion_tokens'] / 1_000_000) * 15.00
+        # Use standard pricing (prompts are typically under 128k tokens)
+        input_cost = (token_usage['prompt_tokens'] / 1_000_000) * 3.50
+        output_cost = (token_usage['completion_tokens'] / 1_000_000) * 10.50
         
         return round(input_cost + output_cost, 6)
 

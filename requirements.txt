@@ -24,11 +24,11 @@ tzdata==2025.2
 # Production server
 gunicorn==23.0.0
 
-# OpenAI for AI-powered contract extraction
-openai==1.59.5
+# Google Gemini for AI-powered contract extraction
+google-generativeai==0.8.3
 
 # Static files serving in production
 whitenoise==6.8.2
 
-# Requests library (may be used by OpenAI or HubSpot)
+# Requests library (may be used for API calls)
 requests==2.32.3

@@ -174,9 +174,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 FILE_UPLOAD_MAX_MEMORY_SIZE = config('MAX_UPLOAD_SIZE', default=10485760, cast=int)  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = config('MAX_UPLOAD_SIZE', default=10485760, cast=int)  # 10MB
 
-# OpenAI Configuration
-OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-4o')
+# Google Gemini Configuration
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-1.5-pro')
 
 # Authentication Configuration
 LOGIN_URL = '/accounts/login/'
