@@ -53,7 +53,7 @@ class AIExtractor:
             
             # Initialize Gemini model with generation config
             model = genai.GenerativeModel(
-                model_name='gemini-1.5-pro-latest',
+                model_name='gemini-pro',
                 generation_config={
                     'temperature': 0.1,  # Low temperature for consistent results
                     'max_output_tokens': 2000,  # Sufficient for detailed extraction
