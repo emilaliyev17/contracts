@@ -178,6 +178,11 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = config('MAX_UPLOAD_SIZE', default=10485760, cast=i
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-4o')
 
+# Authentication Configuration
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/contracts/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 # Security Settings for Production
 if not DEBUG:
     # Cloud Run handles HTTPS termination, so we trust X-Forwarded-Proto header

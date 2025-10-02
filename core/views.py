@@ -27,6 +27,7 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 
+@login_required
 def home(request):
     """Home page view."""
     context = {
@@ -56,6 +57,7 @@ def _get_contract_summary():
     }
 
 
+@login_required
 def contract_list(request):
     """List all contracts."""
     contracts_queryset = Contract.objects.all()
@@ -96,6 +98,7 @@ def contract_list(request):
     return render(request, 'core/contract_list.html', context)
 
 
+@login_required
 def contract_metrics(request):
     """Return contract summary metrics as JSON."""
     summary = _get_contract_summary()
@@ -105,6 +108,7 @@ def contract_metrics(request):
     return JsonResponse(response)
 
 
+@login_required
 def contract_detail(request, contract_id):
     """Detail view for a specific contract."""
     contract = get_object_or_404(Contract, id=contract_id)
@@ -143,6 +147,7 @@ def contract_detail(request, contract_id):
     return render(request, 'core/contract_detail.html', context)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def upload_contract(request):
@@ -200,6 +205,7 @@ def upload_contract(request):
         }, status=500)
 
 
+@login_required
 @csrf_exempt
 @require_http_methods(["GET"])
 def upload_status(request, contract_id):
@@ -224,6 +230,7 @@ def upload_status(request, contract_id):
         }, status=500)
 
 
+@login_required
 def test_results(request):
     """Display batch test results from /2025 folder processing"""
     try:
@@ -295,6 +302,7 @@ def test_results(request):
         })
 
 
+@login_required
 def export_excel(request):
     """Export contracts to Excel format."""
     try:
@@ -389,6 +397,7 @@ def export_excel(request):
         return HttpResponse(f"Export failed: {str(e)}", status=500)
 
 
+@login_required
 def check_contracts(request):
     """Diagnostic view to check database state."""
     contracts = Contract.objects.all()
@@ -398,6 +407,7 @@ def check_contracts(request):
     })
 
 
+@login_required
 @require_http_methods(["POST"])
 def delete_contract(request, contract_id):
     """Delete a contract and all its related data."""
@@ -432,6 +442,7 @@ def delete_contract(request, contract_id):
         return redirect('core:contract_list')
 
 
+@login_required
 @require_http_methods(["POST"])
 def answer_clarification(request, clarification_id):
     """Save user's answer to a clarification question."""
@@ -497,6 +508,7 @@ def answer_clarification(request, clarification_id):
     return redirect('core:contract_detail', contract_id=clarification.contract.id)
 
 
+@login_required
 @require_http_methods(["POST"])
 def apply_contract_clarifications(request, contract_id):
     """Manually apply all answered clarifications to a contract."""
@@ -626,6 +638,7 @@ def generate_invoice_schedule(contract, start_date, end_date):
     return invoices
 
 
+@login_required
 def forecast_view(request):
     """View for payment forecast dashboard."""
     from datetime import datetime, timedelta
@@ -796,6 +809,7 @@ def forecast_view(request):
     return render(request, 'core/forecast.html', context)
 
 
+@login_required
 def export_forecast(request):
     """Export forecast data to Excel."""
     from openpyxl import Workbook
@@ -872,6 +886,7 @@ def export_forecast(request):
     return response
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_po_info(request, contract_id):
     """Update PO Number and Budget for a contract via AJAX"""
@@ -885,6 +900,7 @@ def update_po_info(request, contract_id):
     return JsonResponse({'success': True})
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_contract_type(request, contract_id):
     """Update the contract type selection via AJAX."""
@@ -907,6 +923,7 @@ def update_contract_type(request, contract_id):
     return JsonResponse({'success': True})
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_contract_status(request, contract_id):
     """Update contract status via AJAX"""
@@ -926,6 +943,7 @@ def update_contract_status(request, contract_id):
     return JsonResponse({'success': True})
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_contract_dates(request, contract_id):
     """Update contract start and end dates via AJAX"""
@@ -971,6 +989,7 @@ def update_contract_dates(request, contract_id):
         }, status=400)
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_payment_terms(request, contract_id):
     """Update or create payment terms via AJAX"""
@@ -1014,6 +1033,7 @@ def update_payment_terms(request, contract_id):
     return JsonResponse({'success': True, 'created': created})
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_milestone(request, contract_id):
     """Update milestone information for a contract via AJAX"""
@@ -1084,6 +1104,7 @@ def update_milestone(request, contract_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
+@login_required
 @require_http_methods(["POST"])
 def add_milestone(request, contract_id):
     """Add new payment milestone/invoice via AJAX"""
@@ -1118,6 +1139,7 @@ def add_milestone(request, contract_id):
         return JsonResponse({'success': False, 'error': f'Invalid data: {str(e)}'}, status=400)
 
 
+@login_required
 def accounting(request):
     """Accounting page with reconciliation table."""
     # Get all contracts with milestones
@@ -1129,6 +1151,7 @@ def accounting(request):
     return render(request, 'core/accounting.html', context)
 
 
+@login_required
 @require_http_methods(["POST"])
 def save_qbo_data(request):
     """Save QBO data for payment milestones."""
@@ -1141,6 +1164,7 @@ def save_qbo_data(request):
         return JsonResponse({'status': 'success'})
 
 
+@login_required
 @require_http_methods(["POST"])
 def update_client_name(request, contract_id):
     """Update client name for a contract."""
@@ -1153,6 +1177,7 @@ def update_client_name(request, contract_id):
     return JsonResponse({'success': True})
 
 
+@login_required
 def hubspot_sync(request):
     """HubSpot Sync page view"""
     
@@ -1201,6 +1226,7 @@ def hubspot_sync(request):
     return render(request, 'core/hubspot_sync.html', context)
 
 
+@login_required
 @require_POST
 def match_hubspot_deal(request):
     """Create or update a HubSpotDealMatch record."""
