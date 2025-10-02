@@ -53,7 +53,7 @@ class AIExtractor:
             
             # Initialize Gemini model with generation config
             model = genai.GenerativeModel(
-                model_name='gemini-pro',
+                model_name='models/gemini-2.5-pro',
                 generation_config={
                     'temperature': 0.1,  # Low temperature for consistent results
                     'max_output_tokens': 2000,  # Sufficient for detailed extraction
@@ -328,7 +328,7 @@ Return ONLY the JSON, no other text"""
     
     def estimate_cost(self, extraction_result: Dict[str, Any]) -> float:
         """Estimate the cost of the AI extraction based on token usage."""
-        # Google Gemini 1.5 Pro pricing (as of 2024)
+        # Google Gemini 2.5 Pro pricing (as of 2025)
         # Input: $3.50 per 1M tokens (prompts up to 128k tokens)
         # Output: $10.50 per 1M tokens
         # For prompts over 128k tokens: $7.00 input / $21.00 output per 1M tokens
