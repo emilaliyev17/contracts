@@ -151,22 +151,11 @@ def contract_detail(request, contract_id):
 def contract_pdf_signed_url(request, contract_id):
     """Redirect authenticated users to a fresh signed URL for the contract PDF."""
     contract = get_object_or_404(Contract, id=contract_id)
-
+    
     if not contract.pdf_file:
         raise Http404("Contract PDF not found.")
-
-    storage = contract.pdf_file.storage
-    expiration = getattr(settings, 'GS_EXPIRATION', None)
-
-    try:
-        if expiration:
-            signed_url = storage.url(contract.pdf_file.name, expiration=expiration)
-        else:
-            signed_url = storage.url(contract.pdf_file.name)
-    except TypeError:
-        # Local storage backends ignore the expiration keyword.
-        signed_url = storage.url(contract.pdf_file.name)
-
+    
+    signed_url = contract.pdf_file.storage.url(contract.pdf_file.name)
     return redirect(signed_url)
 
 
