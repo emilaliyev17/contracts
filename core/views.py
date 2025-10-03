@@ -148,15 +148,65 @@ def contract_detail(request, contract_id):
 
 @login_required
 @require_http_methods(["GET"])
-def contract_pdf_signed_url(request, contract_id):
-    """Redirect authenticated users to a fresh signed URL for the contract PDF."""
+def contract_pdf_proxy(request, contract_id):
+    """Stream PDF from private GCS bucket through Django with authentication."""
+    from django.http import StreamingHttpResponse, Http404
+    from google.cloud import storage
+    from django.conf import settings
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     contract = get_object_or_404(Contract, id=contract_id)
-    
+
     if not contract.pdf_file:
         raise Http404("Contract PDF not found.")
-    
-    signed_url = contract.pdf_file.storage.url(contract.pdf_file.name)
-    return redirect(signed_url)
+
+    try:
+        storage_client = storage.Client(
+            project=settings.GS_PROJECT_ID,
+            credentials=getattr(settings, 'GS_CREDENTIALS', None)
+        )
+
+        bucket = storage_client.bucket(settings.GS_BUCKET_NAME)
+        blob = bucket.blob(contract.pdf_file.name)
+
+        if not blob.exists():
+            raise Http404("PDF file not found in storage.")
+
+        blob.reload()
+        file_size = blob.size
+
+        def file_iterator(blob, chunk_size=8192):
+            """Stream file in chunks to minimize memory usage."""
+            if file_size < 10 * 1024 * 1024:  # < 10MB
+                yield blob.download_as_bytes()
+            else:
+                stream = blob.open("rb")
+                try:
+                    while True:
+                        chunk = stream.read(chunk_size)
+                        if not chunk:
+                            break
+                        yield chunk
+                finally:
+                    stream.close()
+
+        response = StreamingHttpResponse(
+            file_iterator(blob),
+            content_type='application/pdf'
+        )
+
+        filename = contract.pdf_file.name.split('/')[-1]
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        response['Content-Length'] = file_size
+        response['Cache-Control'] = 'private, max-age=300'
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Error streaming PDF for contract {contract_id}: {str(e)}")
+        raise Http404("Error loading PDF file.")
 
 
 @login_required
