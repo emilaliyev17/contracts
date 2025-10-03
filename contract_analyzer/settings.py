@@ -165,6 +165,8 @@ GS_DEFAULT_ACL = None  # Use bucket's default ACL (should be private at bucket l
 GS_FILE_OVERWRITE = False  # Don't overwrite files with same name
 GS_QUERYSTRING_AUTH = config('GS_QUERYSTRING_AUTH', default=True, cast=bool)
 GS_EXPIRATION = config('GS_URL_EXPIRATION', default=600, cast=int)  # Signed URL lifetime in seconds
+# Use Application Default Credentials (Cloud Run service account)
+GS_CREDENTIALS = None
 
 # Storage backends configuration
 if IS_CLOUD_RUN:
