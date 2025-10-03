@@ -59,7 +59,7 @@ def _get_contract_summary():
 @login_required
 def contract_list(request):
     """List all contracts."""
-    contracts_queryset = Contract.objects.all()
+    contracts_queryset = Contract.objects.select_related('payment_terms').all()
 
     status_filter = request.GET.get('status', 'all')
     status_map = {

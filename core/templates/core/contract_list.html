@@ -265,6 +265,7 @@
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Contract#</th>
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-right p-4 font-medium text-sm">Total Value</th>
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Status</th>
+              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Payment Frequency</th>
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Start Date</th>
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">End Date</th>
               <th class="sticky top-[0px] z-20 bg-white shadow-sm text-center p-4 font-medium text-sm">Actions</th>
@@ -303,6 +304,13 @@
                   <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">Processing</span>
                 {% else %}
                   <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">{{ contract.status|title }}</span>
+                {% endif %}
+              </td>
+              <td class="p-4 text-sm text-gray-500">
+                {% if contract.payment_terms %}
+                  {{ contract.payment_terms.get_payment_frequency_display }}
+                {% else %}
+                  <span class="text-gray-400">N/A</span>
                 {% endif %}
               </td>
               <td class="p-4 text-sm text-gray-500">{{ contract.start_date|date:"M d, Y"|default:"—" }}</td>
