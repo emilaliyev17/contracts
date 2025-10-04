@@ -164,11 +164,14 @@ editBtn.addEventListener('click', function() {
 saveBtn.addEventListener('click', function() {
     const updates = [];
     inputs.forEach(input => {
-        updates.push({
-            id: input.dataset.milestoneId,
-            field: input.dataset.field,
-            value: input.value
-        });
+        // Only collect non-empty values to reduce payload
+        if (input.value && input.value.trim() !== '') {
+            updates.push({
+                id: input.dataset.milestoneId,
+                field: input.dataset.field,
+                value: input.value
+            });
+        }
     });
     
     fetch("{% url 'core:save_qbo_data' %}", {
