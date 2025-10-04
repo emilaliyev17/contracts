@@ -835,6 +835,7 @@ def forecast_view(request):
             invoices_by_date[invoice['date'].day].append(invoice)
     
     # Create calendar grid
+    calendar.setfirstweekday(calendar.SUNDAY)
     cal = calendar.monthcalendar(cal_year, cal_month)
     calendar_days = []
     
