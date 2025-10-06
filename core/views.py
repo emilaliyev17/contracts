@@ -1228,6 +1228,85 @@ def save_qbo_data(request):
 
 
 @login_required
+def export_accounting(request):
+    """Export accounting data to Excel."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+    from django.http import HttpResponse
+    from datetime import datetime
+    
+    # Query optimized - only load needed fields
+    milestones = PaymentMilestone.objects.select_related('contract').only(
+        'id', 'contract__contract_name', 'contract__contract_number',
+        'invoice_date', 'milestone_name', 'amount',
+        'qbo_invoice_number', 'qbo_invoice_date', 'qbo_amount'
+    )
+    
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Accounting Export"
+    
+    # Headers
+    headers = ['ID', 'Contract Name', 'Contract Number', 'Invoice Date', 
+               'Invoice#', 'Amount', 'QBO Invoice#', 'QBO Inv Date', 
+               'QBO Amount', 'Difference']
+    ws.append(headers)
+    
+    # Style header row - bold, white text, blue background
+    header_fill = PatternFill(start_color='FF4472C4', end_color='FF4472C4', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFFFF')
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Freeze header row
+    ws.freeze_panes = 'A2'
+    
+    # Data rows
+    for milestone in milestones:
+        row = [
+            milestone.id,
+            milestone.contract.contract_name or '',
+            milestone.contract.contract_number or '',
+            milestone.invoice_date.strftime('%m/%d/%Y') if milestone.invoice_date else '',
+            milestone.milestone_name or '',
+            milestone.amount or 0,
+            milestone.qbo_invoice_number or '',
+            milestone.qbo_invoice_date.strftime('%m/%d/%Y') if milestone.qbo_invoice_date else '',
+            milestone.qbo_amount or 0,
+            f"=F{ws.max_row + 1}-I{ws.max_row + 1}"  # Difference formula
+        ]
+        ws.append(row)
+    
+    # Format currency columns (F: Amount, I: QBO Amount, J: Difference)
+    for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
+        for cell in row:
+            cell.number_format = '$#,##0.00'
+    for row in ws.iter_rows(min_row=2, min_col=9, max_col=10):
+        for cell in row:
+            cell.number_format = '$#,##0.00'
+    
+    # Auto-adjust column widths
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value or '')) for cell in column_cells)
+        ws.column_dimensions[column_cells[0].column_letter].width = min(length + 2, 50)
+    
+    # Make ID column narrow
+    ws.column_dimensions['A'].width = 8
+    
+    # Generate filename with date
+    today = datetime.now().date()
+    filename = f"accounting_export_{today.strftime('%Y-%m-%d')}.xlsx"
+    
+    # Return as download
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+
+@login_required
 @require_http_methods(["POST"])
 def update_client_name(request, contract_id):
     """Update client name for a contract."""
