@@ -732,7 +732,7 @@ def forecast_view(request):
                 days_int = int(days) if days != 'all' else 365
             except ValueError:
                 days_int = 30
-            start_date = today
+            start_date = today.replace(day=1)
             end_date = today + timedelta(days=days_int)
     
     # Get sort parameters
