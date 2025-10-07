@@ -712,11 +712,21 @@ def forecast_view(request):
     # Get today's date first
     today = datetime.now().date()
     
-    # Check for custom date range
+    # Check if user is navigating to specific calendar month FIRST
+    cal_month_param = request.GET.get('cal_month')
     custom_start = request.GET.get('start_date')
     custom_end = request.GET.get('end_date')
     
-    if custom_start and custom_end:
+    if cal_month_param:
+        # User navigated to specific month - fetch data for that month only
+        cal_date = datetime.strptime(cal_month_param, '%Y-%m').date()
+        start_date = cal_date.replace(day=1)
+        # Calculate last day of month
+        if cal_date.month == 12:
+            end_date = cal_date.replace(year=cal_date.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            end_date = cal_date.replace(month=cal_date.month + 1, day=1) - timedelta(days=1)
+    elif custom_start and custom_end:
         start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
         end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
     else:
