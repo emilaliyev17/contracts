@@ -687,9 +687,10 @@ def generate_invoice_schedule(contract, start_date, end_date):
     
     # Add payment milestones
     for milestone in contract.payment_milestones.all():
-        if milestone.invoice_date and (start_date <= milestone.invoice_date <= end_date):
+        date_to_check = milestone.due_date or milestone.invoice_date
+        if date_to_check and (start_date <= date_to_check <= end_date):
             invoices.append({
-                'date': milestone.invoice_date if milestone.invoice_date else milestone.due_date,
+                'date': milestone.due_date or milestone.invoice_date,
                 'amount': milestone.amount,
                 'type': 'milestone',
                 'contract_id': contract.id,
