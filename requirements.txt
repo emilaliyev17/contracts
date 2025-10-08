@@ -36,3 +36,4 @@ whitenoise==6.8.2
 
 # Requests library (may be used for API calls)
 requests==2.32.3
+python-dotenv==1.0.1
