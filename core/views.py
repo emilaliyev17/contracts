@@ -228,56 +228,105 @@ def contract_pdf_proxy(request, contract_id):
 def upload_contract(request):
     """Handle contract PDF upload and processing."""
     try:
+        # Detect if this is an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+                  'application/json' in request.headers.get('Accept', '')
+        
         # Check if file was uploaded
         if 'pdf_file' not in request.FILES:
-            return JsonResponse({
-                'success': False,
-                'error': 'No PDF file provided'
-            }, status=400)
+            error_msg = 'No PDF file provided'
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=400)
+            else:
+                messages.error(request, error_msg)
+                return redirect('core:home')
         
         pdf_file = request.FILES['pdf_file']
         
         # Validate file type
         if not pdf_file.name.lower().endswith('.pdf'):
-            return JsonResponse({
-                'success': False,
-                'error': 'File must be a PDF'
-            }, status=400)
+            error_msg = 'File must be a PDF'
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=400)
+            else:
+                messages.error(request, error_msg)
+                return redirect('core:home')
         
         # Validate file size (10MB limit)
         max_size = getattr(settings, 'MAX_UPLOAD_SIZE', 10 * 1024 * 1024)
         if pdf_file.size > max_size:
-            return JsonResponse({
-                'success': False,
-                'error': f'File too large. Maximum size: {max_size / (1024*1024):.1f}MB'
-            }, status=400)
+            error_msg = f'File too large. Maximum size: {max_size / (1024*1024):.1f}MB'
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=400)
+            else:
+                messages.error(request, error_msg)
+                return redirect('core:home')
         
         # Process the contract
         processor = ContractProcessor()
         result = processor.process_contract(pdf_file, user=request.user if request.user.is_authenticated else None)
         
         if result['success']:
-            return JsonResponse({
-                'success': True,
-                'contract_id': result['contract_id'],
-                'confidence_score': float(result['confidence_score']),
-                'extraction_method': result['extraction_method'],
-                'payment_milestones_created': result['payment_milestones_created'],
-                'warnings': result.get('warnings', []),
-                'message': f"Contract processed successfully with {result['confidence_score']:.1f}% confidence"
-            })
+            # Success - handle based on request type
+            if is_ajax:
+                # Return JSON for AJAX requests (current behavior)
+                return JsonResponse({
+                    'success': True,
+                    'contract_id': result['contract_id'],
+                    'confidence_score': float(result['confidence_score']),
+                    'extraction_method': result['extraction_method'],
+                    'payment_milestones_created': result['payment_milestones_created'],
+                    'warnings': result.get('warnings', []),
+                    'message': f"Contract processed successfully with {result['confidence_score']:.1f}% confidence"
+                })
+            else:
+                # Redirect for regular form submissions
+                success_msg = (
+                    f"Contract processed successfully with {result['confidence_score']:.1f}% confidence. "
+                    f"{result['payment_milestones_created']} payment milestones created."
+                )
+                if result.get('warnings'):
+                    success_msg += f" Note: {len(result['warnings'])} warnings."
+                
+                messages.success(request, success_msg)
+                return redirect('core:contract_detail', pk=result['contract_id'])
         else:
-            return JsonResponse({
-                'success': False,
-                'error': result.get('error', 'Unknown processing error')
-            }, status=500)
+            # Error - handle based on request type
+            error_msg = result.get('error', 'Unknown processing error')
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=500)
+            else:
+                messages.error(request, f"Upload failed: {error_msg}")
+                return redirect('core:home')
             
     except Exception as e:
         logger.error(f"Upload contract error: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'error': f'Upload failed: {str(e)}'
-        }, status=500)
+        error_msg = f'Upload failed: {str(e)}'
+        
+        # Check if AJAX request (need to check again in exception handler)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+                  'application/json' in request.headers.get('Accept', '')
+        
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'error': error_msg
+            }, status=500)
+        else:
+            messages.error(request, error_msg)
+            return redirect('core:home')
 
 
 @login_required

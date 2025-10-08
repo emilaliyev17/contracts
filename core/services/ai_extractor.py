@@ -56,7 +56,7 @@ class AIExtractor:
                 model_name='models/gemini-2.5-pro',
                 generation_config={
                     'temperature': 0.1,  # Low temperature for consistent results
-                    'max_output_tokens': 2000,  # Sufficient for detailed extraction
+                    'max_output_tokens': 8192,  # Maximum allowed by Gemini for complete contract analysis
                 }
             )
             
@@ -150,7 +150,7 @@ class AIExtractor:
 }}
 
 Contract text:
-{pdf_text[:8000]}  # Limit to 8000 characters to avoid token limits
+{pdf_text[:50000]}  # Allow up to 50,000 characters for complete contract analysis
 
 CRITICAL RULES:
 - If not 100% certain about ANY field, add clarification

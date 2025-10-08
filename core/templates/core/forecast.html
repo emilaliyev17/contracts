@@ -1,50 +1,70 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
+{% load static %}
+
+<style>
+.geometric-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+</style>
 
 {% block title %}Payment Forecast - Contract Analyzer{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
-  <!-- Header Section -->
-  <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-    <div class="w-full px-3 py-8">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-3xl font-bold mb-2">Payment Forecast</h1>
-          <p class="text-white/80 text-lg">Track and manage your contract payments</p>
+<div class="flex flex-col min-h-screen">
+    <header class="w-full text-white relative" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 geometric-pattern"></div>
+        <div class="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-10">
+                <div>
+                    <h1 class="text-4xl font-bold">Payment Forecast</h1>
+                    <p class="mt-2 text-white/80">Track and manage your contract payments</p>
+                </div>
+                <a class="text-sm font-medium hover:underline" href="/admin/">Admin</a>
+            </div>
+            
+            <!-- Main Navigation -->
+            <div class="bg-white/10 rounded-lg p-1.5 mb-4">
+                <nav class="flex space-x-1 overflow-x-auto">
+                    <a href="{% url 'core:contract_list' %}?status=all" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">All</a>
+                    <a href="{% url 'core:contract_list' %}?status=needs_review" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Needs Review</a>
+                    <a href="{% url 'core:contract_list' %}?status=completed" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Completed</a>
+                    <a href="{% url 'core:contract_list' %}?status=processing" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Processing</a>
+                    <a href="{% url 'core:hubspot_sync' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">HubSpot Sync</a>
+                    <a href="{% url 'core:fpa_dashboard' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">FP&A</a>
+                    <a href="{% url 'core:accounting' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Accounting</a>
+                    <a href="{% url 'core:home' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Upload</a>
+                </nav>
+            </div>
+            
+            <!-- View Tabs - moved inside header -->
+            <div class="bg-white/10 rounded-lg p-1 mb-6">
+                <div class="flex space-x-1">
+                    <button onclick="switchView('table')" id="table-tab" 
+                            class="px-4 py-2 rounded-md text-sm font-medium bg-white text-primary shadow-sm">
+                        Table View
+                    </button>
+                    <button onclick="switchView('timeline')" id="timeline-tab"
+                            class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/20">
+                        Timeline View
+                    </button>
+                    <button onclick="switchView('calendar')" id="calendar-tab"
+                            class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/20">
+                        Calendar View
+                    </button>
+                    <button type="button" 
+                            onclick="window.location.href='{% url 'core:contract_list' %}'"
+                            class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/20 transition-colors">
+                        Contracts
+                    </button>
+                </div>
+            </div>
         </div>
-        <nav class="flex space-x-6">
-          <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
-        </nav>
-      </div>
-    </div>
-  </div>
+    </header>
 
-  <!-- View Tabs -->
-  <div class="w-full px-3 -mt-8">
-      <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit backdrop-blur-sm">
-          <button onclick="switchView('table')" id="table-tab" 
-                  class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
-              Table View
-          </button>
-          <button onclick="switchView('timeline')" id="timeline-tab"
-                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              Timeline View
-          </button>
-          <button onclick="switchView('calendar')" id="calendar-tab"
-                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-              Calendar View
-          </button>
-          <button type="button" 
-                  onclick="window.location.href='{% url 'core:contract_list' %}'"
-                  class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors">
-              Contracts
-          </button>
-      </div>
-  </div>
-
+    <main class="flex-grow w-full px-3 py-8 bg-gray-50">
   <!-- Metrics Row -->
-  <div class="w-full px-3 py-8">
+  <div class="w-full">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-lg transition-shadow duration-200">
               <div class="flex flex-row items-center justify-between mb-2">
@@ -288,8 +308,6 @@
             </div>
         </div>
     </div>
-  </div>
-</div>
 
 <script>
 function switchView(view) {
@@ -311,9 +329,9 @@ function switchView(view) {
     ['table', 'timeline', 'calendar'].forEach(tab => {
         const btn = document.getElementById(tab + '-tab');
         if (tab === view) {
-            btn.className = "px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm";
+            btn.className = "px-4 py-2 rounded-md text-sm font-medium bg-white text-primary shadow-sm";
         } else {
-            btn.className = "px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10";
+            btn.className = "px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/20";
         }
     });
     
@@ -467,4 +485,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+    </main>
+</div>
 {% endblock %}

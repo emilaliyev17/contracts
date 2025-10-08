@@ -1,14 +1,41 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
-{% block content %}
-<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center; color: white;">
-    <div class="px-4 py-8">
-        <h1 class="text-3xl font-bold mb-2">FP&A Dashboard</h1>
-        <p class="text-purple-100">Accounts Receivable Aging Analysis</p>
-    </div>
-</div>
+<style>
+.geometric-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+</style>
 
+{% block content %}
+<div class="flex flex-col min-h-screen">
+    <header class="w-full text-white relative" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 geometric-pattern"></div>
+        <div class="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-10">
+                <div>
+                    <h1 class="text-4xl font-bold">FP&A Dashboard</h1>
+                    <p class="mt-2 text-white/80">Accounts Receivable Aging Analysis</p>
+                </div>
+                <a class="text-sm font-medium hover:underline" href="/admin/">Admin</a>
+            </div>
+            
+            <div class="bg-white/10 rounded-lg p-1.5 mb-6">
+                <nav class="flex space-x-1 overflow-x-auto">
+                    <a href="{% url 'core:contract_list' %}?status=all" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">All</a>
+                    <a href="{% url 'core:contract_list' %}?status=needs_review" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Needs Review</a>
+                    <a href="{% url 'core:contract_list' %}?status=completed" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Completed</a>
+                    <a href="{% url 'core:contract_list' %}?status=processing" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Processing</a>
+                    <a href="{% url 'core:hubspot_sync' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">HubSpot Sync</a>
+                    <a href="{% url 'core:accounting' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Accounting</a>
+                    <a href="{% url 'core:forecast' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Forecast</a>
+                    <a href="{% url 'core:home' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Upload</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full px-2 py-8">
 <div class="max-w-full mx-auto px-2 py-4">
     <!-- Upload Section -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-4">
@@ -417,4 +444,6 @@ function dateFormatter(params) {
     --ag-odd-row-background-color: #f9fafb;
 }
 </style>
+    </main>
+</div>
 {% endblock %}
