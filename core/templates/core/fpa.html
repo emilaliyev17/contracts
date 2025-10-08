@@ -9,9 +9,9 @@
     </div>
 </div>
 
-<div class="container mx-auto px-4 py-6">
+<div class="max-w-full mx-auto px-2 py-4">
     <!-- Upload Section -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-4 mb-4">
         <h2 class="text-xl font-semibold mb-4">Upload AR Aging Report</h2>
         <div class="flex items-center gap-4">
             <input type="file" id="arFile" accept=".xlsx,.xls" class="block w-full text-sm text-gray-500
@@ -31,7 +31,7 @@
     </div>
 
     <!-- Filter Controls -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="bg-white rounded-lg shadow-md p-4 mb-4">
         <h2 class="text-xl font-semibold mb-4">Pivot Table Controls</h2>
         <div class="grid grid-cols-4 gap-4">
             <div>
@@ -64,27 +64,27 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="grid grid-cols-4 gap-2 mb-4 px-2">
+        <div class="bg-white rounded-lg shadow-md p-4">
             <p class="text-gray-600 text-sm">Total Outstanding</p>
             <p id="totalOutstanding" class="text-3xl font-bold">$0</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
             <p class="text-gray-600 text-sm">Current</p>
             <p id="currentAmount" class="text-3xl font-bold text-green-600">$0</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
             <p class="text-gray-600 text-sm">Overdue</p>
             <p id="overdueAmount" class="text-3xl font-bold text-red-600">$0</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
             <p class="text-gray-600 text-sm">Over 90 Days</p>
             <p id="over90Amount" class="text-3xl font-bold text-red-800">$0</p>
         </div>
     </div>
 
     <!-- AG-Grid Container -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-lg shadow-md p-3">
         <div class="flex justify-between mb-4">
             <h2 class="text-xl font-semibold">AR Aging Analysis</h2>
             <button onclick="exportToExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
