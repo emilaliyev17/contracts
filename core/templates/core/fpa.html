@@ -1,0 +1,377 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center; color: white;">
+    <div class="px-4 py-8">
+        <h1 class="text-3xl font-bold mb-2">FP&A Dashboard</h1>
+        <p class="text-purple-100">Accounts Receivable Aging Analysis</p>
+    </div>
+</div>
+
+<div class="container mx-auto px-4 py-6">
+    <!-- Upload Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Upload AR Aging Report</h2>
+        <div class="flex items-center gap-4">
+            <input type="file" id="arFile" accept=".xlsx,.xls" class="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-violet-50 file:text-violet-700
+                hover:file:bg-violet-100">
+            <button onclick="uploadFile()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Upload
+            </button>
+            <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Refresh Data
+            </button>
+        </div>
+        <div id="uploadStatus" class="mt-2"></div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Pivot Table Controls</h2>
+        <div class="grid grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Group By:</label>
+                <select id="rowGroup" class="mt-1 block w-full rounded-md border-gray-300">
+                    <option value="">None</option>
+                    <option value="customer_name">Customer</option>
+                    <option value="aging_bucket" selected>Aging Bucket</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Aggregate:</label>
+                <select id="aggFunc" class="mt-1 block w-full rounded-md border-gray-300">
+                    <option value="sum">Sum</option>
+                    <option value="avg">Average</option>
+                    <option value="count">Count</option>
+                    <option value="max">Maximum</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Filter Customer:</label>
+                <input type="text" id="customerFilter" class="mt-1 block w-full rounded-md border-gray-300">
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyPivot()" class="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    Apply
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-gray-600 text-sm">Total Outstanding</p>
+            <p id="totalOutstanding" class="text-3xl font-bold">$0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-gray-600 text-sm">Current</p>
+            <p id="currentAmount" class="text-3xl font-bold text-green-600">$0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-gray-600 text-sm">Overdue</p>
+            <p id="overdueAmount" class="text-3xl font-bold text-red-600">$0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-gray-600 text-sm">Over 90 Days</p>
+            <p id="over90Amount" class="text-3xl font-bold text-red-800">$0</p>
+        </div>
+    </div>
+
+    <!-- AG-Grid Container -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between mb-4">
+            <h2 class="text-xl font-semibold">AR Aging Analysis</h2>
+            <button onclick="exportToExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export to CSV
+            </button>
+        </div>
+        <div id="myGrid" style="height: 600px;" class="ag-theme-alpine"></div>
+    </div>
+</div>
+
+<!-- Include AG-Grid -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"/>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+<script>
+let gridApi;
+let gridData = [];
+
+// Column Definitions
+const columnDefs = [
+    { field: 'customer_name', headerName: 'Customer', rowGroup: false, enableRowGroup: true },
+    { field: 'invoice_number', headerName: 'Invoice #' },
+    { field: 'transaction_type', headerName: 'Type' },
+    { field: 'invoice_date', headerName: 'Invoice Date', valueFormatter: dateFormatter },
+    { field: 'due_date', headerName: 'Due Date', valueFormatter: dateFormatter },
+    { field: 'amount', headerName: 'Amount', 
+      valueFormatter: currencyFormatter,
+      aggFunc: 'sum',
+      enableValue: true
+    },
+    { field: 'days_overdue', headerName: 'Days Overdue',
+      cellStyle: params => {
+          if (params.value > 90) return {backgroundColor: '#fee2e2'};
+          if (params.value > 60) return {backgroundColor: '#fef3c7'};
+          if (params.value > 30) return {backgroundColor: '#fef9c3'};
+          return null;
+      }
+    },
+    { field: 'aging_bucket', headerName: 'Aging', rowGroup: true, enableRowGroup: true }
+];
+
+// Grid Options
+const gridOptions = {
+    columnDefs: columnDefs,
+    defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        minWidth: 100,
+    },
+    autoGroupColumnDef: {
+        headerName: 'Group',
+        minWidth: 200,
+        cellRendererParams: {
+            suppressCount: false,
+        },
+    },
+    animateRows: true,
+    sideBar: {
+        toolPanels: [
+            {
+                id: 'columns',
+                labelDefault: 'Columns',
+                labelKey: 'columns',
+                iconKey: 'columns',
+                toolPanel: 'agColumnsToolPanel',
+            },
+            {
+                id: 'filters',
+                labelDefault: 'Filters',
+                labelKey: 'filters',
+                iconKey: 'filter',
+                toolPanel: 'agFiltersToolPanel',
+            },
+        ],
+    },
+    enableRangeSelection: true,
+    groupIncludeFooter: true,
+    groupIncludeTotalFooter: true,
+};
+
+// Initialize Grid
+document.addEventListener('DOMContentLoaded', function() {
+    const gridDiv = document.querySelector('#myGrid');
+    gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    refreshData();
+});
+
+// Upload File
+async function uploadFile() {
+    const fileInput = document.getElementById('arFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('ar_file', file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    try {
+        const response = await fetch('{% url "core:upload_ar_data" %}', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            document.getElementById('uploadStatus').innerHTML = 
+                '<div class="text-green-600">✓ ' + result.message + '</div>';
+            refreshData();
+        } else {
+            document.getElementById('uploadStatus').innerHTML = 
+                '<div class="text-red-600">✗ ' + result.message + '</div>';
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+    }
+}
+
+// Refresh Data
+async function refreshData() {
+    try {
+        const response = await fetch('{% url "core:get_ar_data" %}');
+        const result = await response.json();
+        gridData = result.data;
+        
+        if (gridApi) {
+            gridApi.setGridOption('rowData', gridData);
+            updateSummary();
+        }
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+// Update Summary Cards
+function updateSummary() {
+    const total = gridData.reduce((sum, row) => sum + row.amount, 0);
+    const current = gridData.filter(row => row.aging_bucket === 'Current')
+        .reduce((sum, row) => sum + row.amount, 0);
+    const overdue = gridData.filter(row => row.days_overdue > 0)
+        .reduce((sum, row) => sum + row.amount, 0);
+    const over90 = gridData.filter(row => row.days_overdue > 90)
+        .reduce((sum, row) => sum + row.amount, 0);
+    
+    document.getElementById('totalOutstanding').textContent = '$' + total.toLocaleString();
+    document.getElementById('currentAmount').textContent = '$' + current.toLocaleString();
+    document.getElementById('overdueAmount').textContent = '$' + overdue.toLocaleString();
+    document.getElementById('over90Amount').textContent = '$' + over90.toLocaleString();
+}
+
+// Apply Pivot Configuration
+function applyPivot() {
+    const rowGroup = document.getElementById('rowGroup').value;
+    const customerFilter = document.getElementById('customerFilter').value;
+    
+    console.log('Apply button clicked');
+    console.log('Group by:', rowGroup);
+    console.log('Data available:', gridData.length);
+    console.log('Customer filter:', customerFilter);
+    
+    // Update column definitions for grouping
+    const updatedColDefs = columnDefs.map(col => {
+        return {
+            ...col,
+            rowGroup: col.field === rowGroup
+        };
+    });
+    
+    // Apply the new column definitions
+    gridApi.setGridOption('columnDefs', updatedColDefs);
+    
+    // Apply customer filter if provided (using correct AG-Grid Community Edition API)
+    if (customerFilter && customerFilter.trim() !== '') {
+        gridApi.setGridOption('quickFilterText', customerFilter);
+    } else {
+        gridApi.setGridOption('quickFilterText', '');
+    }
+    
+    // Refresh the grid
+    gridApi.refreshCells();
+    
+    console.log('Pivot configuration applied successfully');
+}
+
+// Export to Excel (CSV format - Excel can open it)
+function exportToExcel() {
+    if (!gridApi) {
+        console.error('Grid not initialized');
+        alert('Grid is not ready. Please try again.');
+        return;
+    }
+    
+    // Get filtered data from grid (includes current filters and grouping)
+    const filteredData = [];
+    
+    gridApi.forEachNodeAfterFilterAndSort((node) => {
+        // Only export leaf nodes (not group headers)
+        if (!node.group && node.data) {
+            filteredData.push(node.data);
+        }
+    });
+    
+    if (filteredData.length === 0) {
+        alert('No data to export. Please upload AR data first.');
+        return;
+    }
+    
+    console.log(`Exporting ${filteredData.length} filtered records...`);
+    
+    // Create CSV content with headers
+    const headers = ['Customer', 'Invoice #', 'Type', 'Invoice Date', 'Due Date', 'Amount', 'Days Overdue', 'Aging Bucket'];
+    
+    // Helper function to escape CSV values
+    const escapeCSV = (value) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+            return '"' + stringValue.replace(/"/g, '""') + '"';
+        }
+        return stringValue;
+    };
+    
+    // Convert data to CSV rows
+    const csvRows = filteredData.map(row => [
+        escapeCSV(row.customer_name),
+        escapeCSV(row.invoice_number),
+        escapeCSV(row.transaction_type || 'Invoice'),
+        escapeCSV(row.invoice_date),
+        escapeCSV(row.due_date),
+        escapeCSV(row.amount),
+        escapeCSV(row.days_overdue),
+        escapeCSV(row.aging_bucket)
+    ].join(','));
+    
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    // Generate filename with current date
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    const fileName = `AR_Aging_Report_${dateStr}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL object
+    URL.revokeObjectURL(url);
+    
+    console.log(`✓ Successfully exported ${filteredData.length} records to ${fileName}`);
+}
+
+// Formatters
+function currencyFormatter(params) {
+    return '$' + (params.value || 0).toLocaleString();
+}
+
+function dateFormatter(params) {
+    if (!params.value) return '';
+    return new Date(params.value).toLocaleDateString();
+}
+</script>
+
+<style>
+.ag-theme-alpine {
+    --ag-header-background-color: #f3f4f6;
+    --ag-header-foreground-color: #374151;
+    --ag-odd-row-background-color: #f9fafb;
+}
+</style>
+{% endblock %}

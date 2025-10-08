@@ -48,7 +48,7 @@
                     <a href="?status=completed" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'completed' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">Completed</a>
                     <a href="?status=processing" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'processing' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">Processing</a>
                     <a href="{% url 'core:hubspot_sync' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">HubSpot Sync</a>
-                    <a href="#" onclick="alert('FP&A functionality coming soon'); return false;" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">FP&A</a>
+                    <a href="{% url 'core:fpa_dashboard' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">FP&A</a>
                     <a href="{% url 'core:accounting' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Accounting</a>
                     <a href="{% url 'core:forecast' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Forecast</a>
                     <a href="{% url 'core:home' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Upload</a>

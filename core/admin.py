@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch, ARAgingData
 
 
 @admin.register(ContractType)
@@ -248,3 +248,74 @@ class HubSpotDealMatchAdmin(admin.ModelAdmin):
     list_display = ['deal', 'contract', 'matched_at', 'matched_by']
     list_filter = ['matched_at']
     search_fields = ['deal__deal_name', 'contract__contract_number']
+
+
+@admin.register(ARAgingData)
+class ARAgingDataAdmin(admin.ModelAdmin):
+    list_display = [
+        'customer_name',
+        'invoice_number',
+        'transaction_type',
+        'invoice_date',
+        'due_date',
+        'amount',
+        'days_overdue',
+        'aging_bucket',
+        'uploaded_by',
+        'upload_date'
+    ]
+    list_filter = [
+        'aging_bucket',
+        'upload_date',
+        'invoice_date',
+        'due_date',
+        'uploaded_by',
+        'currency',
+        'payment_status'
+    ]
+    search_fields = [
+        'customer_name',
+        'invoice_number',
+        'file_name',
+        'notes'
+    ]
+    readonly_fields = ['upload_date', 'is_overdue', 'status_color']
+    date_hierarchy = 'upload_date'
+    ordering = ['-upload_date', 'customer_name']
+    
+    fieldsets = (
+        ('Upload Information', {
+            'fields': ('uploaded_by', 'upload_date', 'file_name')
+        }),
+        ('Customer & Invoice', {
+            'fields': ('customer_name', 'invoice_number', 'transaction_type', 'invoice_date', 'due_date')
+        }),
+        ('Amount & Status', {
+            'fields': ('amount', 'currency', 'payment_status')
+        }),
+        ('Aging Information', {
+            'fields': ('days_overdue', 'aging_bucket', 'is_overdue', 'status_color')
+        }),
+        ('Additional Notes', {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make upload_date, uploaded_by readonly after creation."""
+        if obj:  # Editing existing object
+            return self.readonly_fields + ('uploaded_by',)
+        return self.readonly_fields
+    
+    # Add action to bulk calculate aging
+    actions = ['recalculate_aging']
+    
+    def recalculate_aging(self, request, queryset):
+        """Recalculate days overdue and aging bucket for selected records."""
+        for record in queryset:
+            record.calculate_days_overdue()
+            record.determine_aging_bucket()
+            record.save()
+        self.message_user(request, f"Successfully recalculated aging for {queryset.count()} records.")
+    recalculate_aging.short_description = "Recalculate aging for selected records"

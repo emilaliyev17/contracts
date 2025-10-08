@@ -16,12 +16,13 @@ import os
 import tempfile
 from datetime import datetime, date, timedelta
 
-from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch
+from .models import Contract, PaymentMilestone, PaymentTerms, ContractClarification, ContractType, HubSpotDeal, HubSpotDealMatch, ARAgingData
 from .services.contract_processor import ContractProcessor, ContractProcessingError
 from .services.excel_exporter import ExcelExporter
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -1491,3 +1492,342 @@ def match_hubspot_deal(request):
             'was_previously_matched': had_active_match,
         }
     )
+
+
+# ==================== FP&A DASHBOARD VIEWS ====================
+
+@login_required
+def fpa_dashboard(request):
+    """FP&A Dashboard with AR Aging analysis and pivot tables."""
+    # Get summary statistics
+    total_records = ARAgingData.objects.filter(uploaded_by=request.user).count()
+    total_amount = ARAgingData.objects.filter(uploaded_by=request.user).aggregate(
+        total=Sum('amount')
+    )['total'] or 0
+    
+    # Get aging bucket summary
+    aging_summary = {}
+    for bucket in ['Current', '1-30', '31-60', '61-90', '90+']:
+        bucket_data = ARAgingData.objects.filter(
+            uploaded_by=request.user,
+            aging_bucket=bucket
+        ).aggregate(
+            count=models.Count('id'),
+            total=Sum('amount')
+        )
+        aging_summary[bucket] = {
+            'count': bucket_data['count'] or 0,
+            'total': bucket_data['total'] or 0
+        }
+    
+    context = {
+        'total_records': total_records,
+        'total_amount': total_amount,
+        'aging_summary': aging_summary,
+    }
+    return render(request, 'core/fpa.html', context)
+
+
+@login_required
+@require_POST
+def upload_ar_data(request):
+    """Upload and process AR Aging Excel file."""
+    if not request.FILES.get('ar_file'):
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No file provided'
+        }, status=400)
+    
+    try:
+        file = request.FILES['ar_file']
+        
+        # Validate file extension
+        if not file.name.endswith(('.xlsx', '.xls')):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Please upload an Excel file (.xlsx or .xls)'
+            }, status=400)
+        
+        # Read the Excel file
+        df = pd.read_excel(file)
+        
+        # Debug info
+        logger.info(f"Columns found: {df.columns.tolist()}")
+        
+        # The actual columns in the file are:
+        # ['Date', 'Transaction Type', 'Num', 'Customer', 'Due Date', 'Amount', 'Open Balance']
+        
+        # Check required columns
+        required_columns = ['Num', 'Customer', 'Amount']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Missing required columns: {", ".join(missing_columns)}. Found columns: {", ".join(df.columns.tolist())}'
+            }, status=400)
+        
+        # Clear previous data for this user
+        deleted_count = ARAgingData.objects.filter(uploaded_by=request.user).delete()[0]
+        
+        # Process and save new data
+        records_created = 0
+        errors = []
+        
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                try:
+                    # Skip rows with no amount or NaN amount
+                    if pd.isna(row.get('Amount')) or row.get('Amount', 0) == 0:
+                        continue
+                    
+                    # Parse dates with error handling
+                    invoice_date = None
+                    if 'Date' in df.columns and pd.notna(row.get('Date')):
+                        try:
+                            invoice_date = pd.to_datetime(row['Date'], errors='coerce')
+                            if pd.isna(invoice_date):
+                                invoice_date = timezone.now()
+                        except:
+                            invoice_date = timezone.now()
+                    else:
+                        invoice_date = timezone.now()
+                    
+                    due_date = None
+                    if 'Due Date' in df.columns and pd.notna(row.get('Due Date')):
+                        try:
+                            due_date = pd.to_datetime(row['Due Date'], errors='coerce')
+                            if pd.isna(due_date):
+                                due_date = timezone.now()
+                        except:
+                            due_date = timezone.now()
+                    else:
+                        due_date = timezone.now()
+                    
+                    # Calculate days overdue
+                    if due_date and pd.notna(due_date):
+                        days_overdue = (timezone.now().date() - due_date.date()).days
+                        days_overdue = max(0, days_overdue)
+                    else:
+                        days_overdue = 0
+                    
+                    # Determine aging bucket
+                    if days_overdue <= 0:
+                        bucket = 'Current'
+                    elif days_overdue <= 30:
+                        bucket = '1-30'
+                    elif days_overdue <= 60:
+                        bucket = '31-60'
+                    elif days_overdue <= 90:
+                        bucket = '61-90'
+                    else:
+                        bucket = '90+'
+                    
+                    # Use Open Balance if available, otherwise use Amount
+                    balance = row.get('Open Balance', row['Amount'])
+                    if pd.isna(balance):
+                        balance = row['Amount']
+                    
+                    # Get transaction type
+                    transaction_type = 'Invoice'
+                    if 'Transaction Type' in df.columns and pd.notna(row.get('Transaction Type')):
+                        transaction_type = str(row['Transaction Type'])
+                    
+                    # Create record
+                    ARAgingData.objects.create(
+                        uploaded_by=request.user,
+                        file_name=file.name,
+                        customer_name=str(row['Customer'])[:255] if pd.notna(row['Customer']) else 'Unknown',
+                        invoice_number=str(row['Num'])[:100] if pd.notna(row['Num']) else '',
+                        transaction_type=transaction_type[:50],
+                        invoice_date=invoice_date.date() if invoice_date and pd.notna(invoice_date) else timezone.now().date(),
+                        due_date=due_date.date() if due_date and pd.notna(due_date) else timezone.now().date(),
+                        amount=float(balance),
+                        days_overdue=days_overdue,
+                        aging_bucket=bucket
+                    )
+                    records_created += 1
+                    
+                except Exception as row_error:
+                    errors.append(f"Row {index + 2}: {str(row_error)}")
+                    if len(errors) >= 10:  # Limit error messages
+                        errors.append("... and more errors")
+                        break
+        
+        # Get final count
+        final_count = ARAgingData.objects.filter(uploaded_by=request.user).count()
+        
+        message = f'Successfully uploaded {records_created} records'
+        if deleted_count > 0:
+            message += f' (replaced {deleted_count} previous records)'
+        if errors:
+            message += f'. Warning: {len(errors)} rows had errors.'
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': message,
+            'records_created': records_created,
+            'records_deleted': deleted_count,
+            'errors': errors if errors else []
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.exception("Error uploading AR data")
+        logger.error(error_details)
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error: {str(e)}'
+        }, status=500)
+
+
+@login_required
+def get_ar_data(request):
+    """Get AR Aging data for the current user with optional filters."""
+    # Get filter parameters
+    filters = {'uploaded_by': request.user}
+    
+    if request.GET.get('customer'):
+        filters['customer_name__icontains'] = request.GET.get('customer')
+    
+    if request.GET.get('bucket'):
+        filters['aging_bucket'] = request.GET.get('bucket')
+    
+    if request.GET.get('min_amount'):
+        try:
+            filters['amount__gte'] = float(request.GET.get('min_amount'))
+        except ValueError:
+            pass
+    
+    if request.GET.get('max_amount'):
+        try:
+            filters['amount__lte'] = float(request.GET.get('max_amount'))
+        except ValueError:
+            pass
+    
+    # Query data
+    queryset = ARAgingData.objects.filter(**filters).order_by('-days_overdue', 'customer_name')
+    
+    # Apply limit if specified
+    limit = request.GET.get('limit')
+    if limit:
+        try:
+            queryset = queryset[:int(limit)]
+        except ValueError:
+            pass
+    
+    # Get values
+    data = queryset.values(
+        'id',
+        'customer_name',
+        'invoice_number',
+        'transaction_type',
+        'invoice_date',
+        'due_date',
+        'amount',
+        'days_overdue',
+        'aging_bucket',
+        'currency',
+        'payment_status',
+        'notes'
+    )
+    
+    # Convert to list and format dates/decimals
+    data_list = []
+    for item in data:
+        data_list.append({
+            'id': item['id'],
+            'customer_name': item['customer_name'],
+            'invoice_number': item['invoice_number'],
+            'transaction_type': item['transaction_type'],
+            'invoice_date': item['invoice_date'].strftime('%Y-%m-%d') if item['invoice_date'] else None,
+            'due_date': item['due_date'].strftime('%Y-%m-%d') if item['due_date'] else None,
+            'amount': float(item['amount']),
+            'days_overdue': item['days_overdue'],
+            'aging_bucket': item['aging_bucket'],
+            'currency': item['currency'],
+            'payment_status': item['payment_status'],
+            'notes': item['notes']
+        })
+    
+    return JsonResponse({
+        'status': 'success',
+        'data': data_list,
+        'count': len(data_list)
+    })
+
+
+@login_required
+def export_ar_data(request):
+    """Export AR Aging data to Excel."""
+    # Get all AR data for the user
+    data = ARAgingData.objects.filter(
+        uploaded_by=request.user
+    ).order_by('-days_overdue', 'customer_name')
+    
+    if not data.exists():
+        messages.warning(request, "No data to export. Please upload AR aging data first.")
+        return redirect('core:fpa_dashboard')
+    
+    # Create DataFrame
+    df = pd.DataFrame(list(data.values(
+        'customer_name',
+        'invoice_number',
+        'invoice_date',
+        'due_date',
+        'amount',
+        'days_overdue',
+        'aging_bucket',
+        'currency',
+        'payment_status',
+        'notes'
+    )))
+    
+    # Rename columns for better readability
+    df.columns = [
+        'Customer Name',
+        'Invoice Number',
+        'Invoice Date',
+        'Due Date',
+        'Amount',
+        'Days Overdue',
+        'Aging Bucket',
+        'Currency',
+        'Payment Status',
+        'Notes'
+    ]
+    
+    # Create Excel file in memory
+    from io import BytesIO
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='AR Aging Data')
+        
+        # Get workbook and worksheet
+        workbook = writer.book
+        worksheet = writer.sheets['AR Aging Data']
+        
+        # Format columns
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+    
+    output.seek(0)
+    
+    # Create response
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="AR_Aging_Export_{timezone.now().strftime("%Y%m%d")}.xlsx"'
+    
+    return response

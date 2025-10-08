@@ -565,3 +565,136 @@ class ContractClarification(models.Model):
         self.answered = True
         self.answered_at = timezone.now()
         self.save()
+
+
+class ARAgingData(models.Model):
+    """Model for storing Accounts Receivable Aging data from Excel uploads."""
+    
+    # Upload metadata
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='ar_uploads',
+        help_text="User who uploaded this AR data"
+    )
+    upload_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the data was uploaded"
+    )
+    file_name = models.CharField(
+        max_length=255,
+        help_text="Original filename of the uploaded Excel file"
+    )
+    
+    # AR Aging fields
+    customer_name = models.CharField(
+        max_length=255,
+        help_text="Customer/client name"
+    )
+    invoice_number = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="Invoice reference number"
+    )
+    transaction_type = models.CharField(
+        max_length=50,
+        default='Invoice',
+        help_text="Transaction type (Invoice, Payment, Credit Memo, etc.)"
+    )
+    invoice_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date when invoice was issued"
+    )
+    due_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Payment due date"
+    )
+    amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        help_text="Invoice amount"
+    )
+    days_overdue = models.IntegerField(
+        default=0,
+        help_text="Number of days past due date"
+    )
+    aging_bucket = models.CharField(
+        max_length=50,
+        help_text="Aging category (Current, 1-30, 31-60, 61-90, 90+)"
+    )
+    
+    # Optional additional fields
+    currency = models.CharField(
+        max_length=3,
+        default='USD',
+        help_text="Currency code (USD, EUR, etc.)"
+    )
+    payment_status = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Payment status (if available)"
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Additional notes or comments"
+    )
+    
+    class Meta:
+        ordering = ['-upload_date', 'customer_name']
+        verbose_name = "AR Aging Data"
+        verbose_name_plural = "AR Aging Data"
+        indexes = [
+            models.Index(fields=['customer_name'], name='ar_customer_idx'),
+            models.Index(fields=['aging_bucket'], name='ar_aging_idx'),
+            models.Index(fields=['upload_date'], name='ar_upload_idx'),
+            models.Index(fields=['invoice_date'], name='ar_inv_date_idx'),
+            models.Index(fields=['due_date'], name='ar_due_date_idx'),
+        ]
+    
+    def __str__(self):
+        return f"{self.customer_name} - {self.invoice_number} (${self.amount})"
+    
+    @property
+    def is_overdue(self):
+        """Check if invoice is overdue."""
+        return self.days_overdue > 0
+    
+    @property
+    def status_color(self):
+        """Return color code based on aging bucket for UI display."""
+        colors = {
+            'Current': 'green',
+            '1-30': 'yellow',
+            '31-60': 'orange',
+            '61-90': 'red',
+            '90+': 'darkred',
+        }
+        return colors.get(self.aging_bucket, 'gray')
+    
+    def calculate_days_overdue(self):
+        """Calculate days overdue based on due date."""
+        from datetime import date
+        if self.due_date:
+            delta = date.today() - self.due_date
+            self.days_overdue = max(0, delta.days)
+        return self.days_overdue
+    
+    def determine_aging_bucket(self):
+        """Determine aging bucket based on days overdue."""
+        days = self.days_overdue
+        if days <= 0:
+            self.aging_bucket = 'Current'
+        elif days <= 30:
+            self.aging_bucket = '1-30'
+        elif days <= 60:
+            self.aging_bucket = '31-60'
+        elif days <= 90:
+            self.aging_bucket = '61-90'
+        else:
+            self.aging_bucket = '90+'
+        return self.aging_bucket

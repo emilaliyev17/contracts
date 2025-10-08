@@ -32,4 +32,10 @@ urlpatterns = [
     path('contracts/<int:contract_id>/update-client/', views.update_client_name, name='update_client_name'),
     path('hubspot-sync/', views.hubspot_sync, name='hubspot_sync'),
     path('match-hubspot-deal/', views.match_hubspot_deal, name='match_hubspot_deal'),
+    
+    # FP&A Dashboard URLs
+    path('fpa/', views.fpa_dashboard, name='fpa_dashboard'),
+    path('fpa/upload/', views.upload_ar_data, name='upload_ar_data'),
+    path('fpa/data/', views.get_ar_data, name='get_ar_data'),
+    path('fpa/export/', views.export_ar_data, name='export_ar_data'),
 ]
