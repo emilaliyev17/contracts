@@ -862,15 +862,32 @@ def forecast_view(request):
     cal = calendar.monthcalendar(cal_year, cal_month)
     calendar_days = []
     
+    import json
+    
     for week in cal:
         for day in week:
             if day == 0:  # Empty cell
-                calendar_days.append({'date': None, 'invoices': []})
+                calendar_days.append({'date': None, 'invoices': [], 'invoices_json': '[]'})
             else:
                 day_date = datetime(cal_year, cal_month, day).date()
+                day_invoices = invoices_by_date.get(day, [])
+                
+                # Prepare JSON data for JavaScript
+                invoices_json_data = []
+                for invoice in day_invoices:
+                    invoices_json_data.append({
+                        'client': invoice.get('client', 'Unknown'),
+                        'contract_number': invoice.get('contract_number', 'N/A'),
+                        'contract_id': invoice.get('contract_id', 0),
+                        'invoice_number': invoice.get('invoice_number', None),
+                        'amount': float(invoice.get('amount', 0)),
+                        'frequency': invoice.get('frequency', 'N/A')
+                    })
+                
                 calendar_days.append({
                     'date': day_date,
-                    'invoices': invoices_by_date.get(day, [])
+                    'invoices': day_invoices,
+                    'invoices_json': json.dumps(invoices_json_data)
                 })
     
     # Calculate metrics
