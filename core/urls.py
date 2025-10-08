@@ -38,4 +38,5 @@ urlpatterns = [
     path('fpa/upload/', views.upload_ar_data, name='upload_ar_data'),
     path('fpa/data/', views.get_ar_data, name='get_ar_data'),
     path('fpa/export/', views.export_ar_data, name='export_ar_data'),
+    path('fpa/delete/<int:record_id>/', views.delete_ar_record, name='delete_ar_record'),
 ]

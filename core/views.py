@@ -1831,3 +1831,29 @@ def export_ar_data(request):
     response['Content-Disposition'] = f'attachment; filename="AR_Aging_Export_{timezone.now().strftime("%Y%m%d")}.xlsx"'
     
     return response
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_ar_record(request, record_id):
+    """Delete an AR aging record."""
+    try:
+        # Get the record and ensure it belongs to the current user
+        record = get_object_or_404(ARAgingData, id=record_id, uploaded_by=request.user)
+        
+        # Delete the record
+        record.delete()
+        
+        logger.info(f"AR record {record_id} deleted by user {request.user.username}")
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Record deleted successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error deleting AR record {record_id}: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
