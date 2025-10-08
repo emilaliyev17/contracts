@@ -39,6 +39,6 @@ USER appuser
 # Expose port (Cloud Run will override with PORT env var)
 EXPOSE 8080
 
-# Run gunicorn
-CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 contract_analyzer.wsgi:application
+# Run migrations and start gunicorn
+CMD python manage.py migrate --noinput && exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 contract_analyzer.wsgi:application
 
