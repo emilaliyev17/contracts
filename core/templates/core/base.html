@@ -5,24 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Contract Analyzer{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        success: '#22c55e',
-                        warning: '#eab308', 
-                        info: '#3b82f6',
-                        primary: '#6366f1',
-                        destructive: '#ef4444',
-                        muted: '#6b7280',
-                        background: '#ffffff'
+                        primary: "#6366f1",
+                        "primary-gradient-end": "#764ba2",
+                        background: "#f9fafb",
+                        foreground: "#0f172a",
+                        card: "#ffffff",
+                        "card-foreground": "#0f172a",
+                        muted: "#f1f5f9",
+                        "muted-foreground": "#64748b",
+                        border: "#e5e7eb",
+                        "status-completed": "#22c55e",
+                        "status-completed-bg": "#dcfce7",
+                        "status-processing": "#f59e0b",
+                        "status-processing-bg": "#fef3c7",
+                        "status-review": "#3b82f6",
+                        "status-review-bg": "#dbeafe"
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"]
                     }
                 }
             }
-        }
+        };
     </script>
+    <style>
+        .gradient-header {
+            background: linear-gradient(to right, #6366f1, #764ba2);
+        }
+    </style>
     <style>
         body {
             font-family: Arial, sans-serif;

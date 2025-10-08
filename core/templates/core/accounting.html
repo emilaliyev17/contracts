@@ -1,38 +1,28 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% load humanize %}
 {% block content %}
 
-<!-- Gradient Header -->
-<div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+<!-- Gradient Header with Background Image -->
+<div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center; color: white;">
     <div class="px-4 py-8">
-        <div class="flex justify-between items-start">
+        <div class="flex justify-between items-start mb-4">
             <div>
                 <h1 class="text-3xl font-bold mb-2">Accounting</h1>
                 <p class="text-purple-100">Invoice reconciliation with QuickBooks</p>
             </div>
-            <a href="{% url 'core:contract_list' %}" 
-               class="text-white/80 hover:text-white transition-colors px-4 py-2 hover:bg-white/10 rounded-md">
-                Back to Contracts
-            </a>
+            <nav class="flex space-x-4">
+                <a href="{% url 'core:contract_list' %}" class="text-white/80 hover:text-white transition-colors">Back to Contracts</a>
+            </nav>
         </div>
-    </div>
-</div>
-
-<!-- Tab filters -->
-<div class="bg-purple-500 px-4 py-2">
-    <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
-        <button class="px-4 py-2 rounded-md text-sm font-medium bg-white text-purple-600 shadow-sm">
-            All
-        </button>
-        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-            Reconciled
-        </button>
-        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-            Pending
-        </button>
-        <button class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">
-            Discrepancies
-        </button>
+        
+        <!-- NAVIGATION TABS INSIDE HEADER -->
+        <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
+            <a href="?status=all" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'all' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">All</a>
+            <a href="?status=reconciled" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'reconciled' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Reconciled</a>
+            <a href="?status=pending" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'pending' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Pending</a>
+            <a href="?status=discrepancies" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'discrepancies' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Discrepancies</a>
+        </div>
     </div>
 </div>
 
@@ -77,18 +67,19 @@
             </div>
             
             <!-- Table with sticky header -->
-            <table class="w-full">
-                <thead class="sticky top-0 z-20 bg-white shadow-sm">
-                    <tr class="border-b">
-                        <th class="text-left p-4">Contract Name</th>
-                        <th class="text-left p-4">Contract Number</th>
-                        <th class="text-left p-4">Invoice Date</th>
-                        <th class="text-left p-4">Invoice#</th>
-                        <th class="text-right p-4">Amount</th>
-                        <th class="text-left p-4">QBO Invoice#</th>
-                        <th class="text-left p-4">QBO Inv Date</th>
-                        <th class="text-right p-4">QBO Amount</th>
-                        <th class="text-right p-4">Difference</th>
+            <div style="max-height: 600px; overflow-y: auto; overflow-x: auto;" class="rounded-lg border">
+                <table class="w-full">
+                    <thead class="bg-white sticky top-0 z-20 shadow-sm">
+                        <tr class="border-b">
+                            <th class="text-left p-4 bg-white">Contract Name</th>
+                            <th class="text-left p-4 bg-white">Contract Number</th>
+                            <th class="text-left p-4 bg-white">Invoice Date</th>
+                            <th class="text-left p-4 bg-white">Invoice#</th>
+                            <th class="text-right p-4 bg-white">Amount</th>
+                            <th class="text-left p-4 bg-white">QBO Invoice#</th>
+                            <th class="text-left p-4 bg-white">QBO Inv Date</th>
+                            <th class="text-right p-4 bg-white">QBO Amount</th>
+                            <th class="text-right p-4 bg-white">Difference</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,6 +131,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
+            </div>
         </div>
     </div>
 </div>

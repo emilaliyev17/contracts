@@ -29,13 +29,25 @@ logger = logging.getLogger(__name__)
 @login_required
 def home(request):
     """Home page view."""
+    # Calculate metrics for dashboard
+    total_contracts = Contract.objects.count()
+    needs_review_count = Contract.objects.filter(status='needs_clarification').count()
+    total_value = Contract.objects.aggregate(total=Sum('total_value'))['total'] or 0
+    completed_count = Contract.objects.filter(status='completed').count()
+    completion_rate = int((completed_count / total_contracts * 100) if total_contracts > 0 else 0)
+    
+    # Get 5 most recent contracts
+    recent_contracts = Contract.objects.select_related('payment_terms').order_by('-upload_date')[:5]
+    
     context = {
-        'total_contracts': Contract.objects.count(),
-        'active_contracts': Contract.objects.filter(status='completed').count(),
-        'pending_payments': PaymentMilestone.objects.filter(status='pending').count(),
-        'overdue_payments': PaymentMilestone.objects.filter(status='overdue').count(),
+        'total_contracts': total_contracts,
+        'needs_review_count': needs_review_count,
+        'total_value': total_value,
+        'completion_rate': completion_rate,
+        'recent_contracts': recent_contracts,
     }
-    return render(request, 'core/home.html', context)
+    
+    return render(request, 'core/home_redesigned.html', context)
 
 
 def _get_contract_summary():

@@ -2,145 +2,15 @@
 {% load static %}
 {% load humanize %}
 
-{% block title %}Contracts - Contract Analyzer{% endblock %}
+{% block title %}Contract Portfolio - Contract Analyzer{% endblock %}
 
 {% block content %}
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<!-- Material Symbols Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 
 <style>
-.metric-card-new {
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.metric-card-new:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-}
-</style>
-
-<div class="min-h-screen bg-gray-50">
-  <!-- Header with Geometric Pattern -->
-  <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center; color: white;">
-    <div class="px-4 py-8">
-      <div class="flex justify-between items-start">
-        <div>
-          <h1 class="text-3xl font-bold mb-2">Contract Portfolio</h1>
-          <p class="text-purple-100">Monitor contract processing progress and clarify outstanding items</p>
-        </div>
-        <nav class="flex space-x-4">
-          <a href="/admin/" class="text-white/80 hover:text-white transition-colors">Admin</a>
-        </nav>
-      </div>
-      
-      <!-- Tab Navigation -->
-      <div class="flex space-x-1 bg-white/10 rounded-lg p-1 w-fit">
-        <a href="?status=all" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'all' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">All</a>
-        <a href="?status=needs_review" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'needs_review' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Needs Review</a>
-        <a href="?status=completed" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'completed' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Completed</a>
-        <a href="?status=processing" class="px-4 py-2 rounded-md text-sm font-medium {% if active_filter == 'processing' %}bg-white text-purple-600 shadow-sm{% else %}text-white/80 hover:text-white hover:bg-white/10{% endif %}">Processing</a>
-        <a href="#" onclick="window.location.href='{% url 'core:hubspot_sync' %}'" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">HubSpot Sync</a>
-        <a href="#" onclick="alert('FP&A functionality coming soon'); return false;" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">FP&A</a>
-        <a href="{% url 'core:accounting' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Accounting</a>
-        <a href="{% url 'core:forecast' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Forecast</a>
-        <a href="{% url 'core:home' %}" class="px-4 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10">Upload</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="container mx-auto px-6 py-8">
-    <!-- Metrics Row -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
-        <p class="text-sm text-gray-500">Total Contracts</p>
-        <p class="text-3xl font-bold mt-1">{{ summary.total_contracts }}</p>
-        <p class="text-sm text-gray-500 mt-1">Active in portfolio</p>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
-        <p class="text-sm text-gray-500">Needs Clarification</p>
-        <p class="text-3xl font-bold text-yellow-500 mt-1">{{ summary.needs_clarification }}</p>
-        <p class="text-sm text-gray-500 mt-1">Pending review</p>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
-        <p class="text-sm text-gray-500">Total Contract Value</p>
-        <p class="text-3xl font-bold text-blue-500 mt-1">${{ summary.total_value|floatformat:0|intcomma }}</p>
-        <p class="text-sm text-gray-500 mt-1">Combined value</p>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow-sm p-6 metric-card-new">
-        <p class="text-sm text-gray-500">Completed This Month</p>
-        <p class="text-3xl font-bold text-green-500 mt-1">{{ summary.completed_this_month }}</p>
-        <p class="text-sm text-gray-500 mt-1">Successfully processed</p>
-      </div>
-    </div>
-
-    <!-- Existing Content Container -->
-    <div class="contracts-page container-fluid px-4">
-<style>
-/* Override base template container to use full width */
-.container {
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Compact Metric Cards Styling */
-.container-fluid .metric-card {
-    background: #f8f9fa !important;
-    border-radius: 8px !important;
-    padding: 1rem !important;
-    border: 1px solid #dee2e6 !important;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.container-fluid .metric-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-}
-.container-fluid .metric-card.warning {
-    background: #fff3cd !important;
-    border-color: #ffc107 !important;
-}
-.container-fluid .metric-card.info {
-    background: #d1ecf1 !important;
-    border-color: #17a2b8 !important;
-}
-.container-fluid .metric-card.success {
-    background: #d4edda !important;
-    border-color: #28a745 !important;
-}
-.container-fluid .metric-label {
-    font-size: 0.7rem;
-    color: #6c757d;
-    text-transform: uppercase;
-    margin-bottom: 0.25rem;
-}
-.container-fluid .metric-value {
-    font-size: 1.25rem;
-    font-weight: bold;
-    line-height: 1;
-}
-.container-fluid .metric-context {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-/* Action Buttons Styling */
-.btn-link {
-    border: none;
-    text-decoration: none;
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-}
-
-.btn-link:hover {
-    text-decoration: none;
-}
-
-.btn-link:focus {
-    box-shadow: none;
+.geometric-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Sticky table headers */
@@ -148,442 +18,234 @@
     position: sticky;
     top: 0;
     z-index: 20;
-    background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Fix sticky position relative to viewport */
-.contracts-table-wrapper thead th {
-    top: 0px !important;
+/* Hide filter export panel by default */
+#export-filters {
+    display: none;
 }
-
-/* When scrolled past the gradient header */
-@media screen {
-    .contracts-table-wrapper thead th {
-        position: -webkit-sticky;
-        position: sticky;
-    }
-}
-
-/* Ensure proper background on hover */
-.contracts-table-wrapper thead th:hover {
-    background-color: #ffffff;
-}
-
 </style>
-    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-white rounded shadow-sm">
-        <span class="text-muted">Export Contracts to Excel:</span>
-        <a href="{% url 'core:export_excel' %}" class="btn btn-success btn-sm">
-            Export All Contracts
-        </a>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="filter-export-btn">
-            Filter Export
-        </button>
-    </div>
 
-    <div id="export-filters" class="export-filters" style="display: none;">
-        <h5 class="h6 mb-3">Filter Export Options</h5>
-        <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="date_from" class="form-label">From Date</label>
-                    <input type="date" id="date_from" name="date_from" class="form-control">
+<div class="flex flex-col min-h-screen">
+    <!-- HEADER with background image and geometric pattern -->
+    <header class="w-full text-white relative" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)), url('{% static 'images/header.png' %}'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 geometric-pattern"></div>
+        <div class="relative max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-10">
+                <div>
+                    <h1 class="text-4xl font-bold">Contract Portfolio</h1>
+                    <p class="mt-2 text-white/80">Monitor contract processing progress and clarify outstanding items</p>
                 </div>
-                <div class="filter-group">
-                    <label for="date_to" class="form-label">To Date</label>
-                    <input type="date" id="date_to" name="date_to" class="form-control">
-                </div>
-                <div class="filter-group">
-                    <label for="status" class="form-label">Status</label>
-                    <select id="status" name="status" class="form-select">
-                        <option value="">All Statuses</option>
-                        <option value="uploaded">Uploaded</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                        <option value="error">Error</option>
-                    </select>
-                </div>
+                <a class="text-sm font-medium hover:underline" href="/admin/">Admin</a>
             </div>
-            <div class="filter-actions">
-                <button type="submit" class="btn btn-success">Export Filtered Results</button>
-                <button type="button" class="btn btn-outline-secondary" id="cancel-filter-btn">Cancel</button>
+            
+            <!-- NAVIGATION TABS with Django URL routing -->
+            <div class="bg-white/10 rounded-lg p-1.5 mb-6">
+                <nav class="flex space-x-1 overflow-x-auto">
+                    <a href="?status=all" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'all' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">All</a>
+                    <a href="?status=needs_review" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'needs_review' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">Needs Review</a>
+                    <a href="?status=completed" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'completed' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">Completed</a>
+                    <a href="?status=processing" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if active_filter == 'processing' %}bg-white text-primary{% else %}text-white/80 hover:bg-white/20{% endif %}">Processing</a>
+                    <a href="{% url 'core:hubspot_sync' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">HubSpot Sync</a>
+                    <a href="#" onclick="alert('FP&A functionality coming soon'); return false;" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">FP&A</a>
+                    <a href="{% url 'core:accounting' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Accounting</a>
+                    <a href="{% url 'core:forecast' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Forecast</a>
+                    <a href="{% url 'core:home' %}" class="px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap text-white/80 hover:bg-white/20">Upload</a>
+                </nav>
             </div>
-        </form>
-    </div>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <!-- Contract count info -->
-    <div class="mb-4">
-        <span class="text-sm text-gray-500">Showing {{ contracts|length }} of {{ summary.total_contracts }} contracts</span>
-    </div>
-
-    {% if contracts %}
-    <!-- Contracts Table Card -->
-    <div class="bg-white rounded-lg shadow-sm">
-      <div class="p-6 border-b">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 class="text-xl font-semibold">Contracts</h2>
-          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <!-- Search -->
-            <form method="get" action="{% url 'core:contract_list' %}" class="flex-1">
-              <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <input type="text" 
-                       name="search" 
-                       value="{{ search_query }}"
-                       placeholder="Search contracts, clients, or content..."
-                       class="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-80">
-              </div>
-            </form>
-            <!-- Export Button -->
-            <a href="{% url 'core:export_excel' %}" class="px-4 py-2 border rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-              </svg>
-              Export to Excel
-            </a>
-          </div>
         </div>
-      </div>
-      
-      <div class="contracts-table-wrapper">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b bg-gray-50/50">
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">#</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Client</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Contract#</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-right p-4 font-medium text-sm">Total Value</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Status</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Payment Frequency</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">Start Date</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-left p-4 font-medium text-sm">End Date</th>
-              <th class="sticky top-[0px] z-20 bg-white shadow-sm text-center p-4 font-medium text-sm">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for contract in contracts %}
-            <tr class="border-b hover:bg-gray-50 transition-colors">
-              <td class="p-4 text-sm text-gray-500">{{ forloop.counter|stringformat:"02d" }}</td>
-              <td class="p-4 text-sm">{{ contract.client_name|default:"—" }}</td>
-              <td class="px-6 py-4">
-                <div class="flex items-center">
-                  {% if contract.is_hubspot_matched %}
-                    <span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-2" title="Matched with HubSpot"></span>
-                  {% else %}
-                    <span class="w-2 h-2 bg-gray-300 rounded-full inline-block mr-2" title="Not matched"></span>
-                  {% endif %}
-                  <span class="text-blue-600 hover:text-blue-800">
-                    {{ contract.contract_number }}
-                  </span>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
+        <!-- METRIC CARDS with Django variables -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-card dark:bg-dark-card p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <p class="text-muted dark:text-dark-muted text-sm font-medium">Total Contracts</p>
+                <p class="text-3xl font-bold text-foreground dark:text-dark-foreground mt-2">{{ summary.total_contracts }}</p>
+            </div>
+            <div class="bg-card dark:bg-dark-card p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <p class="text-muted dark:text-dark-muted text-sm font-medium">Needs Clarification</p>
+                <p class="text-3xl font-bold text-warning mt-2">{{ summary.needs_clarification }}</p>
+            </div>
+            <div class="bg-card dark:bg-dark-card p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <p class="text-muted dark:text-dark-muted text-sm font-medium">Total Contract Value</p>
+                <p class="text-3xl font-bold text-info mt-2">${{ summary.total_value|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="bg-card dark:bg-dark-card p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300">
+                <p class="text-muted dark:text-dark-muted text-sm font-medium">Completed This Month</p>
+                <p class="text-3xl font-bold text-success mt-2">{{ summary.completed_this_month }}</p>
+            </div>
+        </div>
+
+        <!-- MESSAGES -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-              </td>
-              <td class="p-4 text-right font-medium text-sm">
-                {% if contract.total_value %}
-                    ${{ contract.total_value|floatformat:0|intcomma }}
-                {% else %}
-                    <span class="text-gray-400">N/A</span>
-                {% endif %}
-              </td>
-              <td class="p-4">
-                {% if contract.status == 'completed' %}
-                  <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 border border-green-200">Completed</span>
-                {% elif contract.status == 'needs_clarification' %}
-                  <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Needs Review</span>
-                {% elif contract.status == 'processing' %}
-                  <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">Processing</span>
-                {% else %}
-                  <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">{{ contract.status|title }}</span>
-                {% endif %}
-              </td>
-              <td class="p-4 text-sm text-gray-500">
-                {% if contract.payment_terms %}
-                  {{ contract.payment_terms.get_payment_frequency_display }}
-                {% else %}
-                  <span class="text-gray-400">N/A</span>
-                {% endif %}
-              </td>
-              <td class="p-4 text-sm text-gray-500">{{ contract.start_date|date:"M d, Y"|default:"—" }}</td>
-              <td class="p-4 text-sm text-gray-500">{{ contract.end_date|date:"M d, Y"|default:"—" }}</td>
-              <td class="p-4">
-                <div class="flex items-center justify-center gap-2">
-                  <a href="{% url 'core:contract_detail' contract.id %}?next={{ request.get_full_path|urlencode }}" class="p-1.5 border rounded hover:bg-gray-50" title="View">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                  </a>
-                  <form method="post" action="{% url 'core:delete_contract' contract.id %}" style="display: inline;" onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
-                    {% csrf_token %}
-                    <button type="submit" class="p-1.5 border rounded hover:bg-red-50 text-red-600" title="Delete">
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
-                  </form>
-                </div>
-              </td>
-            </tr>
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% else %}
-    <div class="bg-white rounded-lg shadow-sm p-12 text-center">
-      {% if summary.total_contracts %}
-        <h3 class="text-lg font-semibold mb-2">No contracts match this filter</h3>
-        <p class="text-gray-500 mb-4">Try selecting a different tab or clear the current filter to view more contracts.</p>
-        <a href="{% url 'core:contract_list' %}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Clear Filter</a>
-      {% else %}
-        <h3 class="text-lg font-semibold mb-2">No Contracts Found</h3>
-        <p class="text-gray-500 mb-4">Upload a contract to start tracking agreements in this workspace.</p>
-        <a href="{% url 'core:home' %}" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Upload Your First Contract</a>
-      {% endif %}
-    </div>
-    {% endif %}
+        {% endif %}
+
+        <!-- SEARCH and EXPORT BUTTONS -->
+        <div class="mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <!-- SEARCH BAR with form wrapper -->
+            <form method="get" action="{% url 'core:contract_list' %}" class="w-full md:w-[400px]">
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted dark:text-dark-muted">search</span>
+                    <input name="search" value="{{ search_query }}" class="w-full pl-10 pr-4 py-2 rounded-lg border border-border dark:border-dark-border bg-card dark:bg-dark-card focus:ring-primary focus:border-primary" placeholder="Search contracts, clients, or content..." type="text"/>
+                </div>
+            </form>
+            
+            <!-- EXPORT BUTTONS with existing functionality -->
+            <div class="flex space-x-4">
+                <a href="{% url 'core:export_excel' %}" class="px-4 py-2 text-sm font-semibold text-white bg-success rounded-lg hover:bg-opacity-90">Export All Contracts</a>
+                <button type="button" id="filter-export-btn" class="px-4 py-2 text-sm font-semibold text-muted dark:text-dark-muted bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-lg hover:bg-background dark:hover:bg-dark-card-hover">Filter Export</button>
+            </div>
+        </div>
+
+        <!-- FILTER EXPORT PANEL -->
+        <div id="export-filters" class="mt-4 p-6 bg-card dark:bg-dark-card rounded-lg border border-border dark:border-dark-border shadow-sm">
+            <h5 class="text-lg font-semibold mb-4">Filter Export Options</h5>
+            <form id="filter-form" method="get" action="{% url 'core:export_excel' %}">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-foreground dark:text-dark-foreground mb-2">From Date</label>
+                        <input type="date" id="date_from" name="date_from" class="w-full px-3 py-2 border border-border dark:border-dark-border rounded-lg focus:ring-primary focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-foreground dark:text-dark-foreground mb-2">To Date</label>
+                        <input type="date" id="date_to" name="date_to" class="w-full px-3 py-2 border border-border dark:border-dark-border rounded-lg focus:ring-primary focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-foreground dark:text-dark-foreground mb-2">Status</label>
+                        <select id="status" name="status" class="w-full px-3 py-2 border border-border dark:border-dark-border rounded-lg focus:ring-primary focus:border-primary">
+                            <option value="">All Statuses</option>
+                            <option value="uploaded">Uploaded</option>
+                            <option value="processing">Processing</option>
+                            <option value="completed">Completed</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancel-filter-btn" class="px-4 py-2 text-sm font-semibold text-muted dark:text-dark-muted bg-card dark:bg-dark-card border border-border dark:border-dark-border rounded-lg hover:bg-background">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-success rounded-lg hover:bg-opacity-90">Export Filtered Results</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- CONTRACTS TABLE -->
+        <div class="mt-8 flow-root">
+            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                    <div class="shadow ring-1 ring-black ring-opacity-5 rounded-lg" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
+                        {% if contracts %}
+                        <table class="min-w-full divide-y divide-border dark:divide-dark-border relative">
+                            <thead class="bg-white sticky top-0 z-30 shadow-sm">
+                                <tr>
+                                    <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white sm:pl-6" scope="col">#</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Client</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Contract#</th>
+                                    <th class="px-3 py-3.5 text-right text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Total Value</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Status</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Payment Frequency</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">Start Date</th>
+                                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-foreground dark:text-dark-foreground bg-white" scope="col">End Date</th>
+                                    <th class="relative py-3.5 pl-3 pr-4 bg-white sm:pr-6" scope="col">
+                                        <span class="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border dark:divide-dark-border bg-card dark:bg-dark-card">
+                                {% for contract in contracts %}
+                                <tr class="{% cycle '' 'bg-background dark:bg-dark-background/20' %} hover:bg-background/80 dark:hover:bg-dark-background/40">
+                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-foreground dark:text-dark-foreground sm:pl-6">{{ forloop.counter|stringformat:"02d" }}</td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">{{ contract.client_name|default:"—" }}</td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">
+                                        <div class="flex items-center">
+                                            {% if contract.is_hubspot_matched %}
+                                                <span class="h-2 w-2 rounded-full bg-success mr-2" title="Matched with HubSpot"></span>
+                                            {% else %}
+                                                <span class="h-2 w-2 rounded-full bg-muted dark:bg-dark-muted mr-2" title="Not matched"></span>
+                                            {% endif %}
+                                            {{ contract.contract_number }}
+                                        </div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-right text-muted dark:text-dark-muted">
+                                        {% if contract.total_value %}
+                                            ${{ contract.total_value|floatformat:0|intcomma }}
+                                        {% else %}
+                                            <span class="text-gray-400">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">
+                                        {% if contract.status == 'completed' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">Completed</span>
+                                        {% elif contract.status == 'needs_clarification' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/10 text-warning">Needs Review</span>
+                                        {% elif contract.status == 'processing' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/10 text-info">Processing</span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{{ contract.status|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">
+                                        {% if contract.payment_terms %}
+                                            {{ contract.payment_terms.get_payment_frequency_display }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">{{ contract.start_date|date:"M d, Y"|default:"—" }}</td>
+                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-muted dark:text-dark-muted">{{ contract.end_date|date:"M d, Y"|default:"—" }}</td>
+                                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 space-x-2">
+                                        <a href="{% url 'core:contract_detail' contract.id %}?next={{ request.get_full_path|urlencode }}" class="text-primary hover:text-opacity-80" title="View">
+                                            <span class="material-symbols-outlined text-base">visibility</span>
+                                        </a>
+                                        <form method="post" action="{% url 'core:delete_contract' contract.id %}" style="display: inline;" onsubmit="return confirmDelete('{{ contract.contract_name|escapejs }}', {{ contract.id }});">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-red-500 hover:text-red-700" title="Delete">
+                                                <span class="material-symbols-outlined text-base">delete</span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <!-- EMPTY STATE -->
+                        <div class="bg-card dark:bg-dark-card p-12 text-center">
+                            {% if summary.total_contracts %}
+                                <h3 class="text-lg font-semibold mb-2 text-foreground dark:text-dark-foreground">No contracts match this filter</h3>
+                                <p class="text-muted dark:text-dark-muted mb-4">Try selecting a different tab or clear the current filter to view more contracts.</p>
+                                <a href="{% url 'core:contract_list' %}" class="inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Clear Filter</a>
+                            {% else %}
+                                <h3 class="text-lg font-semibold mb-2 text-foreground dark:text-dark-foreground">No Contracts Found</h3>
+                                <p class="text-muted dark:text-dark-muted mb-4">Upload a contract to start tracking agreements in this workspace.</p>
+                                <a href="{% url 'core:home' %}" class="inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">Upload Your First Contract</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGINATION with Django variables -->
+        <div class="mt-8 flex justify-between items-center">
+            <p class="text-sm text-muted dark:text-dark-muted">Showing {{ contracts|length }} of {{ summary.total_contracts }} contracts</p>
+            <!-- Pagination controls can be added here if needed -->
+        </div>
+    </main>
 </div>
 
-<style>
-.contracts-page {
-    display: block;
-}
-
-.contracts-page > * + * {
-    margin-top: 1.5rem;
-}
-
-
-.summary-stack {
-    width: 100%;
-    border-radius: 0.9rem;
-    overflow: hidden;
-    padding: 0;
-}
-
-.summary-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.6rem 1.5rem;
-    border-bottom: 1px solid #edf0f6;
-    transition: background-color 0.18s ease;
-}
-
-.summary-item:hover {
-    background-color: #f7f9fe;
-}
-
-.summary-item:last-child {
-    border-bottom: none;
-}
-
-.summary-label {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #6c757d;
-}
-
-.summary-value {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #212529;
-}
-
-.export-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.export-btn {
-    padding: 0.6rem 1.5rem;
-}
-
-.export-filters {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 0.75rem;
-}
-
-.filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.filter-group {
-    flex: 1 1 220px;
-}
-
-.filter-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-end;
-}
-
-.nav.contract-filters {
-    display: inline-flex;
-    flex-wrap: wrap;
-    padding: 0;
-    background: transparent;
-    list-style: none;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-.contract-filters .nav-link {
-    border-radius: 999px;
-    padding: 0.5rem 1rem;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.contract-filters .nav-link.active {
-    background-color: #0d6efd;
-    color: #fff;
-    box-shadow: 0 0.25rem 0.75rem rgba(13, 110, 253, 0.15);
-}
-
-.contract-filters .nav-link:not(.active):hover {
-    background-color: rgba(13, 110, 253, 0.08);
-    color: #0d6efd;
-}
-
-.contract-link {
-    color: #0d6efd;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.contract-link:hover {
-    color: #0a58ca;
-    text-decoration: underline;
-}
-
-.contract-table {
-    min-width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.contract-table thead th {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #6c757d;
-    background-color: #f5f7fb;
-    border: 0;
-    border-bottom: 1px solid #e3e7ef;
-    padding: 0.75rem 1rem;
-}
-
-.contract-table tbody td {
-    padding: 1rem;
-    border-top: 0;
-    border-bottom: 1px solid #eef1f6;
-    vertical-align: middle;
-    color: #343a40;
-    font-size: 0.95rem;
-}
-
-.contract-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-.contract-table tbody tr:hover {
-    background-color: #f8f9fc;
-}
-
-.status-chip {
-    display: inline-flex;
-    align-items: center;
-    font-weight: 600;
-    font-size: 0.9rem;
-    letter-spacing: -0.01em;
-}
-
-.status-dot {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 999px;
-    display: inline-block;
-}
-
-.status-dot-neutral {
-    background-color: #ced4da;
-}
-
-.status-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.1rem;
-    height: 1.1rem;
-    border-radius: 999px;
-    background-color: rgba(25, 135, 84, 0.1);
-}
-
-.status-icon svg {
-    width: 0.75rem;
-    height: 0.75rem;
-}
-
-.dropdown .kebab {
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-.empty-state {
-    border-radius: 0.9rem;
-}
-
-.empty-state .card-body {
-    max-width: 420px;
-    margin: 0 auto;
-}
-
-@media (max-width: 576px) {
-    .summary-card .card-body {
-        padding: 1.25rem;
-    }
-
-    .contract-table thead {
-        display: none;
-    }
-
-    .contract-table tbody td {
-        display: block;
-        padding: 0.75rem 0.5rem;
-        border-bottom: none;
-    }
-
-    .contract-table tbody tr {
-        border-bottom: 1px solid #eef1f6;
-        padding: 0.5rem 0;
-    }
-
-    .contract-table tbody td:last-child {
-        padding-bottom: 1rem;
-    }
-}
-</style>
-
+<!-- PRESERVE ALL JAVASCRIPT FUNCTIONS -->
 <script>
+// Confirm delete function
 function confirmDelete(contractName, contractId) {
     const message = `Are you sure you want to delete this contract?\n\n` +
                    `Contract: "${contractName}"\n` +
@@ -625,8 +287,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-    </div> <!-- Close contracts-page -->
-  </div> <!-- Close container -->
-</div> <!-- Close min-h-screen -->
 
 {% endblock %}

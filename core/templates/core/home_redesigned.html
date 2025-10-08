@@ -1,0 +1,266 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Home - Contract Analyzer{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background font-display">
+    <!-- Header -->
+    <header class="gradient-header text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Contract Analyzer Dashboard</h1>
+                    <p class="text-white/80">AI-Powered Contract Management</p>
+                </div>
+                <nav class="flex space-x-4">
+                    <a href="{% url 'core:contract_list' %}" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                        Contracts
+                    </a>
+                    <a href="{% url 'core:forecast' %}" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                        Forecast
+                    </a>
+                    <a href="{% url 'core:accounting' %}" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                        Accounting
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Contracts -->
+            <div class="bg-card rounded-lg shadow-sm p-6 border border-border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-muted-foreground">Total Contracts</p>
+                        <p class="text-3xl font-bold text-foreground mt-2">{{ total_contracts|default:"0" }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Needs Review -->
+            <div class="bg-card rounded-lg shadow-sm p-6 border border-border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-muted-foreground">Needs Review</p>
+                        <p class="text-3xl font-bold text-status-review mt-2">{{ needs_review_count|default:"0" }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-status-review-bg rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-status-review" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Value -->
+            <div class="bg-card rounded-lg shadow-sm p-6 border border-border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-muted-foreground">Total Value</p>
+                        <p class="text-3xl font-bold text-foreground mt-2">${{ total_value|floatformat:0|intcomma|default:"0" }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completion Rate -->
+            <div class="bg-card rounded-lg shadow-sm p-6 border border-border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-muted-foreground">Completion Rate</p>
+                        <p class="text-3xl font-bold text-status-completed mt-2">{{ completion_rate|default:"0" }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-status-completed-bg rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-status-completed" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="bg-card rounded-lg shadow-sm p-8 border border-border mb-8">
+            <h2 class="text-2xl font-bold text-foreground mb-4">Upload Contract</h2>
+            <p class="text-muted-foreground mb-6">Upload a PDF contract to automatically extract payment information using AI.</p>
+            
+            <form id="contract-upload-form" action="{% url 'core:upload_contract' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="border-2 border-dashed border-border rounded-lg p-12 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                    <div class="mx-auto w-16 h-16 text-muted-foreground mb-4">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <div class="text-sm text-muted-foreground">
+                        <label for="pdf-file-input" class="relative cursor-pointer bg-card rounded-md font-medium text-primary hover:text-primary/80">
+                            <span>Upload a file</span>
+                            <input id="pdf-file-input" name="pdf_file" type="file" class="sr-only" accept=".pdf" />
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-2">PDF files only, up to 10MB</p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Recent Contracts Table -->
+        <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+            <div class="px-6 py-4 border-b border-border">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-foreground">Recent Contracts</h2>
+                    <a href="{% url 'core:contract_list' %}" class="text-sm font-medium text-primary hover:underline">
+                        View All →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-muted">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Client
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Contract #
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Value
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-card divide-y divide-border">
+                        {% for contract in recent_contracts %}
+                        <tr class="hover:bg-muted transition-colors">
+                            <th class="px-6 py-4 font-medium text-card-foreground whitespace-nowrap" scope="row">
+                                {{ contract.client_name|default:"—" }}
+                            </th>
+                            <td class="px-6 py-4 text-sm text-card-foreground">
+                                {{ contract.contract_number }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-card-foreground">
+                                {% if contract.total_value %}
+                                    ${{ contract.total_value|floatformat:0|intcomma }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if contract.status == 'completed' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-completed-bg text-status-completed">
+                                        Completed
+                                    </span>
+                                {% elif contract.status == 'processing' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-processing-bg text-status-processing">
+                                        Processing
+                                    </span>
+                                {% elif contract.status == 'needs_clarification' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-review-bg text-status-review">
+                                        Needs Review
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ contract.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-right text-sm">
+                                <a class="font-medium text-primary hover:underline" href="{% url 'core:contract_detail' contract.id %}">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-muted-foreground">
+                                No contracts yet. Upload your first contract above!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.querySelector('.border-dashed');
+    const fileInput = document.querySelector('input[type="file"]');
+    const form = document.getElementById('contract-upload-form');
+    
+    if (!uploadArea || !fileInput || !form) return;
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.add('border-primary', 'bg-primary/5');
+        });
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, () => {
+            uploadArea.classList.remove('border-primary', 'bg-primary/5');
+        });
+    });
+    
+    // Handle dropped files
+    uploadArea.addEventListener('drop', function(e) {
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+    });
+    
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        handleFiles(files);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'application/pdf') {
+                fileInput.files = files;
+                form.submit();
+            } else {
+                alert('Please upload a PDF file');
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
